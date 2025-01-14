@@ -19,3 +19,12 @@
 3. 프로젝트 구현(메모장)
 
 - 기본 프로젝트 구조 활용한 프로젝트 구현
+
+# 0114 수행(학습) 내용
+
+### [1] React 학습
+
+1. 프로젝트 구현(메모장)
+
+- CRUD 활용 프로젝트 구현
+- component 구조, local storage, debounced, useCallback 등 활용
