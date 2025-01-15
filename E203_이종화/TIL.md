@@ -28,3 +28,11 @@
 
 - CRUD 활용 프로젝트 구현
 - component 구조, local storage, debounced, useCallback 등 활용
+
+# 0115 수행(학습) 내용
+
+### [1] 아이디어 회의
+
+- 프로젝트 수행 아이디어 기획
+- 각 아이디어 별 수행 내용 구체화
+- 팀미팅 진행
