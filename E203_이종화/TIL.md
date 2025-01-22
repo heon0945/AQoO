@@ -86,3 +86,32 @@
 - 미니게임 시작 컴포넌트 보완
 - 미니게임 페이지 보완
 - 미니게임 결과 컴포넌트 보완
+
+
+# 0122 수행(학습) 내용
+
+### [1] figma 목업 보완
+- 전반적 디자인 보완
+- 활용 asset search 및 목업 반영
+- ERD 및 API 명세서 바탕으로 상호 간 수정
+- 필요한 효과(뿌얘지기, 이끼 등) 생성
+
+### [2] 프로그램 활용 자료 수집
+- 효과음 자료 수집
+- 효과 화면 수집
+
+### [3] frontend 활용 기술스택 조사
+- 웹 페이지
+    - Next.js (v13 이상)
+    - TypeScript(4.9 이상 혹은 5.x)
+    - Tailwind + styled-components
+    - Recoil + React Query
+- 물고기 동작
+    - gsap        
+- WebSocket
+    - sockjs-client 라이브러리, @stomp/stompjs
+- WebRTC & MediaPipe
+    - openvidu 라이브러리
+    - @mediapipe/hands @mediapipe/camera_utils
+- 화면에서 오디오 제어
+    - Web Audio API
