@@ -24,6 +24,9 @@ repositories {
 }
 
 dependencies {
+    // 환경 변수 의존성
+    implementation 'io.github.cdimascio:dotenv-java:2.2.0'
+
     // Spring Boot Data JPA - 데이터베이스 작업 및 ORM 지원
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
