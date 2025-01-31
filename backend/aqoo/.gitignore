@@ -37,4 +37,4 @@ out/
 .vscode/
 
 ### secret information ###
-.env
+../.env
