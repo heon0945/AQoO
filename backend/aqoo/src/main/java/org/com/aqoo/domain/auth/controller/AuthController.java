@@ -81,9 +81,10 @@ public class AuthController {
         try {
             // 새로운 액세스 토큰 발급
             String newAccessToken = authService.refreshToken(refreshToken);
-            return ResponseEntity.ok(new LoginResponse(newAccessToken));
+            String message = "엑세스 토큰 갱신 성공";
+            return ResponseEntity.ok(new LoginResponse(newAccessToken, message));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(401).body(new LoginResponse("Invalid or expired refresh token"));
+            return ResponseEntity.status(401).body(new LoginResponse("","Invalid or expired refresh token"));
         }
 
     }

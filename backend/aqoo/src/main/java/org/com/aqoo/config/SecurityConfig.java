@@ -20,9 +20,8 @@ public class SecurityConfig {
         http
                 .csrf().disable() // REST API이므로 CSRF 비활성화
                 .authorizeHttpRequests(authorize -> authorize
-//                                .requestMatchers("/**").permitAll() // 테스트를 위해 모두 허용
-                                .requestMatchers("/api/v1/auth/**", "/oauth2/**").permitAll() // 인증 API 경로는 모두 허용
-                                .requestMatchers("/protected/**").authenticated() // 보호된 리소스
+                                .requestMatchers("/**").permitAll() // 테스트를 위해 모두 허용
+//                                .requestMatchers("/api/v1/auth/**", "/oauth2/**").permitAll() // 인증 API 경로는 모두 허용
                                 .anyRequest().authenticated() // 나머지 경로는 인증 필요
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // JWT 필터 추가

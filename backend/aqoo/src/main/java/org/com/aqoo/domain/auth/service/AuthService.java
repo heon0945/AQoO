@@ -73,8 +73,9 @@ public class AuthService {
         user.setRefreshToken(refreshToken);
         userRepository.save(user);
 
+        String message = "accessToken 발급 성공";
         // 응답 생성
-        return new LoginResponse(accessToken);
+        return new LoginResponse(accessToken, message);
     }
 
     // db에 저장된 리프레시 토큰 불러오기
@@ -165,7 +166,9 @@ public class AuthService {
         user.setRefreshToken(refreshToken);
         userRepository.save(user);
 
-        return new LoginResponse(accessToken);
+        String message = "소셜 로그인 성공";
+
+        return new LoginResponse(accessToken, message);
     }
 
     // 아이디 중복 체크

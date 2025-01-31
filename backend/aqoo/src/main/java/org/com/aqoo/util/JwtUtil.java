@@ -1,6 +1,7 @@
 package org.com.aqoo.util;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -19,7 +20,7 @@ public class JwtUtil {
 
     //토큰 생성 메서드
     public String generateToken(String userId, String type) {
-        System.out.println(type+" 토큰 생성");
+        System.out.println(type + " 토큰 생성");
         long expiration = type.equals("ACCESS") ? ACCESS_TOKEN_EXPIRATION : REFRESH_TOKEN_EXPIRATION;
 
         return Jwts.builder()
@@ -37,7 +38,11 @@ public class JwtUtil {
                     .build()
                     .parseClaimsJws(token);
             return true;
+        } catch (ExpiredJwtException e) {
+            System.out.println("액세스 토큰이 만료되었습니다.");
+            return false;
         } catch (Exception e) {
+            System.out.println("유효하지 않은 토큰입니다.");
             return false;
         }
     }

@@ -1,5 +1,6 @@
 package org.com.aqoo.config;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -46,7 +47,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     }
                 }
 
-            } catch (Exception e) {
+            } catch (ExpiredJwtException e) {
+                System.out.println("액세스 토큰 만료됨. 리프레시 토큰을 요청하세요.");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 응답 반환
+                return;
+            }
+            catch (Exception e) {
                 // JWT가 유효하지 않은 경우
                 System.out.println("Invalid JWT: " + e.getMessage());
             }
@@ -55,4 +61,3 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         chain.doFilter(request, response);
     }
 }
-
