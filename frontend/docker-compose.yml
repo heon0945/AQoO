@@ -4,11 +4,11 @@ services:
   frontend:
     container_name: aqoo-fe
     build:
-      context: ./aqoo-fe   # 실제 Next.js 프로젝트가 있는 폴더
+      context: ./frontend/aqoo-fe   # 실제 Next.js 프로젝트가 있는 폴더
     ports:
       - "3000:3000"
     volumes:
-      - ./aqoo:/app
+      - ./frontend/aqoo:/app
       - /app/node_modules
     environment:
       - NODE_ENV=production
