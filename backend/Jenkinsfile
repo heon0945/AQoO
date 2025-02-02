@@ -2,52 +2,15 @@ pipeline {
     agent any
 
     environment {
-        // Docker 이미지 이름 정의
+        // Docker 이미지 이름 (빌드 후, 해당 이미지를 사용하여 배포)
         DOCKER_IMAGE = "s12-webmobile1-sub1/s12p11e203:latest"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // GitLab 리포지토리에서 코드를 체크아웃합니다.
+                // GitLab에서 코드를 체크아웃 (Jenkinsfile은 backend 폴더 내에 위치했다고 가정)
                 checkout scm
-            }
-        }
-        
-        stage('Load Environment Variables') {
-            steps {
-                // Secret File으로 등록한 .env 파일을 불러와서 환경 변수들을 로드 (로그 출력)
-                withCredentials([file(credentialsId: 'backend-env-file', variable: 'ENV_FILE')]) {
-                    script {
-                        def envContent = readFile(env.ENV_FILE)
-                        def lines = envContent.split("\n")
-                        for (line in lines) {
-                            line = line.trim()
-                            if (line && !line.startsWith('#')) {
-                                def pair = line.split("=")
-                                if (pair.length >= 2) {
-                                    def key = pair[0].trim()
-                                    def value = pair[1].trim()
-                                    echo "Loaded env var: ${key}=${value}"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        stage('Prepare Build Context') {
-            steps {
-                script {
-                    // withCredentials 블록을 다시 사용하여 .env 파일을 빌드 컨텍스트에 작성합니다.
-                    withCredentials([file(credentialsId: 'backend-env-file', variable: 'ENV_FILE')]) {
-                        def envContent = readFile(env.ENV_FILE)
-                        // Jenkins 작업 디렉토리에서 backend/aqoo 폴더에 .env 파일 생성
-                        writeFile file: 'backend/aqoo/.env', text: envContent
-                        echo ".env file written to backend/aqoo/.env"
-                    }
-                }
             }
         }
         
@@ -55,7 +18,7 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker image: ${DOCKER_IMAGE}"
-                    // Dockerfile은 backend/aqoo 폴더에 있으므로 해당 경로로 이동합니다.
+                    // Dockerfile은 backend/aqoo 폴더에 있으므로 해당 디렉토리에서 빌드
                     dir('backend/aqoo') {
                         sh "docker build -t ${DOCKER_IMAGE} ."
                     }
@@ -66,14 +29,33 @@ pipeline {
         stage('Test') {
             steps {
                 echo "Running tests..."
-                // 테스트 명령어를 추가하세요.
+                // 필요 시 테스트 명령어를 추가 (예: 단위 테스트, 통합 테스트 등)
             }
         }
         
         stage('Deploy') {
             steps {
-                echo "Deploying application..."
-                // 배포 작업(예: docker push ${DOCKER_IMAGE})을 추가하세요.
+                script {
+                    // 기존 컨테이너(myapp)가 있으면 중지 및 삭제
+                    sh "docker stop myapp || true"
+                    sh "docker rm myapp || true"
+                    
+                    // 배포 시 환경변수 주입을 위해 Jenkins Secret File 자격증명을 사용
+                    // withCredentials로 자격증명(backend-env-file)을 불러와 임시 파일 경로를 DEPLOY_ENV_FILE 변수에 저장
+                    withCredentials([file(credentialsId: 'backend-env-file', variable: 'DEPLOY_ENV_FILE')]) {
+                        // Secret File 내용을 /tmp/.env로 복사 (컨테이너 실행 시 --env-file 옵션에 사용)
+                        sh "cp ${DEPLOY_ENV_FILE} /tmp/.env"
+                        
+                        // 배포: 새 컨테이너를 실행하면서 --env-file 옵션을 사용해 환경변수를 주입합니다.
+                        sh """
+                           docker run -d \
+                           --name myapp \
+                           -p 80:8080 \
+                           --env-file /tmp/.env \
+                           ${DOCKER_IMAGE}
+                        """
+                    }
+                }
             }
         }
     }

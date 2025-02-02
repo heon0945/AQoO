@@ -29,12 +29,9 @@ FROM eclipse-temurin:17-jdk as runtime
 # 작업 디렉토리 생성
 WORKDIR /app
 
-# 환경변수 파일 복사 (현재 프로젝트 루트에서 복사)
-COPY .env /home/app/.env
-
-# JAR 파일 복사 (빌드된 JAR 파일을 실행 환경으로 이동)
+# 빌드된 JAR 파일 복사 (빌드 단계에서 생성된 JAR 파일을 실행 환경으로 이동)
 COPY --from=builder /app/build/libs/*.jar app.jar
 
-# .env 파일 로드 및 실행
-CMD ["sh", "-c", "set -o allexport; source /home/app/.env; set +o allexport; java -jar app.jar"]
+# 애플리케이션 실행 (환경변수는 컨테이너 실행 시 주입됩니다)
+CMD ["java", "-jar", "app.jar"]
 
