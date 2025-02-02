@@ -41,10 +41,10 @@ pipeline {
                     sh "docker rm myapp || true"
                     
                     withCredentials([file(credentialsId: 'backend-env-file', variable: 'DEPLOY_ENV_FILE')]) {
-                        // Jenkins 작업공간 내에 쓰기 권한이 보장되는 디렉토리(tmp)를 생성하고 권한 변경
+                        // Jenkins 작업공간 내 쓰기 권한이 보장되는 디렉토리(tmp)를 생성하고 권한 변경
                         sh "mkdir -p ${WORKSPACE}/tmp && chmod 777 ${WORKSPACE}/tmp"
-                        // Secret File을 tmp 디렉토리로 복사
-                        sh "cp ${DEPLOY_ENV_FILE} ${WORKSPACE}/tmp/deploy.env"
+                        // cat 명령어를 사용해 파일 복사
+                        sh "cat ${DEPLOY_ENV_FILE} > ${WORKSPACE}/tmp/deploy.env"
                         echo ".env file copied to ${WORKSPACE}/tmp/deploy.env"
                         
                         // 배포: 새 컨테이너 실행 시 --env-file 옵션 사용
@@ -59,6 +59,7 @@ pipeline {
                 }
             }
         }
+
     }
     
     post {
