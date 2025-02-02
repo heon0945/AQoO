@@ -9,12 +9,12 @@ import java.util.Set;
 @Setter
 public class ChatRoomDto {
     private String roomId;  // 채팅방 ID
-    private String name;    // 채팅방 이름
+    private String ownerId; // 채팅방 생성자 (유저 ID)
     private Set<String> members; // 채팅방 멤버 목록
 
-    public ChatRoomDto(String roomId, String name, Set<String> members) {
+    public ChatRoomDto(String roomId, String ownerId, Set<String> members) {
         this.roomId = roomId;
-        this.name = name;
+        this.ownerId = ownerId;
         this.members = members;
     }
 }

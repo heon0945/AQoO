@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/v1/chatrooms") // ✅ API 경로 변경
+@RequestMapping("/api/v1/chatrooms")
 public class ChatRoomController {
 
     private final ChatRoomService chatRoomService;
@@ -21,7 +21,7 @@ public class ChatRoomController {
     @GetMapping
     public List<ChatRoomDto> getAllChatRooms() {
         return chatRoomService.getAllRooms().stream()
-                .map(room -> new ChatRoomDto(room.getId(), room.getName(), room.getMembers()))
+                .map(room -> new ChatRoomDto(room.getId(), room.getOwnerId(), room.getMembers()))
                 .collect(Collectors.toList());
     }
 
@@ -29,19 +29,13 @@ public class ChatRoomController {
     @GetMapping("/{roomId}")
     public ChatRoomDto getChatRoom(@PathVariable String roomId) {
         var room = chatRoomService.getRoom(roomId);
-        return new ChatRoomDto(room.getId(), room.getName(), room.getMembers());
+        return new ChatRoomDto(room.getId(), room.getOwnerId(), room.getMembers());
     }
 
     /** 채팅방 생성 */
     @PostMapping
-    public ChatRoomDto createChatRoom(@RequestParam String name) {
-        var room = chatRoomService.createRoom(name);
-        return new ChatRoomDto(room.getId(), room.getName(), room.getMembers());
-    }
-
-    /** 채팅방 삭제 */
-    @DeleteMapping("/{roomId}")
-    public void deleteChatRoom(@PathVariable String roomId) {
-        chatRoomService.deleteRoom(roomId);
+    public ChatRoomDto createChatRoom(@RequestParam String ownerId) {
+        var room = chatRoomService.createRoom(ownerId);
+        return new ChatRoomDto(room.getId(), room.getOwnerId(), room.getMembers());
     }
 }
