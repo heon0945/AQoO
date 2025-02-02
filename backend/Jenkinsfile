@@ -1,0 +1,82 @@
+pipeline {
+    agent any
+
+    // 기본 환경 변수 (Docker 이미지 이름 등)
+    environment {
+        DOCKER_IMAGE = "s12-webmobile1-sub1/s12p11e203:latest"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // GitLab 리포지토리에서 코드를 체크아웃합니다.
+                checkout scm
+            }
+        }
+        
+        stage('Load Environment Variables') {
+            steps {
+                // Jenkins 자격증명으로 등록된 Secret File을 통해 .env 파일을 로드합니다.
+                // 여기서는 credentialsId를 'backend-env-file'로 가정합니다.
+                withCredentials([file(credentialsId: 'backend-env-file', variable: 'ENV_FILE')]) {
+                    script {
+                        // .env 파일의 내용을 읽어와 각 라인을 파싱합니다.
+                        def envContent = readFile(env.ENV_FILE)
+                        def lines = envContent.split("\n")
+                        for (line in lines) {
+                            line = line.trim()
+                            // 빈 줄이나 주석(#)은 무시합니다.
+                            if (line && !line.startsWith('#')) {
+                                def pair = line.split("=")
+                                if (pair.length >= 2) {
+                                    def key = pair[0].trim()
+                                    def value = pair[1].trim()
+                                    // 현재 파이프라인의 환경 변수로 등록합니다.
+                                    env[key] = value
+                                    echo "Loaded env var: ${key}=${value}"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    echo "Building Docker image: ${DOCKER_IMAGE}"
+                    // Dockerfile이 위치한 디렉토리로 이동한 후, Docker 이미지를 빌드합니다.
+                    dir('aqoo') {
+                        sh "docker build -t ${DOCKER_IMAGE} ."
+                    }
+                }
+            }
+        }
+        
+        stage('Test') {
+            steps {
+                echo "Running tests..."
+                // 테스트 스크립트나 명령어를 추가합니다.
+                // 예: sh "docker run --rm ${DOCKER_IMAGE} ./run_tests.sh"
+            }
+        }
+        
+        stage('Deploy') {
+            steps {
+                echo "Deploying application..."
+                // 필요에 따라 Docker Hub에 push하거나, 배포 스크립트를 실행합니다.
+                // 예: sh "docker push ${DOCKER_IMAGE}"
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo "Pipeline completed."
+        }
+        failure {
+            echo "Pipeline failed."
+        }
+    }
+}
