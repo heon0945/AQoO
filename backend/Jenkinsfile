@@ -41,17 +41,17 @@ pipeline {
                     sh "docker rm myapp || true"
                     
                     // 배포 시 환경변수 주입을 위해 Jenkins Secret File 자격증명을 사용
-                    // withCredentials로 자격증명(backend-env-file)을 불러와 임시 파일 경로를 DEPLOY_ENV_FILE 변수에 저장
                     withCredentials([file(credentialsId: 'backend-env-file', variable: 'DEPLOY_ENV_FILE')]) {
-                        // Secret File 내용을 /tmp/.env로 복사 (컨테이너 실행 시 --env-file 옵션에 사용)
-                        sh "cp ${DEPLOY_ENV_FILE} /tmp/.env"
+                        // WORKSPACE 디렉토리에 .env 파일을 복사 (쓰기 권한이 보장됨)
+                        sh "cp ${DEPLOY_ENV_FILE} ${WORKSPACE}/deploy.env"
+                        echo ".env file copied to ${WORKSPACE}/deploy.env"
                         
                         // 배포: 새 컨테이너를 실행하면서 --env-file 옵션을 사용해 환경변수를 주입합니다.
                         sh """
                            docker run -d \
                            --name myapp \
                            -p 80:8080 \
-                           --env-file /tmp/.env \
+                           --env-file ${WORKSPACE}/deploy.env \
                            ${DOCKER_IMAGE}
                         """
                     }
