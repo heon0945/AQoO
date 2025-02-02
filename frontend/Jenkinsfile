@@ -1,7 +1,7 @@
 pipeline {
     agent any
     tools {
-        nodejs 'nodejs'  // 'nodejs'는 Global Tool Configuration에서 설정한 Node.js 이름입니다.
+        nodejs 'nodejs'  // Global Tool Configuration에서 설정한 Node.js 이름
     }
     stages {
         stage('Checkout') {
@@ -9,12 +9,13 @@ pipeline {
                 git branch: 'frontend', 
                     url: 'https://lab.ssafy.com/s12-webmobile1-sub1/S12P11E203.git',
                     credentialsId: 'songhun-gitlab'
-                sh 'ls -al'  // Git Clone 확인용
+                sh 'ls -al'  // 파일 구조 확인용
             }
         }
         stage('Build') {
             steps {
-                dir('aqoo-fe/frontend/aqoo-fe') {  // package.json이 있는 경로로 이동
+                dir('frontend/aqoo-fe') {  // ✅ package.json이 있는 위치로 변경
+                    sh 'ls -al'  // 폴더 내부 확인
                     sh 'npm install'
                     sh 'npm run build'
                 }
@@ -22,7 +23,8 @@ pipeline {
         }
         stage('Deploy') {
             steps {
-                dir('aqoo-fe/frontend') {  // Dockerfile이 있는 경로로 이동
+                dir('frontend') {  // ✅ Dockerfile이 있는 위치로 변경
+                    sh 'ls -al'  // 폴더 내부 확인
                     sh 'docker build -t frontend-app .'
                     sh 'docker run -d -p 3000:3000 frontend-app'
                 }
