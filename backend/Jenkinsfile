@@ -29,7 +29,7 @@ pipeline {
         stage('Test') {
             steps {
                 echo "Running tests..."
-                // 필요 시 테스트 명령어를 추가 (예: 단위 테스트, 통합 테스트 등)
+                // 테스트 명령어 추가 가능 (예: 단위 테스트, 통합 테스트 등)
             }
         }
         
@@ -41,25 +41,23 @@ pipeline {
                     sh "docker rm myapp || true"
                     
                     withCredentials([file(credentialsId: 'backend-env-file', variable: 'DEPLOY_ENV_FILE')]) {
-                        // Jenkins 작업공간 내 쓰기 권한이 보장되는 디렉토리(tmp)를 생성하고 권한 변경
-                        sh "mkdir -p ${WORKSPACE}/tmp && chmod 777 ${WORKSPACE}/tmp"
-                        // cat 명령어를 사용해 파일 복사
-                        sh "cat ${DEPLOY_ENV_FILE} > ${WORKSPACE}/tmp/deploy.env"
-                        echo ".env file copied to ${WORKSPACE}/tmp/deploy.env"
+                        // /tmp 디렉토리는 일반적으로 쓰기 권한이 있으므로, 여기로 파일을 복사합니다.
+                        // cp 대신 cat 명령어를 사용하여 파일 내용을 /tmp/deploy.env에 작성합니다.
+                        sh "cat ${DEPLOY_ENV_FILE} > /tmp/deploy.env"
+                        echo ".env file copied to /tmp/deploy.env"
                         
-                        // 배포: 새 컨테이너 실행 시 --env-file 옵션 사용
+                        // 배포: 새 컨테이너 실행 시 --env-file 옵션 사용하여 환경변수 주입
                         sh """
-                        docker run -d \
-                        --name myapp \
-                        -p 80:8080 \
-                        --env-file ${WORKSPACE}/tmp/deploy.env \
-                        ${DOCKER_IMAGE}
+                           docker run -d \
+                           --name myapp \
+                           -p 80:8080 \
+                           --env-file /tmp/deploy.env \
+                           ${DOCKER_IMAGE}
                         """
                     }
                 }
             }
         }
-
     }
     
     post {
