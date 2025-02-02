@@ -25,7 +25,7 @@ pipeline {
             steps {
                 dir('frontend') {  // ✅ Dockerfile이 있는 위치로 변경
                     sh 'ls -al'  // 폴더 내부 확인
-                    sh 'docker build -t frontend-app ./frontend'  // 빌드 컨텍스트 수정
+                    sh 'docker build -t frontend-app ./aqoo-fe'  // 빌드 컨텍스트를 ./aqoo-fe로 변경
                     sh 'docker run -d -p 3000:3000 frontend-app'
                 }
             }
