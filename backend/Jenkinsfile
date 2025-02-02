@@ -50,6 +50,7 @@ pipeline {
                         sh """
                            docker run -d \
                            --name myapp \
+                           --network host \
                            -p 80:8080 \
                            --env-file /tmp/deploy.env \
                            ${DOCKER_IMAGE}
