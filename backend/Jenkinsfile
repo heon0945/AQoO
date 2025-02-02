@@ -41,13 +41,13 @@ pipeline {
                     sh "docker rm myapp || true"
                     
                     withCredentials([file(credentialsId: 'backend-env-file', variable: 'DEPLOY_ENV_FILE')]) {
-                        // Jenkins 작업공간 내에 쓰기 권한이 보장되는 디렉토리(tmp)를 생성합니다.
-                        sh "mkdir -p ${WORKSPACE}/tmp"
+                        // Jenkins 작업공간 내에 쓰기 권한이 보장되는 디렉토리(tmp)를 생성하고 권한 변경
+                        sh "mkdir -p ${WORKSPACE}/tmp && chmod 777 ${WORKSPACE}/tmp"
                         // Secret File을 tmp 디렉토리로 복사
                         sh "cp ${DEPLOY_ENV_FILE} ${WORKSPACE}/tmp/deploy.env"
                         echo ".env file copied to ${WORKSPACE}/tmp/deploy.env"
                         
-                        // 배포: 새 컨테이너를 실행하면서 --env-file 옵션을 사용해 환경변수를 주입합니다.
+                        // 배포: 새 컨테이너 실행 시 --env-file 옵션 사용
                         sh """
                         docker run -d \
                         --name myapp \
@@ -58,8 +58,7 @@ pipeline {
                     }
                 }
             }
-}
-
+        }
     }
     
     post {
