@@ -7,20 +7,25 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'frontend', 
-		url: 'https://lab.ssafy.com/s12-webmobile1-sub1/S12P11E203.git',
-		credentialsId: 'songhun-gitlab'
+                    url: 'https://lab.ssafy.com/s12-webmobile1-sub1/S12P11E203.git',
+                    credentialsId: 'songhun-gitlab'
+                sh 'ls -al'  // Git Clone 확인용
             }
         }
         stage('Build') {
             steps {
-                sh 'npm install'
-                sh 'npm run build'
+                dir('aqoo-fe/frontend/aqoo-fe') {  // package.json이 있는 경로로 이동
+                    sh 'npm install'
+                    sh 'npm run build'
+                }
             }
         }
         stage('Deploy') {
             steps {
-                sh 'docker build -t frontend-app .'
-                sh 'docker run -d -p 3000:3000 frontend-app'
+                dir('aqoo-fe/frontend') {  // Dockerfile이 있는 경로로 이동
+                    sh 'docker build -t frontend-app .'
+                    sh 'docker run -d -p 3000:3000 frontend-app'
+                }
             }
         }
     }
