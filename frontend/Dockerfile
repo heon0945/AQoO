@@ -5,7 +5,7 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # 3. 전체 소스 코드 복사 (package.json, package-lock.json, 그리고 나머지 소스)
-COPY aqoo-fe/ ./  # 소스 코드 및 의존성 파일 복사
+COPY . ./  # 소스 코드 및 의존성 파일 복사
 
 # 4. 의존성 설치
 RUN npm install  # 의존성 설치
@@ -28,4 +28,4 @@ ENV PORT=3000
 EXPOSE 3000
 
 # 9. Next.js 실행
-CMD ["npm", "start"
+CMD ["npm", "start"]
