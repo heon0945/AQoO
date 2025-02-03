@@ -2,15 +2,22 @@ package org.com.aqoo.domain.aquarium.service;
 
 import lombok.RequiredArgsConstructor;
 import org.com.aqoo.domain.aquarium.dto.AquariumCreateRequestDto;
+import org.com.aqoo.domain.aquarium.dto.AquariumDetailResponseDto;
 import org.com.aqoo.domain.aquarium.dto.AquariumResponseDto;
+import org.com.aqoo.domain.aquarium.dto.FishCountDto;
 import org.com.aqoo.domain.aquarium.entity.Aquarium;
 import org.com.aqoo.domain.aquarium.repository.AquariumRepository;
+import org.com.aqoo.domain.fish.entity.FishType;
+import org.com.aqoo.domain.fish.repository.FishTypeRepository;
+import org.com.aqoo.domain.fish.repository.UserFishRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -18,6 +25,8 @@ import java.util.stream.Collectors;
 public class AquariumService {
 
     private final AquariumRepository aquariumRepository;
+    private final UserFishRepository userFishRepository;
+    private final FishTypeRepository fishTypeRepository;
 
     public List<AquariumResponseDto> getAquariumsByUserId(String userId) {
         List<Aquarium> aquariums = aquariumRepository.findByUserId(userId);
@@ -34,6 +43,17 @@ public class AquariumService {
             );
         }).collect(Collectors.toList());
     }
+
+    public AquariumDetailResponseDto getAquariumDetails(Integer aquariumId) {
+        Aquarium aquarium = aquariumRepository.findById(aquariumId)
+                .orElseThrow(() -> new IllegalArgumentException("어항을 찾을 수 없습니다."));
+
+        return new AquariumDetailResponseDto(aquarium.getAquariumBackgroundId(), new ArrayList<>());
+    }
+
+
+
+
 
     @Transactional
     public Aquarium createAquarium(AquariumCreateRequestDto requestDto) {

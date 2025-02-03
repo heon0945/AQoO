@@ -33,7 +33,7 @@ public class Aquarium {
     @Column(name = "user_id", nullable = false)
     private String userId;
 
-    @Column(name = "aquarium_background_id")
+    @Column(name = "aquarium_background_id", nullable = false)
     private Integer aquariumBackgroundId;
 
     // 추가적인 논리적 필드 (DB 컬럼 X)
