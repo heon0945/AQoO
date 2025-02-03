@@ -1,9 +1,10 @@
 import { User } from "@/store/authAtom";
-import axios from "axios";
+
+// import axios from "axios";
 
 // TODO 더미 말고 API 호출로 수정해줘야 할 것것
 
-const API_URL = "http://localhost:5000/api/auth"; // ✅ 백엔드 로그인 API URL
+// const API_URL = "http://localhost:5000/api/auth"; // ✅ 백엔드 로그인 API URL
 
 // ✅ 로그인된 사용자 정보 가져오기 (accessToken 이용)
 export const fetchUser: () => Promise<User | null> = async () => {
