@@ -18,9 +18,9 @@ FROM node:18-alpine AS runner
 WORKDIR /app
 
 # 7. 빌드된 결과물 복사
-COPY --from=builder /app/.next .next
+COPY --from=builder /.next .next
 COPY --from=builder /app/node_modules node_modules
-COPY --from=builder /app/public public
+COPY --from=builder /public public
 COPY --from=builder /app/package.json package.json
 
 # 8. 환경 변수 설정
