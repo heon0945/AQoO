@@ -33,7 +33,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                dir('frontend/aqoo-fe') {
+                dir('frontend') {
                     sh "docker build -t ${DOCKER_IMAGE} ."
                 }
             }
