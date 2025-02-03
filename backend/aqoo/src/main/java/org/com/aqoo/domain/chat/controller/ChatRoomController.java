@@ -34,8 +34,8 @@ public class ChatRoomController {
 
     /** 채팅방 생성 */
     @PostMapping
-    public ChatRoomDto createChatRoom(@RequestParam String ownerId) {
-        var room = chatRoomService.createRoom(ownerId);
+    public ChatRoomDto createChatRoom(@RequestParam String userId) {
+        var room = chatRoomService.createRoom(userId);
         return new ChatRoomDto(room.getId(), room.getOwnerId(), room.getMembers());
     }
 }

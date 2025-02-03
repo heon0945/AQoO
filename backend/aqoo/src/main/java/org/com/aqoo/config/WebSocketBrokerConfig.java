@@ -25,6 +25,7 @@ public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws") // webSocket 엔드포인트 설정
                 .setAllowedOriginPatterns("*") // 테스트 모든 도메인 허용
 //			.setAllowedOriginPatterns("http://localhost:3000") // 특정 도메인 허용
+                .addInterceptors(new WebSocketHandshakeInterceptor())
                 .withSockJS(); //SockJS 폴백 지원
     }
 }
