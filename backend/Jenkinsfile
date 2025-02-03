@@ -49,7 +49,7 @@ pipeline {
                         // 배포: 새 컨테이너 실행 시 --env-file 옵션 사용하여 환경변수 주입
                         sh """
                            docker run -d \
-                           --name myapp \
+                           --name backend \
                            --network host \
                            -p 8089:8089 \
                            --env-file /tmp/deploy.env \
