@@ -50,6 +50,7 @@ pipeline {
                         sh """
                            docker run -d \
                            --name myapp \
+                           --add-host=host.docker.internal:172.26.4.92
                            -p 80:8089 \
                            --env-file /tmp/deploy.env \
                            ${DOCKER_IMAGE}
