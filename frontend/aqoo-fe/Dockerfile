@@ -9,7 +9,7 @@ COPY package.json package-lock.json ./
 RUN npm install  # 의존성 설치
 
 # 4. 프로젝트 소스 코드 복사
-COPY frontend/aqoo-fe .  # 소스 코드 복사
+COPY . .  # 소스 코드 복사
 
 # 5. Next.js 앱 빌드
 RUN npm run build
