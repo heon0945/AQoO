@@ -1,34 +1,60 @@
 pipeline {
     agent any
-    tools {
-        nodejs 'nodejs'  // Global Tool Configuration에서 설정한 Node.js 이름
+
+    environment {
+        DOCKER_IMAGE = "frontend-app:latest"  // Docker 이미지 태그
+        CONTAINER_NAME = "frontend-container"  // 컨테이너 이름
     }
+
     stages {
         stage('Checkout') {
             steps {
                 git branch: 'frontend', 
                     url: 'https://lab.ssafy.com/s12-webmobile1-sub1/S12P11E203.git',
                     credentialsId: 'songhun-gitlab'
-                sh 'ls -al'  // 파일 구조 확인용
             }
         }
-        stage('Build') {
+
+        stage('Build Frontend') {
             steps {
-                dir('frontend/aqoo-fe') {  // ✅ package.json이 있는 위치로 변경
-                    sh 'ls -al'  // 폴더 내부 확인
+                dir('frontend/aqoo-fe') {  // Next.js 프로젝트 디렉토리
                     sh 'npm install'
                     sh 'npm run build'
                 }
             }
         }
-        stage('Deploy') {
+
+        stage('Build Docker Image') {
             steps {
-                dir('frontend') {  // Dockerfile이 있는 위치로 변경
-                    sh 'ls -al'  // 폴더 내부 확인
-                    sh 'docker build -t frontend-app .'
-                    sh 'docker run -d -p 3000:3000 frontend-app'
+                dir('frontend') {  // Dockerfile이 있는 위치
+                    sh "docker build -t ${DOCKER_IMAGE} ."
                 }
             }
+        }
+
+        stage('Deploy') {
+            steps {
+                script {
+                    // 기존 컨테이너 중지 및 삭제 (존재하는 경우)
+                    sh "docker stop ${CONTAINER_NAME} || true"
+                    sh "docker rm ${CONTAINER_NAME} || true"
+
+                    // 새 컨테이너 실행
+                    sh """
+                        docker run -d --name ${CONTAINER_NAME} \
+                        -p 3000:3000 ${DOCKER_IMAGE}
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline completed."
+        }
+        failure {
+            echo "Pipeline failed."
         }
     }
 }
