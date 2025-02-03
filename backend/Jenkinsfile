@@ -52,7 +52,7 @@ pipeline {
                            --name myapp \
                            --network mynetwork \
                            --add-host=host.docker.internal:172.26.4.92 \
-                           -p 8080:8080 \
+                           -p 8989:8989 \
                            --env-file /tmp/deploy.env \
                            ${DOCKER_IMAGE}
                         """
