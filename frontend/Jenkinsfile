@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "frontend-app:latest"
-        CONTAINER_NAME = "frontend-container"
+        CONTAINER_NAME = "frontend"
     }
 
     stages {
