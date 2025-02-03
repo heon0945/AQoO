@@ -5,7 +5,7 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # 3. 전체 소스 코드 복사 (package.json, package-lock.json, 그리고 나머지 소스)
-COPY ./frontend/aqoo-fe/ ./  # frontend/aqoo-fe 경로에서 소스를 복사
+COPY aqoo-fe/ ./  # frontend/aqoo-fe 경로에서 소스를 복사
 
 # 4. 의존성 설치
 RUN npm install  # 의존성 설치
