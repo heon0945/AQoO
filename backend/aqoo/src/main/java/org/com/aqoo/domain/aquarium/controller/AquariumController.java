@@ -1,9 +1,12 @@
 package org.com.aqoo.domain.aquarium.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.com.aqoo.domain.aquarium.dto.AquariumCreateRequestDto;
 import org.com.aqoo.domain.aquarium.dto.AquariumResponseDto;
+import org.com.aqoo.domain.aquarium.entity.Aquarium;
 import org.com.aqoo.domain.aquarium.service.AquariumService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -26,5 +29,11 @@ public class AquariumController {
         response.put("count", aquariums.size());
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<Aquarium> createAquarium(@Validated @RequestBody AquariumCreateRequestDto requestDto) {
+        Aquarium createdAquarium = aquariumService.createAquarium(requestDto);
+        return ResponseEntity.ok(createdAquarium);
     }
 }
