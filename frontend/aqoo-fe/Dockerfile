@@ -5,11 +5,11 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # 3. package.json과 lock 파일 복사 후 의존성 설치
-COPY package.json package-lock.json ./  # 상대 경로 수정
+COPY ./frontend/aqoo-fe/package.json ./frontend/aqoo-fe/package-lock.json ./
 RUN npm install
 
 # 4. 프로젝트 소스 코드 복사
-COPY . .  # 상대 경로 수정
+COPY ./frontend/aqoo-fe .  # 상대 경로 수정
 
 # 5. Next.js 앱 빌드
 RUN npm run build
