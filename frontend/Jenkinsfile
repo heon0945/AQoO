@@ -1,0 +1,65 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "frontend-app:latest"
+        CONTAINER_NAME = "frontend"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'frontend',
+                    url: 'https://lab.ssafy.com/s12-webmobile1-sub1/S12P11E203.git',
+                    credentialsId: 'songhun-gitlab'
+            }
+        }
+
+        stage('Check Node Version') {
+            steps {
+                // Node.js가 설치되어 있는지 확인
+                sh 'npm --version'  // npm 버전 출력
+            }
+        }
+
+        stage('Build Frontend') {
+            steps {
+                dir('frontend/aqoo-fe') {
+                    sh 'npm install'
+                    sh 'npm run build'
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir('frontend') {
+                    sh "docker build -t ${DOCKER_IMAGE} ."
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                script {
+                    echo "Deploying container with name: ${CONTAINER_NAME}"
+                    sh "docker stop ${CONTAINER_NAME} || true"
+                    sh "docker rm ${CONTAINER_NAME} || true"
+                    sh """
+                        docker run -d --name ${CONTAINER_NAME} --network host \
+                        -p 3000:3000 ${DOCKER_IMAGE}
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline completed."
+        }
+        failure {
+            echo "Pipeline failed."
+        }
+    }
+}
