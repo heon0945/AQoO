@@ -36,9 +36,9 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // 기존 컨테이너(myapp)가 있으면 중지 및 삭제
-                    sh "docker stop myapp || true"
-                    sh "docker rm myapp || true"
+                    // 기존 컨테이너(backend)가 있으면 중지 및 삭제
+                    sh "docker stop backend || true"
+                    sh "docker rm backend || true"
                     
                     withCredentials([file(credentialsId: 'backend-env-file', variable: 'DEPLOY_ENV_FILE')]) {
                         // /tmp 디렉토리는 일반적으로 쓰기 권한이 있으므로, 여기로 파일을 복사합니다.
