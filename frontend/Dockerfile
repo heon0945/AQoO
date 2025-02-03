@@ -4,12 +4,11 @@ FROM node:18-alpine AS builder
 # 2. 작업 디렉토리 설정
 WORKDIR /app
 
-# 3. package.json과 lock 파일 복사 후 의존성 설치
-COPY frontend/aqoo-fe/package.json frontend/aqoo-fe/package-lock.json ./  # 상대 경로 수정
-RUN npm install
+# 3. 전체 소스 코드 복사 (package.json, package-lock.json, 그리고 나머지 소스)
+COPY aqoo-fe/ /app/
 
-# 4. 프로젝트 소스 코드 복사
-COPY frontend/aqoo-fe .  # 상대 경로 수정
+# 4. 의존성 설치
+RUN npm install
 
 # 5. Next.js 앱 빌드
 RUN npm run build
@@ -18,7 +17,7 @@ RUN npm run build
 FROM node:18-alpine AS runner
 WORKDIR /app
 
-# 7. 빌드된 결과물을 복사
+# 7. 빌드된 결과물 복사
 COPY --from=builder /app/.next .next
 COPY --from=builder /app/node_modules node_modules
 COPY --from=builder /app/public public
