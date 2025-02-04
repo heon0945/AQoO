@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MyFishTank</title>
+  </head>
+  <body>
+    <div class="main">
+      <div class="buttons-bg">
+        <button>Home</button>
+        <button>Logout</button>
+      </div>
+      <div class="myPage-container">
+        <div class="wrapper">
+          <input class="radio" type="radio" name="group" id="one" checked />
+          <input class="radio" type="radio" name="group" id="two" />
+          <div class="tabs">
+            <label class="tab" id="one-tab" for="one">도감</label>
+            <label class="tab" id="two-tab" for="two">커스텀</label>
+          </div>
+          <button class="go-to-fishtank">어항관리</button>
+          <div class="fishList-container">
+            <div class="fishList">
+              <div class="panels">
+                <div class="panel" id="one-panel">
+                  <div class="panel-title portrait">
+                    <div class="inner-portrait">
+                      <img src="대표이미지샘플.png" style="width: 130px; height: auto" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="panels">
+                <div class="panel" id="two-panel">
+                  <div class="panel-title portrait">
+                    <div class="inner-portrait">
+                      <img src="대표이미지샘플.png" style="width: 130px; height: auto" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+  <style>
+    body {
+      /* 배경설정 */
+      background: url(배경샘플.png) lightgray 50% / cover no-repeat;
+      background-size: cover;
+    }
+
+    .main {
+      display: flex;
+      /* width: 1920px;
+      height: 1080px;
+      flex-shrink: 0; */
+    }
+    .buttons-bg {
+      /* 좌측 버튼 입력 */
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      margin: 10px;
+    }
+
+    button {
+      /* 사이즈 */
+      min-width: 80px;
+      width: auto;
+      height: 40px;
+      flex-shrink: 0;
+
+      /* 버튼 디자인 */
+      border-radius: 10px;
+      border: 1px solid #040303;
+      background: #fff;
+      box-shadow: -2px -2px 0px 1px rgba(0, 0, 0, 0.5) inset;
+
+      /* 텍스트 컬러 */
+      color: #070707;
+      text-align: center;
+      font-family: "NeoDunggeunmo Pro";
+      font-size: 24px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: normal;
+    }
+
+    /* 페이지 감싸는 부분 */
+    .myPage-container {
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    /* 대표물고기 밖 테두리 */
+    .portrait {
+      /* 사이즈 */
+      width: 170px;
+      height: 170px;
+      flex-shrink: 0;
+      margin-top: auto;
+      margin-bottom: auto;
+      margin-left: 20px;
+      margin-right: 20px;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      /* 디자인 */
+      border-radius: 10px;
+      border: 1px solid #000;
+      background: #fff;
+      box-shadow: -2px -2px 0px 1px rgba(0, 0, 0, 0.5) inset;
+    }
+
+    /* 대표물고기 안 테두리 */
+    .inner-portrait {
+      /* 사이즈 */
+      width: 150px;
+      height: 150px;
+      flex-shrink: 0;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      /* 디자인 */
+      border: 1px solid #000;
+      background: #fff;
+      box-shadow: 1px 1px 0px 1px rgba(0, 0, 0, 0.25) inset;
+    }
+
+    /* 도감 부분 */
+
+    .wrapper {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .tab {
+      position: relative;
+      left: 30px;
+
+      cursor: pointer;
+      display: inline-block;
+
+      width: 80px;
+      height: 20px;
+      flex-shrink: 0;
+
+      padding: 10px 20px;
+
+      border-radius: 10px 10px 0px 0px;
+      border-top: 1px solid #1c5e8d;
+      border-right: 1px solid #1c5e8d;
+      border-left: 1px solid #1c5e8d;
+      background: #f0f0f0;
+      box-shadow: -1px 0px 0px 2px rgba(0, 0, 0, 0.25) inset;
+
+      color: #070707;
+      text-align: center;
+      font-family: "NeoDunggeunmo Pro";
+      font-size: 24px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: normal;
+    }
+
+    .go-to-fishtank {
+      position: absolute;
+      right: 0px;
+    }
+
+    .fishList-container {
+      width: 1300px;
+      height: 400px;
+      margin: 0;
+      padding: 20px;
+
+      border-radius: 10px;
+      border: 2px solid #1c5e8d;
+      background: #31a9ff;
+      box-shadow: -2px -2px 0px 1px rgba(0, 0, 0, 0.25) inset;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .fishList {
+      background-color: white;
+      width: 100%;
+      height: 100%;
+
+      border-radius: 30px;
+      background: #fff;
+    }
+
+    .panels {
+      background-color: white;
+      overflow: hidden;
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel-title {
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+
+    p {
+      font-size: 1.5em;
+      color: blue;
+      text-align: center;
+    }
+
+    .radio {
+      display: none;
+    }
+
+    /* display: none인 설명창을 각 조건에 따라 block해주기 */
+    #one:checked ~ .fishList-container .fishList .panels #one-panel,
+    #two:checked ~ .fishList-container .fishList .panels #two-panel {
+      display: block;
+    }
+
+    #one:checked ~ .tabs #one-tab,
+    #two:checked ~ .tabs #two-tab {
+      background-color: #31a9ff;
+      color: #000;
+      border-top: 3px solid #000;
+    }
+  </style>
+</html>
