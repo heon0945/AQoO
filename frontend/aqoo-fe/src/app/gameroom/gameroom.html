@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>방만들기</title>
+    <style>
+        /* 전체 화면 (배경 이미지 포함) */
+        body {
+            margin: 0;
+            padding: 0;
+            background: url("background.png") no-repeat center center/cover; 
+            font-family: 'NeoDunggeunmo Pro', sans-serif;
+        }
+
+        /* 채팅 컨테이너 */
+        .chat-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* BACK 버튼 (왼쪽 상단 고정) */
+        .back-button {
+            position: absolute;
+            top: 2vh;
+            left: 2vw;
+            width: 8vw;
+            height: 5vh;
+            background: #ffffff;
+            border: 2px solid #000000;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: inset -2px -2px 0px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        /* 채팅 패널 (친구 & 참여자 리스트) */
+        .chat-panel {
+            width: 60vw;
+            height: 70vh;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 3vw;
+            background: rgba(63, 183, 147, 0.45);
+            border: 2px solid #1c5e8d;
+            box-shadow: inset -2px -2px 0px 4px rgba(0, 0, 0, 0.25);
+            border-radius: 10px;
+            padding: 2vh;
+        }
+
+        /* 친구 & 참여자 리스트 박스 */
+        .participant-box {
+            width: 20vw;
+            height: 60vh;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid #000000;
+            box-shadow: inset 1px 1px 0px 3px rgba(0, 0, 0, 0.25);
+            border-radius: 10px;
+            padding: 1vw;
+            text-align: center;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        /* 참여자 리스트 */
+        .user-list {
+            width: 100%;
+            height: calc(100% - 7vh);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1vh;
+            padding-bottom: 2vh;
+        }
+
+        /* 검색 입력창 + 버튼 컨테이너 */
+        .search-container {
+            position: absolute;
+            bottom: 1vh;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5vw;
+            width: 90%;
+        }
+
+        /* 검색 입력창 */
+        .search-box {
+            flex-grow: 1;
+            height: 4vh;
+            font-size: 1rem;
+            border-radius: 5px;
+        }
+
+        /* 검색 버튼 */
+        .search-button {
+            width: 5vw;
+            height: 4vh;
+            font-size: 1rem;
+            background: #1a1d81;
+            color: #ffffff;
+            text-align: center;
+            border-radius: 5px;
+        }
+
+        /* 만들기 버튼 */
+        .create-button {
+            width: 15vw;
+            height: 6vh;
+            background: #00ff00;
+            border: 2px solid #000000;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            margin-top: 2vh;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <button class="back-button">BACK</button>
+
+        <div class="chat-panel">
+            <!-- 친구 리스트 -->
+            <div class="participant-box">
+                <p>친구 4</p>
+                <div class="user-list">
+                    <p>닉네임 1</p>
+                    <p>닉네임 2</p>
+                    <p>닉네임 3</p>
+                    <p>닉네임 4</p>
+                </div>
+                <div class="search-container">
+                    <input class="search-box" placeholder="아이디를 입력하세요." />
+                    <button class="search-button">검색</button>
+                </div>
+            </div>
+
+            <!-- 참여자 리스트 -->
+            <div class="participant-box">
+                <p>참여자 2</p>
+                <div class="user-list">
+                    <p>닉네임 1</p>
+                    <p>닉네임 2</p>
+                </div>
+                <div class="search-container">
+                    <input class="search-box" placeholder="아이디를 입력하세요." />
+                    <button class="search-button">검색</button>
+                </div>
+            </div>
+        </div>
+
+        <button class="create-button">만들기</button>
+    </div>
+</body>
+</html>
