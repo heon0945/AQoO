@@ -8,8 +8,8 @@ import org.com.aqoo.domain.aquarium.dto.FishCountDto;
 import org.com.aqoo.domain.aquarium.entity.Aquarium;
 import org.com.aqoo.domain.aquarium.repository.AquariumRepository;
 import org.com.aqoo.domain.fish.entity.FishType;
-import org.com.aqoo.domain.fish.repository.FishTypeRepository;
-import org.com.aqoo.domain.fish.repository.UserFishRepository;
+import org.com.aqoo.repository.FishTypeRepository;
+import org.com.aqoo.repository.UserFishRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

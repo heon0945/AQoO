@@ -1,9 +1,7 @@
 package org.com.aqoo.domain.auth.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.com.aqoo.domain.auth.dto.ExpUpRequest;
-import org.com.aqoo.domain.auth.dto.ExpUpResponse;
-import org.com.aqoo.domain.auth.dto.UserInfoResponse;
+import org.com.aqoo.domain.auth.dto.*;
 import org.com.aqoo.domain.auth.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +18,13 @@ public class UserController {
     public ResponseEntity<UserInfoResponse> getUserInfo(@PathVariable String userId) {
         UserInfoResponse userInfo = userService.getUserInfo(userId);
         return ResponseEntity.ok(userInfo);
+    }
+
+    // 회원 정보 수정
+    @PostMapping
+    public ResponseEntity<UpdateUserResponse> updateUser(@RequestBody UpdateUserRequest request) {
+        UpdateUserResponse response = userService.updateUser(request);
+        return ResponseEntity.ok(response);
     }
 
     // 경험치 증가 & 레벨업
