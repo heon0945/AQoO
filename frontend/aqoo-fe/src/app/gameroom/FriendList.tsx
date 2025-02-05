@@ -13,7 +13,10 @@ export default function FriendList() {
 
   const handleAddParticipant = (friend: Friend) => {
     // 참가자 추가 최대 5명으로 제한
-    // if ~~~
+    if (participants.length >= 5) {
+      alert("최대 5명까지만 초대할 수 있습니다!")
+      return;
+    }
     // 친구를 참가자로 추가하는 함수
     if (!participants.some((p) => p.id === friend.id)) {
       setParticipants([...participants, friend]); // 참가자 목록에 추가
@@ -25,11 +28,11 @@ export default function FriendList() {
   if (error) return <p>Error loading friends.</p>;
 
   return (
-    <div className="w-96 h-[450px] bg-white bg-opacity-80 border border-black rounded-lg p-1">
+    <div className="w-96 h-[450px] bg-white bg-opacity-70 border border-black rounded-lg p-4">
       <p className="font-bold mb-2">친구 목록</p>
       <div className="overflow-y-auto h-[400px] flex flex-col gap-2">
         {friends.map((friend) => (
-          <div key={friend.id} className="flex justify-between items-center border border-black px-2">
+          <div key={friend.id} className="flex justify-between items-center border border-black rounded px-2">
             {/* 물고기 이미지 + 유저 정보 */}
             <div className="flex items-center gap-3 p-1">
               <img 
@@ -40,6 +43,7 @@ export default function FriendList() {
               <div>
                 <p className="text-xs">Lv.{friend.level}</p>
                 <p className="text-lg font-bold">{friend.nickname}</p>
+                <p className="text-sm">{friend.id}</p>
               </div>
             </div>
 

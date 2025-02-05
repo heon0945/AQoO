@@ -18,14 +18,18 @@ export default function ParticipantList() {
       <div className="overflow-y-auto h-72 flex flex-col gap-2">
         {participants.length > 0 ? (
           participants.map((participant) => (
-            <div key={participant.id} className="flex justify-between items-center p-2 border rounded-lg">
+            <div key={participant.id} className="flex justify-between items-center px-2 border rounded-lg">
               <div className="flex items-center gap-3">
                 <img 
                   src={participant.fishImage?.trim() !== "" ? participant.fishImage : "/fish/default.png"}
                   alt="참가자 물고기"
                   className="w-8 h-8 rounded-full border"
                 />
-                <span>{participant.nickname}</span>
+                <div>
+                <p className="text-xs">Lv.{participant.level}</p>
+                <p className="text-lg font-bold">{participant.nickname}</p>
+                <p className="text-sm">{participant.id}</p>
+                </div>
               </div>
               <button
                 className="px-3 py-1 bg-red-500 text-white rounded"
