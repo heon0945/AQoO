@@ -12,6 +12,9 @@ const config: Config = {
         background: "rgb(var(--background) / <alpha-value>)",
         foreground: "rgb(var(--foreground) / <alpha-value>)",
       },
+      fontFamily: {
+        pretendard: ["Pretendard", "sans-serif"],
+      }
     },
   },
   plugins: [],
