@@ -40,7 +40,7 @@ export default function ParticipantList() {
             </div>
           ))
         ) : (
-          <p className="text-gray-500">참가자가 없습니다.</p>
+          <p className="text-gray-500 text-center text-2xl">참가자가 없습니다.</p>
         )}
       </div>
     </div>
