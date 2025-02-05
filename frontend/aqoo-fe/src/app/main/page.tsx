@@ -3,12 +3,15 @@
 import React, { useEffect, useState } from "react";
 
 import BottomMenu from "@/app/main/BottomMenuBar"; // 하단 메뉴바 컴포넌트
+import FriendsList from "./FriendList";
+import Image from "next/image";
 import Link from "next/link";
 import { Settings } from "lucide-react";
 
 export default function MainPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [background, setBackground] = useState("/background-1.png");
+  const [isFriendsOpen, setIsFriendsOpen] = useState(false); // 친구 목록 상태 추가
 
   // localStorage에서 기존 설정된 배경 불러오기
   useEffect(() => {
@@ -28,14 +31,20 @@ export default function MainPage() {
     <div className="relative w-full h-screen">
       {/* 배경 이미지 + 투명 레이어 */}
       <div
-        className="absolute inset-0 bg-cover bg-center before:absolute before:inset-0 before:bg-white/30"
+        className="absolute inset-0 bg-cover bg-center w-screen h-screen before:absolute before:inset-0 before:bg-white/30"
         style={{ backgroundImage: `url(${background})` }}
       ></div>
-
-      {/* 상단 네비게이션 */}
+      {/* <Image
+        src="http://13.124.6.53/images/watermelon.png"
+        alt="Watermelon"
+        className="absolute top-40 left-60"
+        width={200}
+        height={300}
+      /> */}
+      ;{/* 상단 네비게이션 */}
       <div className="absolute top-4 left-4 z-10 mt-2 ml-10">
         <Link href="/">
-          <span className="text-white text-5xl font-bold">AQoO</span>
+          <span className="text-white text-5xl hover:text-yellow-300 ">AQoO</span>
         </Link>
       </div>
       <button
@@ -44,10 +53,10 @@ export default function MainPage() {
       >
         <Settings className="w-6 h-6 text-white" />
       </button>
-
       {/* 하단 메뉴바 */}
-      <BottomMenu />
-
+      <BottomMenu setIsFriendsOpen={setIsFriendsOpen} />
+      {/* 친구 목록 */}
+      {isFriendsOpen && <FriendsList onClose={() => setIsFriendsOpen(false)} />}
       {/* 설정 모달 */}
       {isSettingsOpen && (
         <div className="absolute top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-20">
@@ -62,7 +71,6 @@ export default function MainPage() {
           </div>
         </div>
       )}
-
       {/* 배경 변경 버튼 */}
       {/* <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white p-4 rounded-lg shadow-lg z-10">
         <p className="text-center font-bold">배경 변경</p>
