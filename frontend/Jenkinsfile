@@ -27,7 +27,6 @@ pipeline {
                 dir('frontend/aqoo-fe') {
                     sh 'npm install'
                     sh 'npm run build'
-		    sh 'npm run export'  // Next.js 정적 파일 빌드
                 }
             }
         }
