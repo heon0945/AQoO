@@ -17,6 +17,8 @@ export default function ChatPage() {
         if (savedParticipants) {
             setParticipants(JSON.parse(savedParticipants) as Friend[]);
         }
+
+        // const gameparticipansts = 
     }, []);
 
     return (
