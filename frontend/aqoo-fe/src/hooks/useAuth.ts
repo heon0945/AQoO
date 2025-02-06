@@ -1,52 +1,53 @@
-import { User, authState } from "@/store/authAtom";
-import { fetchUser, login, logout } from "@/services/authService";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-import { useEffect } from "react";
+// src/hooks/useAuth.ts
 import { useRecoilState } from "recoil";
+import { authAtom } from "@/store/authAtom";
+import { login as apiLogin, logout as apiLogout, fetchUser as apiFetchUser } from "@/services/authService";
 
-// ✅ 현재 로그인 상태 확인
 export const useAuth = () => {
-  const [auth, setAuth] = useRecoilState(authState);
+  const [auth, setAuth] = useRecoilState(authAtom);
 
-  const { data: user } = useQuery<User | null>({
-    queryKey: ["user"],
-    queryFn: fetchUser,
-    staleTime: 1000 * 60 * 5,
-  });
+  /**
+   * 로그인 함수
+   * - apiLogin 호출 후 반환된 데이터를 기반으로 accessToken과 사용자 id를 Recoil 상태에 저장합니다.
+   */
+  const login = async (id: string, pw: string): Promise<void> => {
+    try {
+      const user = await apiLogin(id, pw);
+      const accessToken = localStorage.getItem("accessToken") || undefined;
+      setAuth({
+        isAuthenticated: true,
+        user: { id }, // 입력받은 id를 그대로 사용자 식별자로 사용합니다.
+        accessToken,
+      });
+    } catch (error: any) {
+      throw new Error(error.message || "로그인 중 오류가 발생했습니다.");
+    }
+  };
 
-  useEffect(() => {
-    setAuth({ user: user || null, isAuthenticated: !!user });
-  }, [user, setAuth]);
+  /**
+   * 로그아웃 함수
+   * - apiLogout 호출 후 Recoil 상태를 초기화합니다.
+   */
+  const logout = async (): Promise<void> => {
+    await apiLogout();
+    setAuth({ isAuthenticated: false });
+  };
 
-  return { user, isAuthenticated: auth.isAuthenticated };
-};
+  /**
+   * 저장된 accessToken을 이용해 사용자 정보를 불러와 상태를 업데이트합니다.
+   */
+  const fetchUser = async (): Promise<void> => {
+    const user = await apiFetchUser();
+    if (user) {
+      setAuth({
+        isAuthenticated: true,
+        user,
+        accessToken: localStorage.getItem("accessToken") || undefined,
+      });
+    } else {
+      setAuth({ isAuthenticated: false });
+    }
+  };
 
-// ✅ 로그인 요청
-export const useLogin = () => {
-  const [, setAuth] = useRecoilState(authState);
-  const queryClient = useQueryClient(); // ✅ React Query의 캐시 관리 객체
-
-  return useMutation({
-    mutationFn: ({ username, password }: { username: string; password: string }) => login(username, password),
-    onSuccess: (data: User) => {
-      setAuth({ user: data, isAuthenticated: true });
-      queryClient.invalidateQueries({ queryKey: ["user"] });
-    },
-  });
-};
-
-// ✅ 로그아웃 요청
-export const useLogout = () => {
-  const [, setAuth] = useRecoilState(authState);
-  const queryClient = useQueryClient(); // ✅ React Query의 캐시 관리 객체
-
-  return useMutation({
-    mutationFn: logout,
-    onSuccess: () => {
-      setAuth({ user: null, isAuthenticated: false });
-      // ✅ 로그아웃 후 `fetchUser()` 실행하여 상태 초기화
-      queryClient.invalidateQueries({ queryKey: ["user"] });
-    },
-  });
+  return { auth, login, logout, fetchUser };
 };
