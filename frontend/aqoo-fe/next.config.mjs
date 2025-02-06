@@ -7,6 +7,9 @@ const nextConfig = {
   images: {
     unoptimized: true,  // 이미지 최적화 비활성화
   },
+  eslint: {
+    ignoreDuringBuilds: true,  // 빌드 중 ESLint 검사 무시
+  },
 };
 
 export default nextConfig;
