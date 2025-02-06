@@ -15,10 +15,10 @@ pipeline {
             }
         }
 
-        stage('Check Node Version') {
+        stage('Check Node & NPM Version') {
             steps {
-                // Node.js가 설치되어 있는지 확인
-                sh 'npm --version'  // npm 버전 출력
+                sh 'node --version'  // Node.js 버전 확인
+                sh 'npm --version'   // npm 버전 확인
             }
         }
 
@@ -27,6 +27,7 @@ pipeline {
                 dir('frontend/aqoo-fe') {
                     sh 'npm install'
                     sh 'npm run build'
+		    sh 'npm run export'  // Next.js 정적 파일 빌드
                 }
             }
         }
@@ -38,16 +39,22 @@ pipeline {
                 }
             }
         }
+	
+	stage('Stop & Remove Old Container') {
+            steps {
+                script {
+                    sh "docker stop ${CONTAINER_NAME} || true"
+                    sh "docker rm ${CONTAINER_NAME} || true"
+                }
+            }
+        }
 
         stage('Deploy') {
             steps {
                 script {
-                    echo "Deploying container with name: ${CONTAINER_NAME}"
-                    sh "docker stop ${CONTAINER_NAME} || true"
-                    sh "docker rm ${CONTAINER_NAME} || true"
                     sh """
-                        docker run -d --name ${CONTAINER_NAME} --network host \
-                        -p 3000:3000 ${DOCKER_IMAGE}
+                        docker run -d --name ${CONTAINER_NAME} \
+                        -p 80:80 ${DOCKER_IMAGE}
                     """
                 }
             }
@@ -57,6 +64,7 @@ pipeline {
     post {
         always {
             echo "Pipeline completed."
+	    sh "docker ps -a"
         }
         failure {
             echo "Pipeline failed."

@@ -1,31 +1,29 @@
-# 1. Node.js 공식 이미지 사용 (Next.js 권장 버전)
+# 1. Next.js 빌드를 위한 Node.js 이미지 사용
 FROM node:18-alpine AS builder
 
 # 2. 작업 디렉토리 설정
 WORKDIR /app
 
-# 3. 전체 소스 코드 복사 (package.json, package-lock.json, 그리고 나머지 소스)
+# 3. Next.js 프로젝트 복사 (aqoo-fe 폴더를 고려하여 수정)
 COPY aqoo-fe/ /app/
 
 # 4. 의존성 설치
 RUN npm install
 
-# 5. Next.js 앱 빌드
+# 5. Next.js 정적 파일 빌드 (next export 사용)
 RUN npm run build
+RUN npm run export
 
-# 6. 실행을 위한 환경 설정
-FROM node:18-alpine AS runner
-WORKDIR /app
+# 6. Nginx를 사용하는 이미지로 변경
+FROM nginx:alpine
 
-# 7. 빌드된 결과물 복사
-COPY --from=builder /app/.next .next
-COPY --from=builder /app/node_modules node_modules
-COPY --from=builder /app/public public
-COPY --from=builder /app/package.json package.json
+# 7. Nginx 설정 파일 복사 (frontend/nginx.conf를 적용)
+COPY nginx.conf /etc/nginx/nginx.conf
 
-# 8. 환경 변수 설정
-ENV PORT=3000
-EXPOSE 3000
+# 8. Next.js 정적 파일을 Nginx 기본 html 폴더로 복사
+COPY --from=builder /app/out /usr/share/nginx/html
 
-# 9. Next.js 실행
-CMD ["npm", "start"]
+# 9. 컨테이너 실행 시 Nginx 실행
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+
