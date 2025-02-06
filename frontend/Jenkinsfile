@@ -31,4 +31,35 @@ pipeline {
             }
         }
 
-        stage('Build D
+        stage('Build Docker Image') {
+            steps {
+                dir('frontend') {
+                    sh "docker build -t ${DOCKER_IMAGE} ."
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                script {
+                    echo "Deploying container with name: ${CONTAINER_NAME}"
+                    sh "docker stop ${CONTAINER_NAME} || true"
+                    sh "docker rm ${CONTAINER_NAME} || true"
+                    sh """
+                        docker run -d --name ${CONTAINER_NAME} --network host \
+                        -p 80:80 ${DOCKER_IMAGE}
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline completed."
+        }
+        failure {
+            echo "Pipeline failed."
+        }
+    }
+}
