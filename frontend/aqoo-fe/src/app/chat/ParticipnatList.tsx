@@ -17,14 +17,12 @@ export default function ChatParticipantList() {
             key={participant.id} 
             className="flex justify-between items-center px-3 py-2 border rounded-md bg-gray-100"
           >
-            {/* 이 부분만 스크롤 가능 */}
-            <div className="overflow-y-auto max-h-[80px] pr-2">
-              <p className="text-sm font-bold">Lv.{participant.level} {participant.nickname}</p>
-            </div>
-
-            {/* 참가자 준비 상태 표시 */}
-            <p className={`text-xs font-semibold ${participant.status === "READY" ? "text-green-500" : "text-gray-500"}`}>
-              {participant.status}
+            {/* 닉네임 + 레벨 + 상태 */}
+            <p className="text-sm font-bold flex items-center gap-2">
+              Lv.{participant.level} {participant.nickname} 
+              <span className={`text-xs font-semibold ${participant.status === "READY" ? "text-green-500" : "text-gray-500"}`}>
+                ({participant.status})
+              </span>
             </p>
           </div>
         ))}
