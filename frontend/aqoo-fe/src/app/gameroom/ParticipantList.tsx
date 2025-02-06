@@ -3,15 +3,19 @@
 import { useRecoilState } from "recoil";
 import { participantsState, addedFriendsState, Friend } from "@/store/participantAtom";
 
+import { useEffect } from "react";
+
+
+
 export default function ParticipantList() {
   const [participants, setParticipants] = useRecoilState(participantsState);
   const [addedFriends, setAddedFriends] = useRecoilState(addedFriendsState);
-
+  
   const handleRemoveParticipant = (participant: Friend) => {
     setParticipants(participants.filter((p) => p.id !== participant.id)); // 참가자 목록에서 제거
     setAddedFriends(addedFriends.filter((id) => id !== participant.id)); // 추가된 친구 목록에서 제거
   };
-
+  
   return (
     <div className="w-96 h-[450px] bg-white bg-opacity-70 border border-black rounded-lg p-4">
       <p className="font-bold mb-2">참여자 목록</p>

@@ -31,7 +31,7 @@ export default function FriendList() {
     <div className="w-96 h-[450px] bg-white bg-opacity-70 border border-black rounded-lg p-4">
       <p className="font-bold mb-2">친구 목록</p>
       <div className="overflow-y-auto h-[400px] flex flex-col gap-2">
-        {friends.map((friend) => (
+        {friends?.map((friend) => (
           <div key={friend.id} className="flex justify-between items-center border border-black rounded px-2">
             {/* 물고기 이미지 + 유저 정보 */}
             <div className="flex items-center gap-3 p-1">

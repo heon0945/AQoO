@@ -20,5 +20,5 @@ const mockFriends = [
 
 // api 요청 들어오면 데이터 반환
 export async function GET() {
-    return NextResponse.json(mockFriends);
+    return NextResponse.json( mockFriends);
 }
