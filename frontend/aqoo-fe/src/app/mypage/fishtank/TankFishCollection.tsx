@@ -1,6 +1,6 @@
 "use client";
 
-import CollectionItemCard from "./CollectionItemCard";
+import CollectionItemCard from "../CollectionItemCard";
 
 interface TankFishCollectionProps {
   tankName: string;
@@ -15,7 +15,7 @@ export default function TankFishCollection({ tankName }: TankFishCollectionProps
 
   return (
     // 동일하게 bg-blue w-full h-full rounded-[30px]
-    <div className="bg-white w-full h-full rounded-[30px] p-4 overflow-auto">
+    <div className="bg-white w-full h-full rounded-[30px] p-3 overflow-auto">
       <div className="flex flex-wrap">
         {tankFishList.map((fish) => (
           <CollectionItemCard key={fish.id} name={fish.name} count={fish.count} imageSrc={fish.imageSrc} />

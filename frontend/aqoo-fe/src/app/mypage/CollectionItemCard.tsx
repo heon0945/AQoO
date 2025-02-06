@@ -27,16 +27,18 @@ export default function CollectionItemCard({ name, count, imageSrc }: Collection
       <div
         className="
           w-[150px] h-[150px]
-          flex items-center justify-center
-          flex-col
+          flex flex-col items-center justify-center
           rounded-xl border border-black bg-white
         "
       >
-        <Image src={imageSrc} alt={name} width={130} height={130} style={{ objectFit: "cover" }} />
+        <div className="flex-1 flex items-center justify-center">
+          <Image src={imageSrc} alt={name} width={130} height={130} style={{ objectFit: "cover" }} />
+        </div>
         <div
           className="
           flex items-end gap-2 text-[15px]
-          font-[NeoDunggeunmo_Pro] text-black mt-1
+          font-[NeoDunggeunmo_Pro] text-black
+          mt-auto
         "
         >
           <p>{name}</p>

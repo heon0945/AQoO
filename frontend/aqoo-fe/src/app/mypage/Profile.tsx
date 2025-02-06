@@ -15,7 +15,7 @@ export default function ProfileInfo() {
       "
     >
       {/* 좌측: 초상화 + 레벨/닉네임/정보 */}
-      <div className="flex gap-2 justify-center ml-2">
+      <div className="flex gap-2 justify-center ml-2 p-3">
         {/* 초상화 컨테이너 */}
         <div
           className="

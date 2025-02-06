@@ -14,7 +14,7 @@ export default function MyFishCollection() {
 
   return (
     // bg-blue, w-full, h-full, rounded-[30px] 적용
-    <div className="bg-white w-full h-full rounded-[30px] p-4 overflow-auto">
+    <div className="bg-white w-full h-full rounded-[30px] p-3 overflow-auto">
       <div className="flex flex-wrap">
         {myFishList.map((fish) => (
           <CollectionItemCard key={fish.id} name={fish.name} count={fish.count} imageSrc={fish.imageSrc} />
