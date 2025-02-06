@@ -1,19 +1,28 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
-import BottomMenu from "@/app/main/BottomMenuBar"; // 하단 메뉴바 컴포넌트
-import FriendsList from "./FriendList";
-import Image from "next/image";
+import BottomMenuBar from "@/app/main/BottomMenuBar";
+import CleanComponent from "@/app/main/CleanComponent";
+import FriendsList from "@/app/main/FriendsList";
 import Link from "next/link";
+import PushNotifications from "@/app/main/PushNotifications";
 import { Settings } from "lucide-react";
+import { gsap } from "gsap";
+
+// 🔹 물고기 데이터 타입 정의
+interface FishData {
+  id: number;
+  name: string;
+  image: string; // 물고기 이미지 URL
+}
 
 export default function MainPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [background, setBackground] = useState("/background-1.png");
-  const [isFriendsOpen, setIsFriendsOpen] = useState(false); // 친구 목록 상태 추가
+  const [activeComponent, setActiveComponent] = useState<string | null>(null);
+  const [fishes, setFishes] = useState<FishData[]>([]);
 
-  // localStorage에서 기존 설정된 배경 불러오기
   useEffect(() => {
     const savedBg = localStorage.getItem("background");
     if (savedBg) {
@@ -21,30 +30,35 @@ export default function MainPage() {
     }
   }, []);
 
-  // 배경 변경 함수
-  const changeBackground = (bg: string) => {
-    setBackground(bg);
-    localStorage.setItem("background", bg); // 저장해서 새로고침 후에도 유지
-  };
+  useEffect(() => {
+    // ✅ API 대신 테스트용 더미 데이터 사용
+    const dummyFishData: FishData[] = [
+      { id: 1, name: "물고기1", image: "/fish-1.png" },
+      { id: 2, name: "물고기2", image: "/fish-2.png" },
+      { id: 3, name: "물고기3", image: "/fish-3.png" },
+      { id: 4, name: "물고기4", image: "/fish-4.png" },
+      { id: 5, name: "물고기5", image: "/fish-5.png" },
+    ];
+    setFishes(dummyFishData);
+  }, []);
 
   return (
-    <div className="relative w-full h-screen">
-      {/* 배경 이미지 + 투명 레이어 */}
+    <div className="relative w-full h-screen overflow-hidden">
+      {/* 🖼 배경 이미지 */}
       <div
         className="absolute inset-0 bg-cover bg-center w-screen h-screen before:absolute before:inset-0 before:bg-white/30"
         style={{ backgroundImage: `url(${background})` }}
       ></div>
-      {/* <Image
-        src="http://13.124.6.53/images/watermelon.png"
-        alt="Watermelon"
-        className="absolute top-40 left-60"
-        width={200}
-        height={300}
-      /> */}
-      ;{/* 상단 네비게이션 */}
+
+      {/* 🐠 떠다니는 물고기 렌더링 */}
+      {fishes.map((fish) => (
+        <Fish key={fish.id} fish={fish} />
+      ))}
+
+      {/* 🏠 상단 네비게이션 */}
       <div className="absolute top-4 left-4 z-10 mt-2 ml-10">
         <Link href="/">
-          <span className="text-white text-5xl hover:text-yellow-300 ">AQoO</span>
+          <span className="text-white text-5xl hover:text-yellow-300">AQoO</span>
         </Link>
       </div>
       <button
@@ -53,48 +67,133 @@ export default function MainPage() {
       >
         <Settings className="w-6 h-6 text-white" />
       </button>
-      {/* 하단 메뉴바 */}
-      <BottomMenu setIsFriendsOpen={setIsFriendsOpen} />
-      {/* 친구 목록 */}
-      {isFriendsOpen && <FriendsList onClose={() => setIsFriendsOpen(false)} />}
-      {/* 설정 모달 */}
-      {isSettingsOpen && (
-        <div className="absolute top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-20">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <p className="text-lg font-bold">설정 메뉴</p>
-            <button
-              className="mt-4 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
-              onClick={() => setIsSettingsOpen(false)}
-            >
-              닫기
-            </button>
-          </div>
+
+      {/* 📌 하단 메뉴 바 */}
+      <BottomMenuBar setActiveComponent={setActiveComponent} />
+
+      {/* ✅ CleanComponent를 BottomMenuBar 위에 정확하게 배치 */}
+      {activeComponent === "clean" && (
+        <div className="absolute bottom-[130px] right-[100px] z-50">
+          <CleanComponent onClose={() => setActiveComponent(null)} />
         </div>
       )}
-      {/* 배경 변경 버튼 */}
-      {/* <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white p-4 rounded-lg shadow-lg z-10">
-        <p className="text-center font-bold">배경 변경</p>
-        <div className="flex space-x-4 mt-2">
-          <button
-            onClick={() => changeBackground("/background-1.png")}
-            className="p-2 bg-blue-500 text-white rounded-lg"
-          >
-            배경 1
-          </button>
-          <button
-            onClick={() => changeBackground("/background-2.png")}
-            className="p-2 bg-green-500 text-white rounded-lg"
-          >
-            배경 2
-          </button>
-          <button
-            onClick={() => changeBackground("/background-3.png")}
-            className="p-2 bg-red-500 text-white rounded-lg"
-          >
-            배경 3
-          </button>
+
+      {/* ✅ FriendsList도 같은 방식 적용 */}
+      {activeComponent === "friends" && (
+        <div className="absolute bottom-[130px] left-[100px] z-50">
+          <FriendsList onClose={() => setActiveComponent(null)} />
         </div>
-      </div> */}
+      )}
+
+      {/* ✅ PushNotifications도 같은 방식 적용 */}
+      {activeComponent === "push" && (
+        <div className="absolute bottom-[130px] left-[100px] z-50">
+          <PushNotifications onClose={() => setActiveComponent(null)} />
+        </div>
+      )}
     </div>
+  );
+}
+function Fish({ fish }: { fish: FishData }) {
+  const fishRef = useRef<HTMLImageElement | null>(null);
+  const directionRef = useRef(-1); // 기본 방향: 왼쪽 (-1)
+
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const handleClick = () => {
+    if (!fishRef.current) return;
+
+    gsap.to(fishRef.current, {
+      scale: 0.9,
+      duration: 0.15,
+      ease: "power1.inOut",
+      yoyo: true,
+      repeat: 1,
+    });
+  };
+
+  useEffect(() => {
+    if (!fishRef.current) return;
+
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+
+    const safeMargin = 80;
+    const bottomMargin = 100;
+    const upperLimit = windowHeight * 0.2; // 화면 상단 20% 이내에서는 내려가는 확률 높이기
+
+    const randomStartX = Math.random() * (windowWidth - 2 * safeMargin) + safeMargin;
+    const randomStartY = Math.random() * (windowHeight - bottomMargin - 50) + 50;
+
+    // 물고기 초기 위치 설정 (기본 왼쪽 방향)
+    gsap.set(fishRef.current, {
+      x: randomStartX,
+      y: randomStartY,
+      scaleX: directionRef.current, // 기본적으로 왼쪽 (-1)
+    });
+
+    const moveFish = () => {
+      if (!fishRef.current) return;
+
+      const randomSpeed = Math.random() * 7 + 9; // 속도 랜덤
+      const maxMoveX = windowWidth * (0.4 + Math.random() * 0.4);
+      let moveDistanceX = maxMoveX * (Math.random() > 0.5 ? 1 : -1);
+
+      const currentY = parseFloat(gsap.getProperty(fishRef.current, "y") as string);
+
+      // 🔹 아래로 이동하는 비율 높이기
+      let moveDistanceY = windowHeight * (0.1 + Math.random() * 0.15) * (Math.random() > 0.65 ? 1 : -1);
+
+      // 🔹 화면 상단 20% 이상일 경우, 아래로 이동하는 확률을 80% 이상으로 증가
+      if (currentY < upperLimit) {
+        moveDistanceY = windowHeight * (0.1 + Math.random() * 0.2);
+      }
+
+      // 새로운 위치 계산
+      let newX = parseFloat(gsap.getProperty(fishRef.current, "x") as string) + moveDistanceX;
+      let newY = currentY + moveDistanceY;
+
+      // 경계 제한
+      if (newX < safeMargin) {
+        newX = safeMargin + Math.random() * 50;
+        directionRef.current = -1;
+      }
+      if (newX > windowWidth - safeMargin) {
+        newX = windowWidth - safeMargin - Math.random() * 50;
+        directionRef.current = 1;
+      }
+      if (newY < 50) newY = 50 + Math.random() * 30;
+      if (newY > windowHeight - bottomMargin) newY = windowHeight - bottomMargin - Math.random() * 30;
+
+      // 애니메이션 적용
+      gsap.to(fishRef.current, {
+        x: newX,
+        y: newY,
+        duration: randomSpeed,
+        ease: "power2.inOut",
+        onUpdate: () => {
+          const prevX = parseFloat(gsap.getProperty(fishRef.current, "x") as string);
+          directionRef.current = newX > prevX ? 1 : -1;
+          gsap.set(fishRef.current, { scaleX: directionRef.current });
+        },
+        onComplete: moveFish, // 계속 이동 반복
+      });
+    };
+
+    moveFish();
+  }, []);
+
+  return (
+    <img
+      ref={fishRef}
+      src={fish.image}
+      alt={fish.name}
+      className="absolute max-w-64 h-16 transform-gpu"
+      style={{
+        transformOrigin: "center",
+        transform: "translate(-50%, -50%)",
+      }}
+      onClick={handleClick}
+    />
   );
 }

@@ -5,17 +5,24 @@ import { useEffect, useState } from "react";
 import MenuButton from "./MenuButton";
 import { useRouter } from "next/navigation";
 
-export default function BottomMenuBar({ setIsFriendsOpen }: { setIsFriendsOpen: (value: boolean) => void }) {
+export default function BottomMenuBar({ setActiveComponent }: { setActiveComponent: (value: string | null) => void }) {
   const router = useRouter();
 
   return (
     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full max-w-[1400px] bg-white/70 rounded-lg px-3 flex flex-wrap items-center justify-between shadow-lg backdrop-blur-md">
       {/* 좌측 메뉴 */}
       <div className="flex space-x-2 md:space-x-4">
+        {/* ✅ MyPage는 페이지 이동 */}
         <MenuButton icon="/icon-fishTank.png" label="MyPage" onClick={() => router.push("/mypage")} />
-        <MenuButton icon="/alertIcon.png" label="Push" />
-        <MenuButton icon="/friendIcon.png" label="Friends" onClick={() => setIsFriendsOpen(true)} />
-        <MenuButton icon="/gameIcon.png" label="Game" />
+
+        {/* ✅ 친구 목록 */}
+        <MenuButton icon="/friendIcon.png" label="Friends" onClick={() => setActiveComponent("friends")} />
+
+        {/* ✅ Push 알림 */}
+        <MenuButton icon="/alertIcon.png" label="Push" onClick={() => setActiveComponent("push")} />
+
+        {/* ✅ Game 히스토리 */}
+        <MenuButton icon="/gameIcon.png" label="Game" onClick={() => router.push("/gameroom")} />
       </div>
 
       {/* 중앙: 사용자 정보 */}
@@ -40,7 +47,7 @@ export default function BottomMenuBar({ setIsFriendsOpen }: { setIsFriendsOpen: 
       {/* 우측 메뉴 */}
       <div className="flex space-x-2 md:space-x-4">
         <MenuButton icon="/waterIcon.png" label="Water" />
-        <MenuButton icon="/cleanIcon.png" label="Clean" />
+        <MenuButton icon="/cleanIcon.png" label="Clean" onClick={() => setActiveComponent("clean")} />
         <MenuButton icon="/feedIcon.png" label="Feed" />
       </div>
     </div>
