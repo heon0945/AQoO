@@ -1,69 +1,70 @@
+// src/services/authService.ts
+import axios from "axios";
 import { User } from "@/store/authAtom";
-//import axios from "axios";
 
-// TODO 더미 말고 API 호출로 수정해줘야 할 것것
+const AUTH_API_URL = "http://i12e203.p.ssafy.io:8089/api/v1/auth";
+const USER_API_URL = "http://i12e203.p.ssafy.io:8089/api/v1/users";
 
-//const API_URL = "http://localhost:5000/api/auth"; // ✅ 백엔드 로그인 API URL
+/**
+ * 로그인 API 호출
+ * - 요청 시 id와 pw를 전송합니다.
+ * - 응답 JSON 본문에서 accessToken을 추출해 localStorage에 저장합니다.
+ * - 로그인 성공 시 입력받은 id 값을 사용자 식별자로 사용하여 User 객체를 반환합니다.
+ */
+export const login = async (id: string, pw: string): Promise<User> => {
+  try {
+    const res = await axios.post(
+      `${AUTH_API_URL}/login`,
+      { id, pw },
+      { withCredentials: true }
+    );
 
-// ✅ 로그인된 사용자 정보 가져오기 (accessToken 이용)
-export const fetchUser: () => Promise<User | null> = async () => {
-  const token = localStorage.getItem("accessToken"); // ✅ 저장된 accessToken 가져오기
-  if (!token) return null; // 로그인 정보 없음
+    // 응답 JSON 본문에서 accessToken 추출 (예: { accessToken: "token_value", message: "..." })
+    const { accessToken } = res.data;
+    if (accessToken) {
+      localStorage.setItem("accessToken", accessToken);
+    }
 
-  //////////////////////////////////////////////////////////////실제 API 호출출
-  // try {
-  //
-  //   const res = await axios.get(`${API_URL}/users/me`, {
-  //     headers: { Authorization: `Bearer ${token}` },
-  //     withCredentials: true,
-  //   });
+    // 로그인 성공 시 입력받은 id 값을 로컬에 저장 (userId로 사용)
+    localStorage.setItem("loggedInUser", id);
 
-  //   return res.data;
-
-  //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // } catch (error) {
-  //   return null; // 로그인 정보 없음
-  // }
-  /////////////////////////////////////////////////////////////
-
-  // ✅ 로그인된 사용자 정보(localStorage) 반환 (더미 데이터)
-  const storedUser = localStorage.getItem("loggedInUser");
-  if (storedUser) {
-    return JSON.parse(storedUser);
+    // 백엔드에서 추가 사용자 정보가 없다면, 입력받은 id로 User 객체를 생성하여 반환합니다.
+    return { id };
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "로그인 실패");
   }
-
-  return null; // 로그인 정보 없음};
 };
 
-// 로그인 API 호출
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const login = async (username: string, password: string): Promise<User> => {
-  // const res = await axios.post(`${API_URL}/login`, { username, password }, { withCredentials: true });
-  // return res.data; // 로그인 성공 시 사용자 정보 반환
-
-  // ✅ 더미
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const userData: User = { id: 1, name: username, email: `${username}@example.com` };
-
-      localStorage.setItem("accessToken", "dummy-access-token"); // ✅ 더미 토큰 저장
-      localStorage.setItem("loggedInUser", JSON.stringify(userData));
-      resolve(userData); // ✅ 입력한 ID 기반 더미 데이터 반환
-    }, 500);
-  });
-};
-
-// 로그아웃 API 호출
+/**
+ * 로그아웃 API 호출
+ * - 서버에 로그아웃 요청을 보내고, localStorage에 저장된 인증 정보를 삭제합니다.
+ */
 export const logout = async (): Promise<void> => {
-  // await axios.post(`${API_URL}/logout`, {}, { withCredentials: true });
+  try {
+    await axios.post(`${AUTH_API_URL}/logout`, {}, { withCredentials: true });
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("loggedInUser");
+  } catch (error) {
+    console.error("Error during logout:", error);
+  }
+};
 
-  // ✅ 더미
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      localStorage.removeItem("accessToken"); // ✅ 더미 토큰 삭제
-      localStorage.removeItem("loggedInUser"); // ✅ 저장된 사용자 정보 삭제
+/**
+ * 저장된 accessToken을 이용해 로그인된 사용자 정보를 가져옵니다.
+ */
+export const fetchUser = async (): Promise<User | null> => {
+  const token = localStorage.getItem("accessToken");
+  const storedId = localStorage.getItem("loggedInUser");
+  if (!token || !storedId) return null;
 
-      resolve();
-    }, 500);
-  });
+  try {
+    const res = await axios.get(`${USER_API_URL}/${storedId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      withCredentials: true,
+    });
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    return null;
+  }
 };
