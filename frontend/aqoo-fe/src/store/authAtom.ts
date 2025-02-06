@@ -1,19 +1,23 @@
-// src/store/authAtom.ts
+// store/authAtom.ts
+
 import { atom } from "recoil";
 
+// 사용자 정보를 위한 TypeScript 인터페이스 정의
 export interface User {
-  id: string;
-  // 필요에 따라 name, email, 기타 필드를 추가할 수 있습니다.
+  id: number;
+  name: string;
+  email: string;
 }
 
-export interface AuthState {
+interface AuthState {
+  user: User | null;
   isAuthenticated: boolean;
-  user?: User;
-  accessToken?: string;
-  // refreshToken은 보안상 쿠키로 관리하므로 store에 저장하지 않습니다.
 }
 
-export const authAtom = atom<AuthState>({
-  key: "authAtom",
-  default: { isAuthenticated: false },
+export const authState = atom<AuthState>({
+  key: "authState",
+  default: {
+    user: null,
+    isAuthenticated: false,
+  },
 });
