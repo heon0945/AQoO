@@ -6,7 +6,6 @@ pipeline {
         CONTAINER_NAME = "frontend"
         NGINX_CONFIG = "/etc/nginx/nginx.conf" // Nginx 설정 파일 경로
     }
-
     stages {
         stage('Checkout') {
             steps {
