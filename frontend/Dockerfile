@@ -17,8 +17,8 @@ RUN npm run export
 # 6. Nginx를 사용하는 이미지로 변경
 FROM nginx:alpine
 
-# 7. Nginx 설정 파일 복사 (frontend/nginx.conf를 적용)
-COPY nginx.conf /etc/nginx/nginx.conf
+# 7. Nginx 설정 파일 복사 (nginx.conf를 원하는 대로 적용)
+# COPY nginx.conf /etc/nginx/nginx.conf
 
 # 8. Next.js 정적 파일을 Nginx 기본 html 폴더로 복사
 COPY --from=builder /app/out /usr/share/nginx/html
@@ -26,4 +26,3 @@ COPY --from=builder /app/out /usr/share/nginx/html
 # 9. 컨테이너 실행 시 Nginx 실행
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
-
