@@ -13,18 +13,23 @@ RUN npm install
 # 5. Next.js 앱 빌드
 RUN npm run build
 
-# 6. nginx 설치
-FROM nginx:alpine
+# 6. Next.js 앱 실행을 위한 최소한의 이미지 사용
+FROM node:18-alpine AS runner
 
-# 7. 빌드된 결과물 복사
-COPY --from=builder /app/.next /usr/share/nginx/html/.next
-COPY --from=builder /app/public /usr/share/nginx/html/public
-COPY --from=builder /app/package.json /usr/share/nginx/html/package.json
-COPY nginx.conf /etc/nginx/nginx.conf
+# 7. 작업 디렉토리 설정
+WORKDIR /app
 
-# 8. 환경 변수 설정
-ENV PORT=80
-EXPOSE 80
+# 8. 빌드된 결과물 복사
+COPY --from=builder /app/.next /app/.next
+COPY --from=builder /app/public /app/public
+COPY --from=builder /app/package.json /app/package.json
 
-# 9. nginx 실행
-CMD ["nginx", "-g", "daemon off;"]
+# 9. Next.js 앱 실행에 필요한 의존성 설치 (production 모드)
+RUN npm install --production
+
+# 10. 포트 설정
+ENV PORT 3000
+EXPOSE 3000
+
+# 11. Next.js 앱 실행
+CMD ["npm", "start"]
