@@ -12,7 +12,7 @@ RUN npm install
 
 # 5. Next.js 정적 파일 빌드 (next export 사용)
 RUN npm run build
-RUN npm run export
+#RUN npm run export
 
 # 6. Nginx를 사용하는 이미지로 변경
 FROM nginx:alpine
