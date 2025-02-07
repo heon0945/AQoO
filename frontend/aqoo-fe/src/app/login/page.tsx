@@ -44,8 +44,8 @@ export default function LoginPage() {
     // 소셜 로그인에 사용할 백엔드 엔드포인트 선택
     const url =
       provider === "google"
-        ? "https://i12e203.p.ssafy.io:8089/oauth2/authorization/google"
-        : "https://i12e203.p.ssafy.io:8089/oauth2/authorization/naver";
+        ? "https://i12e203.p.ssafy.io/oauth2/authorization/google"
+        : "https://i12e203.p.ssafy.io/oauth2/authorization/naver";
 
     try {
       // GET 요청 전송 (쿠키 포함)
