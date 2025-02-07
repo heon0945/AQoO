@@ -1,6 +1,8 @@
 "use client";
 
+import { AquariumData, UserInfo } from "@/types";
 import React, { useEffect, useRef, useState } from "react";
+import axios, { AxiosResponse } from "axios";
 
 import BottomMenuBar from "@/app/main/BottomMenuBar";
 import CleanComponent from "@/app/main/CleanComponent";
@@ -21,13 +23,42 @@ export default function MainPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [background, setBackground] = useState("/background-1.png");
   const [activeComponent, setActiveComponent] = useState<string | null>(null);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [fishes, setFishes] = useState<FishData[]>([]);
+  const [aquariumData, setAquariumData] = useState<AquariumData | null>(null);
+
+  const API_BASE_URL = "http://i12e203.p.ssafy.io:8089/api/v1";
+  const userId = "ejoyee"; // dummy
 
   useEffect(() => {
     const savedBg = localStorage.getItem("background");
     if (savedBg) {
       setBackground(savedBg);
     }
+
+    axios
+      .get(`${API_BASE_URL}/users/${userId}`)
+      .then((response: AxiosResponse<UserInfo>) => {
+        console.log(response.data);
+        setUserInfo(response.data);
+
+        // 유저 정보를 바탕으로 메인 어항 상세 정보 조회 API 호출
+        const aquariumId = userInfo?.mainAquarium;
+        console.log("메인 아쿠아리움 id : ", aquariumId);
+        if (aquariumId !== null && aquariumId !== undefined) {
+          axios
+            .get(`${API_BASE_URL}/aquariums/${aquariumId}`)
+            .then((res: AxiosResponse<AquariumData>) => {
+              console.log("어항 상세 정보 조회", res.data);
+
+              setAquariumData(res.data);
+            })
+            .catch((err) => console.error("어항 정보 불러오기 실패", err));
+        }
+      })
+      .catch((error) => {
+        console.error("유저 정보 불러오기 실패", error);
+      });
   }, []);
 
   useEffect(() => {
@@ -42,8 +73,12 @@ export default function MainPage() {
     setFishes(dummyFishData);
   }, []);
 
+  if (!userInfo) return <div>로딩 중...</div>;
+  else if (!aquariumData) return <div>아쿠아리움 정보 로딩중...</div>;
+
   return (
     <div className="relative w-full h-screen overflow-hidden">
+      <title>AQoO</title>
       {/* 🖼 배경 이미지 */}
       <div
         className="absolute inset-0 bg-cover bg-center w-screen h-screen before:absolute before:inset-0 before:bg-white/30"
@@ -69,7 +104,7 @@ export default function MainPage() {
       </button>
 
       {/* 📌 하단 메뉴 바 */}
-      <BottomMenuBar setActiveComponent={setActiveComponent} />
+      <BottomMenuBar setActiveComponent={setActiveComponent} userInfo={userInfo} aquariumData={aquariumData} />
 
       {/* ✅ CleanComponent를 BottomMenuBar 위에 정확하게 배치 */}
       {activeComponent === "clean" && (
@@ -137,6 +172,7 @@ function Fish({ fish }: { fish: FishData }) {
 
       const randomSpeed = Math.random() * 7 + 9; // 속도 랜덤
       const maxMoveX = windowWidth * (0.4 + Math.random() * 0.4);
+      // eslint-disable-next-line prefer-const
       let moveDistanceX = maxMoveX * (Math.random() > 0.5 ? 1 : -1);
 
       const currentY = parseFloat(gsap.getProperty(fishRef.current, "y") as string);
