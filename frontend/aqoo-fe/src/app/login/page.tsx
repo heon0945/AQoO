@@ -15,19 +15,16 @@ interface LoginFormInputs {
 }
 
 export default function LoginPage() {
-  // react-hook-form을 사용하여 입력값 관리
   const { register, handleSubmit } = useForm<LoginFormInputs>();
-  // 일반 로그인 함수 (아이디/비밀번호 로그인)
   const { login } = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  // 일반 로그인 폼 제출 처리 함수
+  // 일반 로그인 처리
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
     setIsLoading(true);
     try {
       await login(data.id, data.pw);
-      // 로그인 성공 후 이동할 페이지
       router.push("/test-recoil-query");
     } catch (error: any) {
       alert(error.message);
@@ -37,46 +34,14 @@ export default function LoginPage() {
   };
 
   /**
-   * 소셜 로그인 처리 함수
-   * @param provider "google" | "naver"
+   * 소셜 로그인 버튼 클릭 시, 백엔드의 OAuth2 엔드포인트로 브라우저를 이동
    */
-  const handleSocialLogin = async (provider: "google" | "naver") => {
-    // 소셜 로그인에 사용할 백엔드 엔드포인트 선택
+  const handleSocialLogin = (provider: "google" | "naver") => {
     const url =
       provider === "google"
         ? "https://i12e203.p.ssafy.io/oauth2/authorization/google"
         : "https://i12e203.p.ssafy.io/oauth2/authorization/naver";
-
-    try {
-      // GET 요청 전송 (쿠키 포함)
-      const res = await fetch(url, {
-        method: "GET",
-        credentials: "include"
-      });
-
-      // 응답 상태 체크
-      if (!res.ok) {
-        throw new Error("소셜 로그인 요청에 실패했습니다.");
-      }
-
-      // 응답 JSON 파싱 (accessToken, userId, nickName 포함)
-      const data = await res.json();
-      const { accessToken, userId, nickName } = data;
-
-      // accessToken과 userId를 localStorage에 저장
-      if (accessToken) {
-        localStorage.setItem("accessToken", accessToken);
-      }
-      localStorage.setItem("loggedInUser", userId);
-
-      // (필요시) 전역 상태 관리(auth 상태)를 업데이트할 수 있습니다.
-
-      // 로그인 성공 후 리다이렉트
-      router.push("/test-recoil-query");
-    } catch (error: any) {
-      console.error("소셜 로그인 에러:", error);
-      alert(error.message || "소셜 로그인 중 오류가 발생했습니다.");
-    }
+    window.location.href = url;
   };
 
   return (
@@ -99,7 +64,6 @@ export default function LoginPage() {
             placeholder="비밀번호"
             register={register("pw", { required: true })}
           />
-
           <div className="flex items-center justify-between text-sm">
             <label className="flex items-center">
               <input type="checkbox" className="mr-2" />
@@ -109,7 +73,6 @@ export default function LoginPage() {
               아이디 / 비밀번호 찾기
             </a>
           </div>
-
           <LoginButton text="로그인" isLoading={isLoading} />
         </form>
 
@@ -119,7 +82,6 @@ export default function LoginPage() {
             text="구글로 로그인"
             color="white"
             icon={<FcGoogle size={20} />}
-            // 폼 제출을 막기 위해 type을 "button"으로 지정합니다.
             type="button"
             onClick={() => handleSocialLogin("google")}
           />
