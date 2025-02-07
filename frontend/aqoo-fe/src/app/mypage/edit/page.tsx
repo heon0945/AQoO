@@ -4,8 +4,8 @@ import React, { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import InputField from "@/app/login/componets/InputField";
-import LoginButton from "@/app/login/componets/LoginButton";
+import InputField from "./InputField";
+import LoginButton from "./Buttons";
 
 interface ProfileFormInputs {
   nickname: string;
@@ -15,9 +15,12 @@ export default function EditProfilePage() {
   const { register, handleSubmit, setValue } = useForm<ProfileFormInputs>();
   const { getUser, updateProfile } = useAuth();
   const router = useRouter();
-  const [userData, setUserData] = useState<{ userId: string; userNickName: string; mainFishImage: string } | null>(
-    null
-  );
+  const [userData, setUserData] = useState<{
+    userId: string;
+    userNickName: string;
+    mainFishImage: string;
+    userEmail: string;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -38,6 +41,7 @@ export default function EditProfilePage() {
     try {
       await updateProfile({
         userId: userData?.userId || "",
+        userEmail: userData?.userEmail || "",
         userNickName: data.nickname,
         mainFishImage: userData?.mainFishImage || "",
       });
@@ -70,7 +74,7 @@ export default function EditProfilePage() {
           {/* 이메일 필드 (비활성화) */}
           <InputField
             label="이메일"
-            placeholder={userData?.userId || "로딩 중..."}
+            placeholder={userData?.userEmail || "로딩 중..."}
             register={{ disabled: true }}
             className="bg-gray-200"
           />
