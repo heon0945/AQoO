@@ -32,7 +32,7 @@ export default function ChatPage() {
                         status: "READY",
                         isHost: true,
                     };
-                    setHostUser(host);
+                    // setHostUser(host);
                 }
             })
             .catch(error => {
