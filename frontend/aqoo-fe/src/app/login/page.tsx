@@ -47,7 +47,7 @@ export default function LoginPage() {
   return (
     <div
       className="flex justify-center items-center h-screen bg-cover bg-center"
-      style={{ backgroundImage: "url('https://13.124.6.53/images/bg1.png')" }}
+      style={{ backgroundImage: "url('https://i12e203.p.ssafy.io/images/bg1.png')" }}
     >
       <div className="bg-white p-8 rounded-2xl shadow-lg w-96">
         <h2 className="text-center text-2xl font-bold mb-6">로그인</h2>

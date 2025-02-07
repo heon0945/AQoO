@@ -19,17 +19,17 @@ export const login = async (id: string, pw: string): Promise<User> => {
       { withCredentials: true }
     );
 
-    // 응답 JSON 본문에서 accessToken 추출 (예: { accessToken: "token_value", message: "..." })
-    const { accessToken,userId,nickName } = res.data;
+    // 응답 JSON 본문에서 accessToken, userId, nickName 추출
+    const { accessToken, userId, nickName } = res.data;
     if (accessToken) {
       localStorage.setItem("accessToken", accessToken);
     }
 
-    // 로그인 성공 시 입력받은 id 값을 로컬에 저장 (userId로 사용)
+    // 로그인 성공 시 userId를 로컬에 저장
     localStorage.setItem("loggedInUser", userId);
 
-    // 백엔드에서 추가 사용자 정보가 없다면, 입력받은 id로 User 객체를 생성하여 반환합니다.
-    return { id,nickName};
+    // 추가 사용자 정보가 없다면, 입력받은 id로 User 객체 생성하여 반환합니다.
+    return { id, nickName };
   } catch (error: any) {
     throw new Error(error.response?.data?.message || "로그인 실패");
   }
@@ -38,13 +38,24 @@ export const login = async (id: string, pw: string): Promise<User> => {
 /**
  * 로그아웃 API 호출
  * - 서버에 로그아웃 요청을 보내고, localStorage에 저장된 인증 정보를 삭제합니다.
+ * - 엔드포인트는 /logout/{userId} 형태로 호출합니다.
  */
 export const logout = async (): Promise<void> => {
   try {
-    await axios.post(`${AUTH_API_URL}/logout`, {}, { withCredentials: true });
+    const userId = localStorage.getItem("loggedInUser");
+    if (!userId) {
+      // userId가 없으면 인증 관련 데이터를 정리 후 종료
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("loggedInUser");
+      return;
+    }
+
+    // userId를 포함한 로그아웃 엔드포인트 호출
+    await axios.post(`${AUTH_API_URL}/logout/${userId}`, {}, { withCredentials: true });
+    // 로그아웃 성공 시 localStorage의 인증 데이터 삭제
     localStorage.removeItem("accessToken");
     localStorage.removeItem("loggedInUser");
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error during logout:", error);
   }
 };
