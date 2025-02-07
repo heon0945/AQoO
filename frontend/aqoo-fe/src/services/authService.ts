@@ -2,8 +2,8 @@
 import axios from "axios";
 import { User } from "@/store/authAtom";
 
-const AUTH_API_URL = "https://i12e203.p.ssafy.io:8089/api/v1/auth";
-const USER_API_URL = "https://i12e203.p.ssafy.io:8089/api/v1/users";
+const AUTH_API_URL = "https://i12e203.p.ssafy.io/api/v1/auth";
+const USER_API_URL = "https://i12e203.p.ssafy.io/api/v1/users";
 
 /**
  * 로그인 API 호출
