@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -18,10 +20,9 @@ export default function SocialLoginCallback() {
       localStorage.setItem("nickName", nickName || "");
       router.push("/test-recoil-query");
     } else {
-      // 토큰이 없으면 로그인 페이지로 되돌림
       router.push("/login");
     }
   }, [router, searchParams]);
 
-  return <div>로그인 처리 중...</div>;
+  return <div>로그인 중입니다...</div>;
 }
