@@ -39,8 +39,8 @@ export default function LoginPage() {
   const handleSocialLogin = (provider: "google" | "naver") => {
     const url =
       provider === "google"
-        ? "https://i12e203.p.ssafy.io/oauth2/authorization/google"
-        : "https://i12e203.p.ssafy.io/oauth2/authorization/naver";
+        ? "/oauth2/authorization/google"
+        : "/oauth2/authorization/naver";
     window.location.href = url;
   };
 
