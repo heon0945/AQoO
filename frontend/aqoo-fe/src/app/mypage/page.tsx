@@ -1,8 +1,8 @@
 "use client";
 
-import LeftButtons from "./LeftButtons";
-import Profile from "./Profile";
-import MyCollection from "./MyCollection";
+import LeftButtons from "./components/LeftButtons";
+import Profile from "./components/Profile";
+import MyCollection from "./components/MyCollection";
 
 export default function myPage() {
   return (

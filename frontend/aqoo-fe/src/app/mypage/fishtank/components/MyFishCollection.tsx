@@ -1,6 +1,6 @@
 "use client";
 
-import CollectionItemCard from "../CollectionItemCard";
+import CollectionItemCard from "./CollectionItemCard";
 
 export default function MyFishCollection() {
   // 예시로 5마리 물고기

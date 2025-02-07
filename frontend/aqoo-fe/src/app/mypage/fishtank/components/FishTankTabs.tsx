@@ -23,7 +23,7 @@ export default function FishTankTabs() {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden mb-2">
+    <div className="flex flex-col h-full overflow-hidden mb-2 mt-2">
       {/* 탭 버튼 영역 */}
       <div className="flex items-end mb-0">
         {tabs.map((tabName, idx) => (
@@ -32,7 +32,7 @@ export default function FishTankTabs() {
             onClick={() => setSelectedIndex(idx)}
             className={`
               cursor-pointer inline-flex items-center justify-center
-              w-[150px] h-15 px-[20px] py-[10px] mr-1
+              w-[150px] h-10 px-[20px] py-[10px] mr-1
               rounded-t-xl border-t border-r border-l border-[#1c5e8d]
               bg-[#f0f0f0]
               [box-shadow:-1px_0px_0px_2px_rgba(0,0,0,0.25)_inset]
@@ -49,7 +49,7 @@ export default function FishTankTabs() {
           onClick={handleAddTank}
           className="
               cursor-pointer inline-flex items-center justify-center
-              w-[200px] h-15 px-[20px] py-[10px] mr-1
+              w-[200px] h-10 px-[20px] py-[10px] mr-1
               rounded-t-xl border-t border-r border-l border-[#1c5e8d]
               bg-[#f0f0f0]
               [box-shadow:-1px_0px_0px_2px_rgba(0,0,0,0.25)_inset]

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 
 export default function ProfileInfo() {
   return (
@@ -87,7 +88,8 @@ export default function ProfileInfo() {
 
       {/* 우측: 회원정보수정 버튼 */}
       <div className="self-start m-2 mr-5">
-        <button
+        <Link
+          href="/mypage"
           className="
             min-w-[80px] h-10 px-2
             rounded-xl border border-[#040303] bg-white 
@@ -98,7 +100,7 @@ export default function ProfileInfo() {
           "
         >
           회원정보수정
-        </button>
+        </Link>
       </div>
     </div>
   );

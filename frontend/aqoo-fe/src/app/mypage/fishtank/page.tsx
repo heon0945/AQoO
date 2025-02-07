@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import FishTankTabs from "./FishTankTabs";
+import FishTankTabs from "./components/FishTankTabs";
 
 export default function MyFishTank() {
   return (
@@ -19,7 +19,7 @@ export default function MyFishTank() {
         <Link
           href="/mypage"
           className="
-             w-[80px] h-10 px-2 m-2
+             min-w-[80px] h-10 px-2 m-2
              rounded-xl border border-[#040303] bg-white
              [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset]
              flex items-center justify-center
