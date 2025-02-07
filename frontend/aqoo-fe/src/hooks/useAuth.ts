@@ -16,7 +16,7 @@ export const useAuth = () => {
       const accessToken = localStorage.getItem("accessToken") || undefined;
       setAuth({
         isAuthenticated: true,
-        user: { id }, // 입력받은 id를 그대로 사용자 식별자로 사용합니다.
+        user, // 입력받은 id를 그대로 사용자 식별자로 사용합니다.
         accessToken,
       });
     } catch (error: any) {
