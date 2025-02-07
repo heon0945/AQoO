@@ -20,16 +20,16 @@ export const login = async (id: string, pw: string): Promise<User> => {
     );
 
     // 응답 JSON 본문에서 accessToken 추출 (예: { accessToken: "token_value", message: "..." })
-    const { accessToken } = res.data;
+    const { accessToken,userId,nickName } = res.data;
     if (accessToken) {
       localStorage.setItem("accessToken", accessToken);
     }
 
     // 로그인 성공 시 입력받은 id 값을 로컬에 저장 (userId로 사용)
-    localStorage.setItem("loggedInUser", id);
+    localStorage.setItem("loggedInUser", userId);
 
     // 백엔드에서 추가 사용자 정보가 없다면, 입력받은 id로 User 객체를 생성하여 반환합니다.
-    return { id };
+    return { id,nickName};
   } catch (error: any) {
     throw new Error(error.response?.data?.message || "로그인 실패");
   }
