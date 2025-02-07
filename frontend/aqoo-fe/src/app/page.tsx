@@ -4,6 +4,7 @@ export default function Home() {
       <h1 className="text-4xl font-bold text-blue-600">Hello, Next.js 14!</h1>
       <p className="mt-4 text-lg text-gray-700">Tailwind CSS 적용 완료 ✅</p>
       <p className="mt-4 text-lg text-gray-700">젠킨스 테스트!</p>
+      <p className="mt-4 text-lg text-gray-700">젠킨스!</p>
     </main>
   );
 }
