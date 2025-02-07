@@ -23,7 +23,8 @@
     "react-webcam": "^7.2.0",
     "recoil": "^0.7.7",
     "styled-components": "^6.1.14",
-    "tailwind-scrollbar-hide": "^2.0.0"
+    "tailwind-scrollbar-hide": "^2.0.0",
+    "react-hook-form": "^7.50.1"
   },
   "devDependencies": {
     "@tanstack/react-query": "^5.66.0",

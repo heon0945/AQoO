@@ -1,42 +1,80 @@
 "use client";
 
+import { Friend, SearchUser } from "@/types";
+import axios, { AxiosResponse } from "axios";
 import { useEffect, useRef, useState } from "react";
 
 import { useInput } from "@/hooks/useInput"; // useInput 훅을 사용
 
-export default function FriendsList({ onClose }: { onClose: () => void }) {
-  const [myFriends, setMyFriends] = useState([
-    { username: "닉네임1", level: 12, handle: "아이디1" },
-    { username: "닉네임2", level: 1, handle: "아이디2" },
-    { username: "닉네임3", level: 4, handle: "아이디3" },
-  ]);
+export default function FriendsList({ onClose, userId }: { onClose: () => void; userId: string }) {
+  const [myFriends, setMyFriends] = useState<Friend[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const searchInput = useInput("");
-  const [searchResults, setSearchResults] = useState<{ username: string; level: number; handle: string }[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  // 🔹 친구 삭제 함수
-  const handleDeleteFriend = (handle: string) => {
-    setMyFriends((prev) => prev.filter((friend) => friend.handle !== handle));
+  const API_BASE_URL = "http://i12e203.p.ssafy.io:8089/api/v1";
+
+  // ✅ 친구 목록 API 호출
+  useEffect(() => {
+    axios
+      .get(`${API_BASE_URL}/friends/${userId}`)
+      .then((response: AxiosResponse<{ count: number; friends: Friend[] }>) => {
+        console.log("친구 목록 조회:", response.data);
+        setMyFriends(response.data.friends);
+      })
+      .catch((error) => {
+        console.error("친구 목록 불러오기 실패", error);
+        setError("친구 목록을 불러오는데 실패했습니다.");
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  // 친구 추가 함수
+  const handleAddFriend = (friendId: string) => {
+    axios
+      .post(`${API_BASE_URL}/friends/request`, {
+        userId: userId, // 현재 로그인된 사용자 ID
+        friendId: friendId, // 추가할 친구 ID
+        status: "PENDING", // 요청 상태
+      })
+      .then((response: AxiosResponse<{ relationshipId: number }>) => {
+        console.log("친구 추가 요청 성공:", response.data);
+        setSearchResults((prev) => prev.map((user) => (user.friendId === friendId ? { ...user, isFriend: 1 } : user)));
+      })
+      .catch((error) => console.error("친구 추가 요청 실패", error));
   };
 
-  // 🔹 검색 API 호출 (더미 데이터로 대체)
+  // 🔹 친구 삭제 함수
+  const handleDeleteFriend = (relationshipId: number) => {
+    axios
+      .delete(`${API_BASE_URL}/friends/delete`, { data: { relationshipId } }) // ✅ 요청 바디 추가
+      .then(() => {
+        setMyFriends((prev) => prev.filter((friend) => friend.id !== relationshipId)); // ✅ 삭제 후 상태 업데이트
+      })
+      .catch((error) => console.error("친구 삭제 실패", error));
+  };
+
+  // 🔹 검색 API 호출
   const handleSearch = () => {
     if (!searchInput.value.trim()) {
-      setSearchResults([]); // 검색어가 없으면 리스트 초기화
+      setSearchResults([]);
       return;
     }
 
-    const allUsers = [
-      { username: "닉네임1", level: 12, handle: "아이디1" },
-      { username: "닉네임5", level: 8, handle: "아이디5" },
-      { username: "닉네임6", level: 3, handle: "아이디6" },
-    ];
-
-    // 검색어를 포함하는 유저 필터링 (대소문자 무시)
-    const results = allUsers.filter((user) => user.handle.toLowerCase().includes(searchInput.value.toLowerCase()));
-
-    setSearchResults(results);
+    axios
+      .get(`${API_BASE_URL}/friends/find-users/${searchInput.value}`)
+      .then((response: AxiosResponse<SearchUser[]>) => {
+        // ✅ `SearchUser[]` 타입 적용
+        console.log("검색 결과:", response.data);
+        setSearchResults(response.data);
+      })
+      .catch((error) => {
+        console.error("사용자 검색 실패", error);
+        setSearchResults([]);
+      });
   };
 
   // 🔹 엔터 키 입력 시 검색 실행
@@ -72,7 +110,7 @@ export default function FriendsList({ onClose }: { onClose: () => void }) {
       <div className="space-y-3 overflow-y-auto scrollbar-hide flex-grow">
         {myFriends.length > 0 ? (
           myFriends.map((friend) => (
-            <FriendItem key={friend.handle} friend={friend} handleDeleteFriend={handleDeleteFriend} />
+            <FriendItem key={friend.friendId} friend={friend} handleDeleteFriend={handleDeleteFriend} />
           ))
         ) : (
           <p className="text-center text-gray-500">아직 친구가 없습니다.</p>
@@ -85,7 +123,7 @@ export default function FriendsList({ onClose }: { onClose: () => void }) {
         {searchResults.length > 0 && (
           <div className="absolute bottom-full left-0 w-full bg-white border border-black rounded-lg shadow-lg p-3 max-h-[200px] overflow-y-auto scrollbar-hide z-10">
             {searchResults.map((user, index) => (
-              <SearchResultItem key={index} user={user} />
+              <SearchResultItem key={index} user={user} handleAddFriend={handleAddFriend} />
             ))}
           </div>
         )}
@@ -117,20 +155,20 @@ function FriendItem({
   friend,
   handleDeleteFriend,
 }: {
-  friend: { username: string; level: number; handle: string };
-  handleDeleteFriend: (handle: string) => void;
+  friend: Friend;
+  handleDeleteFriend: (relationshipId: number) => void;
 }) {
   return (
     <div className="relative p-3 bg-white rounded-lg border border-black flex items-center space-x-3 cursor-pointer hover:bg-gray-100 group">
       <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
       <div>
         <p className="text-xs">Lv. {friend.level}</p>
-        <p className="font-bold">{friend.username}</p>
-        <p className="text-sm text-gray-500">@{friend.handle}</p>
+        <p className="font-bold">{friend.nickname}</p>
+        <p className="text-sm text-gray-500">@{friend.friendId}</p>
       </div>
       {/* 🔹 hover 시만 보이는 삭제 버튼 */}
       <button
-        onClick={() => handleDeleteFriend(friend.handle)}
+        onClick={() => handleDeleteFriend(friend.id)}
         className="absolute right-3 px-3 py-1 bg-red-500 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200"
       >
         삭제
@@ -140,18 +178,29 @@ function FriendItem({
 }
 
 // 검색 결과 아이템 (친구 추가 가능)
-function SearchResultItem({ user }: { user: { username: string; level: number; handle: string } }) {
+function SearchResultItem({
+  user,
+  handleAddFriend,
+}: {
+  user: SearchUser;
+  handleAddFriend: (friendId: string) => void;
+}) {
   return (
     <div className="p-3 bg-white mb-2 rounded-lg border border-black flex items-center justify-between space-x-3">
       <div className="flex items-center space-x-3">
         <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
         <div>
           <p className="text-xs">Lv. {user.level}</p>
-          <p className="font-bold">{user.username}</p>
-          <p className="text-sm text-gray-500">@{user.handle}</p>
+          <p className="font-bold">{user.nickname}</p>
+          <p className="text-sm text-gray-500">@{user.userId}</p>
         </div>
       </div>
-      <button className="px-3 py-1 bg-blue-500 text-white text-xs rounded-md">친구 추가</button>
+      <button
+        onClick={() => handleAddFriend(user.friendId)}
+        className="px-3 py-1 bg-blue-500 text-white text-xs rounded-md"
+      >
+        친구 추가
+      </button>
     </div>
   );
 }

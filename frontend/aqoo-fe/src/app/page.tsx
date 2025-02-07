@@ -16,6 +16,7 @@ export default function Home() {
           <p className="mt-16 text-4xl text-white hover:text-yellow-300 animate-bounce">start...</p>
         </Link>
       </div>
+
     </main>
   );
 }

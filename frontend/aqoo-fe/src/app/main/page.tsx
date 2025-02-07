@@ -41,25 +41,25 @@ export default function MainPage() {
       .then((response: AxiosResponse<UserInfo>) => {
         console.log(response.data);
         setUserInfo(response.data);
-
-        // 유저 정보를 바탕으로 메인 어항 상세 정보 조회 API 호출
-        const aquariumId = userInfo?.mainAquarium;
-        console.log("메인 아쿠아리움 id : ", aquariumId);
-        if (aquariumId !== null && aquariumId !== undefined) {
-          axios
-            .get(`${API_BASE_URL}/aquariums/${aquariumId}`)
-            .then((res: AxiosResponse<AquariumData>) => {
-              console.log("어항 상세 정보 조회", res.data);
-
-              setAquariumData(res.data);
-            })
-            .catch((err) => console.error("어항 정보 불러오기 실패", err));
-        }
       })
       .catch((error) => {
         console.error("유저 정보 불러오기 실패", error);
       });
   }, []);
+
+  useEffect(() => {
+    if (userInfo?.mainAquarium !== null && userInfo?.mainAquarium !== undefined) {
+      console.log("메인 아쿠아리움 id:", userInfo.mainAquarium);
+
+      axios
+        .get(`${API_BASE_URL}/aquariums/${userInfo.mainAquarium}`)
+        .then((res: AxiosResponse<AquariumData>) => {
+          console.log("어항 상세 정보 조회", res.data);
+          setAquariumData(res.data);
+        })
+        .catch((err) => console.error("어항 정보 불러오기 실패", err));
+    }
+  }, [userInfo]); // ✅ `userInfo`가 변경될 때 실행
 
   useEffect(() => {
     // ✅ API 대신 테스트용 더미 데이터 사용
@@ -116,7 +116,7 @@ export default function MainPage() {
       {/* ✅ FriendsList도 같은 방식 적용 */}
       {activeComponent === "friends" && (
         <div className="absolute bottom-[130px] left-[100px] z-50">
-          <FriendsList onClose={() => setActiveComponent(null)} />
+          <FriendsList onClose={() => setActiveComponent(null)} userId={userInfo.id} />
         </div>
       )}
 
