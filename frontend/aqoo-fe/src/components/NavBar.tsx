@@ -1,48 +1,90 @@
-// components/NavBar.tsx
 "use client";
 
-import { useAuth } from "@/hooks/useAuth";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Settings, X } from "lucide-react";
 
-export default function NavBar() {
-  // useAuth 훅에서 auth 상태와 logout 함수를 받아옵니다.
+import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+export default function Navbar() {
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [bgMusicVolume, setBgMusicVolume] = useState(50); // 배경음악 기본값 50
+  const [sfxVolume, setSfxVolume] = useState(50); // 효과음 기본값 50
   const { auth, logout } = useAuth();
-  const { user, isAuthenticated } = auth;
   const router = useRouter();
 
-  async function handleLogout() {
-    await logout(); // 로그아웃 API 호출 및 상태/로컬 스토리지 정리
-    router.push("/login");
-  }
+  // ✅ 로그아웃 함수
+  const handleLogout = async () => {
+    try {
+      await logout(); // Recoil 상태 초기화 & API 호출 <<< 이거 지금 안 되는 게 로컬이어서 그런 건지 아닌지 모르겠어서 수정 바람
+      router.push("/login"); // 로그아웃 후 로그인 페이지로 이동
+    } catch (error) {
+      console.error("로그아웃 실패", error);
+    }
+  };
 
   return (
-    <nav className="flex items-center justify-between p-4 bg-gray-200 shadow">
-      <Link href="/" className="text-lg font-bold">
-        Home
-      </Link>
-      <div className="flex items-center space-x-4">
-        {isAuthenticated && user ? (
-          <>
-            <span className="text-blue-600 font-medium">
-              Welcome, {user.nickName}!
-            </span>
-            <button
-              className="px-4 py-2 bg-red-500 text-white rounded"
-              onClick={handleLogout}
-            >
-              Logout
+    <>
+      <nav className="absolute top-4 left-4 z-10 flex justify-between w-full px-10">
+        {/* 🏠 로고 */}
+        <Link href="/">
+          <span className="text-white text-5xl hover:text-yellow-300">AQoO</span>
+        </Link>
+
+        {/* ⚙️ 설정 버튼 */}
+        <button className="p-2 bg-white/30 rounded-full hover:bg-white/50" onClick={() => setIsSettingsOpen(true)}>
+          <Settings className="w-6 h-6 text-white" />
+        </button>
+      </nav>
+
+      {/* 🎛️ 설정 모달 */}
+      {isSettingsOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-80">
+            {/* 모달 헤더 */}
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">설정</h2>
+              <button onClick={() => setIsSettingsOpen(false)}>
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* 배경음악 조절 */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium">배경음악</label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={bgMusicVolume}
+                onChange={(e) => setBgMusicVolume(Number(e.target.value))}
+                className="w-full"
+              />
+              <span className="text-sm">{bgMusicVolume}%</span>
+            </div>
+
+            {/* 효과음 조절 */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium">효과음</label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={sfxVolume}
+                onChange={(e) => setSfxVolume(Number(e.target.value))}
+                className="w-full"
+              />
+              <span className="text-sm">{sfxVolume}%</span>
+            </div>
+
+            {/* 로그아웃 버튼 */}
+            <button className="w-full bg-red-500 text-white p-2 rounded hover:bg-red-600" onClick={handleLogout}>
+              로그아웃
             </button>
-          </>
-        ) : (
-          <Link
-            href="/login"
-            className="px-4 py-2 bg-blue-500 text-white rounded"
-          >
-            Login
-          </Link>
-        )}
-      </div>
-    </nav>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
