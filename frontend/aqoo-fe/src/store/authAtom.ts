@@ -3,7 +3,7 @@ import { atom } from "recoil";
 
 export interface User {
   id: string;
-  nickName: String;
+  nickName: string;
   // 필요에 따라 name, email, 기타 필드를 추가할 수 있습니다.
 }
 
