@@ -1,6 +1,9 @@
+// 유저가 보내는 메세지를 표시하는 컴포넌트
+
 'use client';
 
 import { ChatMessage } from "@/store/chatAtom";
+
 
 interface MessageProps {
   message: ChatMessage;

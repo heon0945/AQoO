@@ -5,7 +5,8 @@ export interface Friend {
   nickname: string;
   level: number;
   fishImage?: string;
-  status: "READY" | "WAITING";
+  status?: "READY" | "WAITING";
+  isHOst?: boolean;
 }
 
 export const participantsState = atom<Friend[]>({

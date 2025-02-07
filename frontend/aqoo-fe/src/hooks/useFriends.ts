@@ -3,7 +3,7 @@ import { Friend } from "@/store/participantAtom";
 
 // 친구목록 API 요청
 const fetchFriends = async (): Promise<Friend[]> => {
-    const response = await fetch("/api/friends"); // 내부 api 요청
+    const response = await fetch("http://i12e203.p.ssafy.io:8089/api/v1/friends/eejj"); // 내부 api 요청
     if (!response.ok) throw new Error("Failed to fetch friends");
     return response.json();
 };

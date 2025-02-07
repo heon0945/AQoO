@@ -5,7 +5,9 @@ import { useRecoilState } from "recoil";
 import { participantsState, addedFriendsState, Friend } from "@/store/participantAtom";
 
 export default function FriendList() {
-  const { data: friends = [], isLoading, error } = useFriends();
+  const { data, isLoading, error } = useFriends();
+  const friends = data?.friends ?? [];
+
   const [participants, setParticipants] = useRecoilState(participantsState);
   const [addedFriends, setAddedFriends] = useRecoilState(addedFriendsState);
 
