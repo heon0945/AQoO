@@ -12,7 +12,7 @@ export default function NavBar() {
   const router = useRouter();
 
   async function handleLogout() {
-    await logout(); // useAuth에 정의된 logout 함수 호출
+    await logout(); // 로그아웃 API 호출 및 상태/로컬 스토리지 정리
     router.push("/login");
   }
 
