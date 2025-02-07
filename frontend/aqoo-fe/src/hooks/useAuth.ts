@@ -1,7 +1,9 @@
 // src/hooks/useAuth.ts
-import { useRecoilState } from "recoil";
+
+import { fetchUser as apiFetchUser, login as apiLogin, logout as apiLogout } from "@/services/authService";
+
 import { authAtom } from "@/store/authAtom";
-import { login as apiLogin, logout as apiLogout, fetchUser as apiFetchUser } from "@/services/authService";
+import { useRecoilState } from "recoil";
 
 export const useAuth = () => {
   const [auth, setAuth] = useRecoilState(authAtom);
