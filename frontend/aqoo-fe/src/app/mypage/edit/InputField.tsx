@@ -5,18 +5,20 @@ interface InputFieldProps {
   label: string;
   type?: string;
   placeholder?: string;
-  register: UseFormRegisterReturn;
+  register?: UseFormRegisterReturn;
+  disabled?: boolean;
 }
 
-const InputField: React.FC<InputFieldProps> = ({ label, type = "text", placeholder, register }) => {
+const InputField: React.FC<InputFieldProps> = ({ label, type = "text", placeholder, register, disabled = false }) => {
   return (
     <div>
       <label className="block text-gray-700 font-medium mb-1">{label}</label>
       <input
         type={type}
         placeholder={placeholder}
-        {...register}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-200"
+        disabled={disabled}
+        {...(register ? register : {})}
+        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-200 bg-gray-200"
       />
     </div>
   );

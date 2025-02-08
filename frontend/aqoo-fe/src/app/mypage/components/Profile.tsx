@@ -89,7 +89,7 @@ export default function ProfileInfo() {
       {/* 우측: 회원정보수정 버튼 */}
       <div className="self-start m-2 mr-5">
         <Link
-          href="/mypage"
+          href="/mypage/edit"
           className="
             min-w-[80px] h-10 px-2
             rounded-xl border border-[#040303] bg-white 
