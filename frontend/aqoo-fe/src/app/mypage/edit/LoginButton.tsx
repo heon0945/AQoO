@@ -4,7 +4,7 @@ interface LoginButtonProps {
   text: string;
   onClick?: () => void;
   isLoading?: boolean;
-  color?: "blue" | "white" | "green";
+  color?: "blue" | "white" | "green" | "red";
   icon?: ReactNode;
   type?: "button" | "submit";
 }
@@ -21,6 +21,7 @@ export default function LoginButton({
     blue: "bg-blue-700 text-white hover:bg-blue-800",
     white: "bg-white text-gray-800 border border-gray-300 hover:bg-gray-100",
     green: "bg-[#03C75A] text-white hover:bg-green-700",
+    red: "bg-[#F00] text-white hover:bg-red-800",
   };
 
   return (

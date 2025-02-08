@@ -1,39 +1,50 @@
-import { ReactNode } from "react";
+"use client";
 
-interface LoginButtonProps {
+import { useRouter } from "next/navigation";
+
+interface ButtonsProps {
   text: string;
-  onClick?: () => void;
-  isLoading?: boolean;
-  color?: "blue" | "white" | "green";
-  icon?: ReactNode;
-  type?: "button" | "submit";
 }
 
-export default function LoginButton({
-  text,
-  onClick,
-  isLoading,
-  color = "blue",
-  icon,
-  type = "submit",
-}: LoginButtonProps) {
-  const colorClasses = {
-    blue: "bg-blue-700 text-white hover:bg-blue-800",
-    white: "bg-white text-gray-800 border border-gray-300 hover:bg-gray-100",
-    green: "bg-[#03C75A] text-white hover:bg-green-700",
+export default function Buttons({ text }: ButtonsProps) {
+  const router = useRouter();
+
+  // 버튼 클릭 시 이동할 경로 결정
+  const handleNavigation = () => {
+    if (text === "BACK") {
+      router.push("/mypage");
+    } else if (text === "완료") {
+      router.push("/");
+    }
   };
 
   return (
     <button
-      type={type}
-      onClick={onClick}
-      disabled={isLoading}
-      className={`w-full flex items-center justify-center gap-2 p-3 rounded-lg transition ${colorClasses[color]} ${
-        isLoading ? "opacity-50 cursor-not-allowed" : ""
-      }`}
+      onClick={handleNavigation}
+      className="min-w-[80px] h-10 px-2 rounded-xl border border-[#040303] bg-white
+      [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset] flex items-center justify-center text-[#070707] text-center
+      font-[400] text-2xl leading-none"
     >
-      {icon && <span>{icon}</span>}
-      <span>{isLoading ? "처리 중..." : text}</span>
+      {text}
     </button>
   );
 }
+
+// "use client";
+
+// import Link from "next/link";
+
+// export default function LeftButtons() {
+//   return (
+//     <div className="flex flex-col justify-between m-2">
+//       <Link
+//         href="/mypage"
+//         className=" min-w-[80px] h-10 px-2 rounded-xl border border-[#040303] bg-white
+//         [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset] flex items-center justify-center text-[#070707] text-center
+//         font-[400] text-2xl leading-none font-[NeoDunggeunmo_Pro] "
+//       >
+//         Back
+//       </Link>
+//     </div>
+//   );
+// }
