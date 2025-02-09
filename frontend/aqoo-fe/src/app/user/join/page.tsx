@@ -44,7 +44,14 @@ export default function JoinPage() {
       className="flex justify-center items-center min-h-screen bg-cover bg-center"
       style={{ backgroundImage: "url('https://i12e203.p.ssafy.io/images/bg1.png')" }}
     >
-      <div className="bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-2xl w-96 border-t-4 border-blue-500">
+      <div className="relative bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-2xl w-96 border-t-4 border-blue-500">
+        {/* 뒤로가기 버튼 - 카드 왼쪽 상단에 위치 */}
+        <button 
+          onClick={() => router.back()} 
+          className="absolute top-4 left-4 text-blue-500 hover:underline"
+        >
+          뒤로가기
+        </button>
         <h2 className="text-center text-3xl font-bold text-blue-900 mb-6">회원가입</h2>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* 이메일 입력 */}
