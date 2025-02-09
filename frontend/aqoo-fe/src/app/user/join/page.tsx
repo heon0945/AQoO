@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useSearchParams, useRouter } from "next/navigation";
-import { InputField } from "./components/InputField";
+import InputField from "@/app/user/join/components/InputField";
 
 interface JoinFormInputs {
   email: string;
@@ -12,10 +12,10 @@ interface JoinFormInputs {
   nickName: string;
 }
 
-export default function JoinPage() {
+function JoinPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  
+
   // URL 쿼리에서 email이 있다면 소셜 가입으로 간주합니다.
   const prefillEmail = searchParams.get("email") || "";
   const isSocialJoin = Boolean(prefillEmail);
@@ -46,8 +46,8 @@ export default function JoinPage() {
     >
       <div className="relative bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-2xl w-96 border-t-4 border-blue-500">
         {/* 뒤로가기 버튼 - 카드 왼쪽 상단에 위치 */}
-        <button 
-          onClick={() => router.back()} 
+        <button
+          onClick={() => router.back()}
           className="absolute top-4 left-4 text-blue-500 hover:underline"
         >
           뒤로가기
@@ -103,5 +103,13 @@ export default function JoinPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function JoinPage() {
+  return (
+    <Suspense fallback={<div>로딩 중...</div>}>
+      <JoinPageContent />
+    </Suspense>
   );
 }
