@@ -3,6 +3,7 @@
 import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useSearchParams, useRouter } from "next/navigation";
+import { InputField } from "./components/InputField";
 
 interface JoinFormInputs {
   email: string;
@@ -26,7 +27,7 @@ export default function JoinPage() {
   } = useForm<JoinFormInputs>({
     defaultValues: {
       email: prefillEmail,
-      id: prefillEmail, // 이메일과 아이디를 동일하게
+      id: prefillEmail, // 이메일과 아이디를 동일하게 채워줍니다.
       password: "",
       nickName: "",
     },
@@ -34,7 +35,7 @@ export default function JoinPage() {
 
   const onSubmit: SubmitHandler<JoinFormInputs> = (data) => {
     console.log("회원가입 데이터:", data);
-    // 가입 API 호출 후 성공 시 로그인 페이지 등으로 이동
+    // 가입 API 호출 후 성공 시 로그인 페이지 등으로 이동합니다.
     router.push("/user/login");
   };
 
@@ -47,68 +48,44 @@ export default function JoinPage() {
         <h2 className="text-center text-3xl font-bold text-blue-900 mb-6">회원가입</h2>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* 이메일 입력 */}
-          <div>
-            <label className="block text-sm font-semibold text-blue-800">이메일</label>
-            <input
-              type="email"
-              placeholder="example@sea.com"
-              className={`mt-1 block w-full px-3 py-2 border border-blue-300 rounded-lg placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 transition ${
-                isSocialJoin ? "bg-gray-100 cursor-not-allowed" : "bg-white"
-              }`}
-              {...register("email", { required: true })}
-              disabled={isSocialJoin}
-            />
-            {errors.email && (
-              <span className="text-red-500 text-xs">필수 입력 항목입니다.</span>
-            )}
-          </div>
-          
+          <InputField
+            label="이메일"
+            type="email"
+            placeholder="example@sea.com"
+            {...register("email", { required: "필수 입력 항목입니다." })}
+            disabled={isSocialJoin}
+            error={errors.email?.message as string}
+          />
+
           {/* 아이디 입력 */}
-          <div>
-            <label className="block text-sm font-semibold text-blue-800">아이디</label>
-            <input
-              type="text"
-              placeholder="아이디"
-              className={`mt-1 block w-full px-3 py-2 border border-blue-300 rounded-lg placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 transition ${
-                isSocialJoin ? "bg-gray-100 cursor-not-allowed" : "bg-white"
-              }`}
-              {...register("id", { required: true })}
-              disabled={isSocialJoin}
-            />
-            {errors.id && (
-              <span className="text-red-500 text-xs">필수 입력 항목입니다.</span>
-            )}
-          </div>
-          
+          <InputField
+            label="아이디"
+            type="text"
+            placeholder="아이디"
+            {...register("id", { required: "필수 입력 항목입니다." })}
+            disabled={isSocialJoin}
+            error={errors.id?.message as string}
+          />
+
           {/* 비밀번호 입력 (일반 가입일 경우에만 보임) */}
           {!isSocialJoin && (
-            <div>
-              <label className="block text-sm font-semibold text-blue-800">비밀번호</label>
-              <input
-                type="password"
-                placeholder="비밀번호"
-                className="mt-1 block w-full px-3 py-2 border border-blue-300 rounded-lg placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 transition bg-white"
-                {...register("password", { required: true })}
-              />
-              {errors.password && (
-                <span className="text-red-500 text-xs">필수 입력 항목입니다.</span>
-              )}
-            </div>
-          )}
-          
-          {/* 닉네임 입력 */}
-          <div>
-            <label className="block text-sm font-semibold text-blue-800">닉네임</label>
-            <input
-              type="text"
-              placeholder="닉네임"
-              className="mt-1 block w-full px-3 py-2 border border-blue-300 rounded-lg placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 transition bg-white"
-              {...register("nickName", { required: true })}
+            <InputField
+              label="비밀번호"
+              type="password"
+              placeholder="비밀번호"
+              {...register("password", { required: "필수 입력 항목입니다." })}
+              error={errors.password?.message as string}
             />
-            {errors.nickName && (
-              <span className="text-red-500 text-xs">필수 입력 항목입니다.</span>
-            )}
-          </div>
+          )}
+
+          {/* 닉네임 입력 */}
+          <InputField
+            label="닉네임"
+            type="text"
+            placeholder="닉네임"
+            {...register("nickName", { required: "필수 입력 항목입니다." })}
+            error={errors.nickName?.message as string}
+          />
 
           <button
             type="submit"
