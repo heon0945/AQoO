@@ -1,7 +1,6 @@
 // src/hooks/useAuth.ts
 
 import { fetchUser as apiFetchUser, login as apiLogin, logout as apiLogout } from "@/services/authService";
-
 import { authAtom } from "@/store/authAtom";
 import { useRecoilState } from "recoil";
 
@@ -51,5 +50,20 @@ export const useAuth = () => {
     }
   };
 
-  return { auth, login, logout, fetchUser };
+  /**
+   * 소셜 로그인 함수
+   * - 소셜 로그인 후 받은 accessToken, userId, nickName을 이용해 Recoil 상태와 localStorage를 업데이트합니다.
+   */
+  const socialLogin = (accessToken: string, userId: string, nickName: string): void => {
+    localStorage.setItem("accessToken", accessToken);
+    localStorage.setItem("loggedInUser", userId);
+    localStorage.setItem("nickName", nickName);
+    setAuth({
+      isAuthenticated: true,
+      user: { id: userId, nickName },
+      accessToken,
+    });
+  };
+
+  return { auth, login, logout, fetchUser, socialLogin };
 };
