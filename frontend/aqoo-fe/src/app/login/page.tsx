@@ -50,7 +50,8 @@ export default function LoginPage() {
       style={{ backgroundImage: "url('https://i12e203.p.ssafy.io/images/bg1.png')" }}
     >
       <div className="bg-white p-8 rounded-2xl shadow-lg w-96">
-        <h2 className="text-center text-2xl font-bold mb-6">로그인</h2>
+        {/* 제목에 text-gray-900 추가로 대비 향상 */}
+        <h2 className="text-center text-2xl font-bold text-gray-900 mb-6">로그인</h2>
         {/* 일반 로그인 폼 */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <InputField
@@ -64,16 +65,14 @@ export default function LoginPage() {
             placeholder="비밀번호"
             register={register("pw", { required: true })}
           />
-          <div className="flex items-center justify-between text-sm">
-            <label className="flex items-center">
-              <input type="checkbox" className="mr-2" />
-              자동 로그인
-            </label>
+          {/* 자동 로그인 기능 제거 → 아이디/비밀번호 찾기 링크만 남김 */}
+          <div className="text-right text-sm">
             <a href="#" className="text-blue-500">
               아이디 / 비밀번호 찾기
             </a>
           </div>
-          <LoginButton text="로그인" isLoading={isLoading} />
+          {/* 로그인 버튼에 color prop 추가 (LoginButton 컴포넌트에서 해당 prop 활용 시) */}
+          <LoginButton text="로그인" color="blue" isLoading={isLoading} />
         </form>
 
         {/* 소셜 로그인 버튼들 */}
