@@ -1,4 +1,3 @@
-// SocialLoginCallbackClient.tsx
 'use client';
 
 export const dynamic = 'force-dynamic';
@@ -18,7 +17,7 @@ export default function SocialLoginCallbackClient() {
     const nickName = searchParams.get("nickName") || "";
 
     if (accessToken && userId) {
-      // 소셜 로그인 함수를 호출하여 Recoil 상태와 localStorage를 업데이트합니다.
+      // 소셜 로그인 함수를 호출하면 Recoil 상태에 loginType: "social" 정보도 저장됩니다.
       socialLogin(accessToken, userId, nickName);
       router.push("/test-recoil-query");
     } else {

@@ -6,8 +6,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { FcGoogle } from "react-icons/fc";
 import { SiNaver } from "react-icons/si";
-import LoginButton from "@/app/login/componets/LoginButton";
-import InputField from "@/app/login/componets/InputField";
+import LoginButton from "@/app/user/login/components/LoginButton";
+import InputField from "@/app/user/login/components/InputField";
 
 interface LoginFormInputs {
   id: string;
@@ -50,7 +50,7 @@ export default function LoginPage() {
       style={{ backgroundImage: "url('https://i12e203.p.ssafy.io/images/bg1.png')" }}
     >
       <div className="bg-white p-8 rounded-2xl shadow-lg w-96">
-        {/* 제목에 text-gray-900 추가로 대비 향상 */}
+        {/* 제목 */}
         <h2 className="text-center text-2xl font-bold text-gray-900 mb-6">로그인</h2>
         {/* 일반 로그인 폼 */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -65,13 +65,12 @@ export default function LoginPage() {
             placeholder="비밀번호"
             register={register("pw", { required: true })}
           />
-          {/* 자동 로그인 기능 제거 → 아이디/비밀번호 찾기 링크만 남김 */}
+          {/* 아이디/비밀번호 찾기 링크 */}
           <div className="text-right text-sm">
             <a href="#" className="text-blue-500">
               아이디 / 비밀번호 찾기
             </a>
           </div>
-          {/* 로그인 버튼에 color prop 추가 (LoginButton 컴포넌트에서 해당 prop 활용 시) */}
           <LoginButton text="로그인" color="blue" isLoading={isLoading} />
         </form>
 
@@ -91,6 +90,16 @@ export default function LoginPage() {
             type="button"
             onClick={() => handleSocialLogin("naver")}
           />
+        </div>
+
+        {/* 회원가입 버튼 (일반 회원가입은 모든 정보를 직접 입력) */}
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => router.push("/user/join")}
+            className="text-blue-500 hover:underline"
+          >
+            회원가입
+          </button>
         </div>
       </div>
     </div>

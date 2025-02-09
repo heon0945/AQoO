@@ -1,4 +1,3 @@
-// src/store/authAtom.ts
 import { atom } from "recoil";
 
 export interface User {
@@ -11,6 +10,8 @@ export interface AuthState {
   isAuthenticated: boolean;
   user?: User;
   accessToken?: string;
+  // 로그인 방식 정보를 추가 (소셜 로그인 vs 일반 로그인)
+  loginType?: "social" | "regular";
   // refreshToken은 보안상 쿠키로 관리하므로 store에 저장하지 않습니다.
 }
 
