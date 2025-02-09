@@ -1,17 +1,18 @@
-'use client';
+"use client";
 
 import { useState } from "react";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 import { RecoilRoot, useRecoilValue } from "recoil";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useRouter } from "next/navigation"; // 뒤로가기 버튼 / 참가자 정보 같이 넘기기
-import { participantsState } from "@/store/participantAtom"; // 참가자 상태 가져오기
-
+import { participantsState, Friend } from "@/store/participantAtom";
 
 import FriendList from "@/app/gameroom/FriendList";
 import ParticipantList from "@/app/gameroom/ParticipantList";
 
+const API_BASE_URL = "http://i12e203.p.ssafy.io:8089/api/v1";
+
 export default function GameRoom() {
-  // Query Client 생성
   const [queryClient] = useState(() => new QueryClient());
 
   return (
@@ -23,43 +24,45 @@ export default function GameRoom() {
   );
 }
 
-// 방 생성 컴포넌트 (Recoil 상태 사용)
 function RoomCreationScreen() {
   const participants = useRecoilValue(participantsState);
-  const router = useRouter(); // 뒤로가기
+  const router = useRouter();
 
-  const handleCreateRoom = () => {
-
+  const handleCreateRoom = async () => {
     if (participants.length === 0) {
       alert("⚠ 참가자가 없습니다! 최소 1명 이상 추가해주세요.");
       return;
     }
-
-    const encodedData = encodeURIComponent(JSON.stringify(participants));
-    console.log("🚀 참가자 정보 전송:", encodedData); // ✅ 로그 추가
-    console.log('이동할 url', `/chat?data=${encodedData}`);
-      setTimeout(() => {
-        router.push(`/chat?data=${encodedData}`);
-    }, 100);
   
-
-    // 참가자 정보 URL 쿼리스트링으로 넘기기
-    const query = 'data=${encodeURIComponent(JSON.stringify(participants))}';
-    router.push(`/chat?${query}`);
-
-    // 참가자 있으면 채팅방으로 이동
-    router.push("/chat");
+    try {
+      console.log("🚀 [TEST] 채팅방 생성 요청 시작 (실제 API 없음)");
+  
+      // ✅ 1️⃣ 가짜 채팅방 ID 생성 (실제 API가 없으므로)
+      const fakeRoomId = `test_room_${Date.now()}`;
+      console.log("✅ [TEST] 채팅방 생성 성공, Room ID:", fakeRoomId);
+  
+      // ✅ 2️⃣ 가짜 친구 초대 처리 (실제 API 없음)
+      const invitedUsers = participants.slice(1).map((friend) => friend.id);
+      console.log("✅ [TEST] 친구 초대 완료:", invitedUsers);
+  
+      // ✅ 3️⃣ 채팅방으로 이동 (가짜 Room ID 사용)
+      const encodedData = encodeURIComponent(JSON.stringify(participants));
+      router.push(`/chat?data=${encodedData}&roomId=${fakeRoomId}`);
+  
+    } catch (error) {
+      console.error("❌ [TEST] 채팅방 생성 또는 초대 실패", error);
+      alert("테스트 환경에서 채팅방을 생성하는 데 실패했습니다.");
+    }
   };
+  
 
   return (
     <div
       className="relative flex flex-col items-center justify-center min-h-screen bg-cover bg-center"
       style={{ backgroundImage: "url('/images/background.png')" }}
     >
-      {/* 투명도 있는 배경 오버레이 */}
       <div className="absolute inset-0 bg-white opacity-20"></div>
 
-      {/* 메인 컨텐츠 */}
       <div className="relative z-10 flex flex-col items-center">
         <h1 className="text-5xl font-bold mb-6 text-black">🎮 방 만들기 🕹️</h1>
         <div className="flex gap-6">
@@ -68,7 +71,6 @@ function RoomCreationScreen() {
         </div>
       </div>
 
-      {/* 방 만들기 버튼 */}
       <button
         className="fixed bottom-10 right-7 px-10 py-2 rounded-lg border border-black bg-white text-2xl shadow-md hover:bg-gray-100"
         onClick={handleCreateRoom}
@@ -76,7 +78,6 @@ function RoomCreationScreen() {
         만들기
       </button>
 
-      {/* 뒤로가기 버튼 (메인페이지로 이동) */}
       <button
         className="fixed bottom-10 left-7 px-10 py-2 rounded-lg border border-black bg-white text-2xl shadow-md hover:bg-gray-100"
         onClick={() => router.push("/")}
