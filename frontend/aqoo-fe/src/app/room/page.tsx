@@ -13,7 +13,7 @@ export default function CreateChatRoom() {
     setLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:8089/api/v1/chatrooms?userId=${encodeURIComponent(
+        `https://i12e203.p.ssafy.io/api/v1/chatrooms?userId=${encodeURIComponent(
           userName
         )}`,
         {

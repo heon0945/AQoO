@@ -29,6 +29,7 @@ body {
 @font-face {
   font-family: "NeoDunggeunmoPro";
   src: url("/NeoDunggeunmoPro-Regular.woff") format("woff");
+
   font-weight: normal;
   font-style: normal;
 }

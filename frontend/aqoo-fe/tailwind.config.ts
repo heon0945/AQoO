@@ -31,6 +31,7 @@ const config: Config = {
       animation: {
         shrinkExpand: "shrinkExpand 0.3s ease-in-out", // 0.3초 동안 실행
       },
+
     },
   },
   // eslint-disable-next-line @typescript-eslint/no-require-imports

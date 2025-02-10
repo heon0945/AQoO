@@ -18,7 +18,7 @@ export default function RoomPage({ params }: RoomPageProps) {
 
   return (
     <div className="min-h-screen p-4 bg-gray-100">
-      <IntegratedRoom roomId={roomid} userName={userName} isHost={isHost} />
+      <IntegratedRoom roomId={roomid} userName={userName} />
     </div>
   );
 }
