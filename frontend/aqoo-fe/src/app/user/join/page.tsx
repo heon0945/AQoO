@@ -4,6 +4,8 @@ import React, { Suspense } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useSearchParams, useRouter } from "next/navigation";
 import InputField from "@/app/user/join/components/InputField";
+import axiosInstance from "@/services/axiosInstance" // axios 인스턴스 import (경로는 환경에 맞게 조정)
+import axios from "axios";
 
 interface JoinFormInputs {
   email: string;
@@ -33,10 +35,18 @@ function JoinPageContent() {
     },
   });
 
-  const onSubmit: SubmitHandler<JoinFormInputs> = (data) => {
-    console.log("회원가입 데이터:", data);
-    // 가입 API 호출 후 성공 시 로그인 페이지 등으로 이동합니다.
-    router.push("/user/login");
+  const onSubmit: SubmitHandler<JoinFormInputs> = async (data) => {
+    // 요청 본문에 소셜 로그인 여부 추가
+    const requestBody = { ...data, isSocialLogin: isSocialJoin };
+    try {
+      console.log("보낼 데이터 : " + requestBody)
+      const response = await axios.post("https://i12e203.p.ssafy.io/api/v1/auth/register", requestBody);
+      console.log("회원가입 성공:", response.data);
+      router.push("/user/login");
+    } catch (error: any) {
+      console.error("회원가입 실패:", error);
+      alert(error.message);
+    }
   };
 
   return (
@@ -59,7 +69,7 @@ function JoinPageContent() {
             label="이메일"
             type="email"
             placeholder="example@sea.com"
-            {...register("email", { required: "필수 입력 항목입니다." })}
+            register={register("email", { required: "필수 입력 항목입니다." })}
             disabled={isSocialJoin}
             error={errors.email?.message as string}
           />
@@ -69,7 +79,7 @@ function JoinPageContent() {
             label="아이디"
             type="text"
             placeholder="아이디"
-            {...register("id", { required: "필수 입력 항목입니다." })}
+            register={register("id", { required: "필수 입력 항목입니다." })}
             disabled={isSocialJoin}
             error={errors.id?.message as string}
           />
@@ -80,7 +90,7 @@ function JoinPageContent() {
               label="비밀번호"
               type="password"
               placeholder="비밀번호"
-              {...register("password", { required: "필수 입력 항목입니다." })}
+              register={register("password", { required: "필수 입력 항목입니다." })}
               error={errors.password?.message as string}
             />
           )}
@@ -90,7 +100,7 @@ function JoinPageContent() {
             label="닉네임"
             type="text"
             placeholder="닉네임"
-            {...register("nickName", { required: "필수 입력 항목입니다." })}
+            register={register("nickName", { required: "필수 입력 항목입니다." })}
             error={errors.nickName?.message as string}
           />
 
