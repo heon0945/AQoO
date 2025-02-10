@@ -3,7 +3,7 @@
 import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import InputField from "@/app/user/find-id/components/InputField"; // 혹은 재사용 가능한 InputField 컴포넌트를 사용
+import InputField from "@/app/user/find-id/components/InputField";
 
 interface FindIdFormInputs {
   email: string;
@@ -11,17 +11,12 @@ interface FindIdFormInputs {
 
 export default function FindIdPage() {
   const router = useRouter();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FindIdFormInputs>();
+  const { register, handleSubmit, formState: { errors } } = useForm<FindIdFormInputs>();
 
   const onSubmit: SubmitHandler<FindIdFormInputs> = (data) => {
     console.log("아이디 찾기 데이터:", data);
-    // 실제 API 호출 후 결과에 따라 페이지 이동 또는 결과 표시 로직을 구현합니다.
-    // 여기서는 예시로 확인 페이지로 이동하도록 처리합니다.
-    router.push("/user/find-id/confirmation");
+    // 폼 제출 시, 입력한 이메일을 쿼리 파라미터로 포함하여 확인 페이지로 이동
+    router.push(`/user/find-id/confirmation?email=${encodeURIComponent(data.email)}`);
   };
 
   return (

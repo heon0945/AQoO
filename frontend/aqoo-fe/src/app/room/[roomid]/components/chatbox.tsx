@@ -1,6 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+// components/ChatBox.tsx
+'use client';
+
+import { useEffect, useState } from 'react';
 import { getStompClient } from '@/lib/stompclient';
 
+// 채팅 메시지 타입 (필요에 따라 ChatMessageDto를 사용해도 됩니다)
 interface ChatMessage {
   roomId: string;
   sender: string;
@@ -16,12 +20,12 @@ interface ChatBoxProps {
 export default function ChatBox({ roomId, userName }: ChatBoxProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // WebSocket 구독: 채팅 메시지를 받음
   useEffect(() => {
     const client = getStompClient();
     if (client) {
+      // ChatWebSocketController의 sendMessage 메서드가 "/topic/{roomId}" 로 메시지를 전송한다고 가정
       const subscription = client.subscribe(`/topic/${roomId}`, (messageFrame) => {
         const message: ChatMessage = JSON.parse(messageFrame.body);
         setMessages((prev) => [...prev, message]);
@@ -29,15 +33,6 @@ export default function ChatBox({ roomId, userName }: ChatBoxProps) {
       return () => subscription.unsubscribe();
     }
   }, [roomId]);
-
-  // 메시지가 업데이트되면 마지막 메시지 요소로 스크롤
-  useEffect(() => {
-    console.log("메세지 업데이트", messagesEndRef.current);
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
-  
 
   // 메시지 전송 함수
   const sendMessage = () => {
@@ -64,12 +59,15 @@ export default function ChatBox({ roomId, userName }: ChatBoxProps) {
     <div className="border rounded p-4 mt-6">
       <div className="h-64 overflow-y-auto mb-4">
         {messages.map((msg, index) => (
-          <div key={index} className="mb-2">
+          <div
+            key={index}
+            className={`mb-2 ${
+              msg.sender === userName ? 'text-right' : 'text-left'
+            }`}
+          >
             <strong>{msg.sender}</strong>: {msg.content}
           </div>
         ))}
-        {/* 스크롤을 위한 빈 요소 */}
-        <div ref={messagesEndRef} />
       </div>
       <div className="flex">
         <input

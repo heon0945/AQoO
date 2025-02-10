@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { SubmitHandler, useForm } from "react-hook-form";
+
+import { FcGoogle } from "react-icons/fc";
+import InputField from "@/app/user/login/components/InputField";
+import LoginButton from "@/app/user/login/components/LoginButton";
+import { SiNaver } from "react-icons/si";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import { FcGoogle } from "react-icons/fc";
-import { SiNaver } from "react-icons/si";
-import LoginButton from "@/app/user/login/components/LoginButton";
-import InputField from "@/app/user/login/components/InputField";
 
 interface LoginFormInputs {
   id: string;
@@ -26,7 +27,7 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await login(data.id, data.pw);
-      router.push("/test-recoil-query");
+      router.push("/main");
     } catch (error: any) {
       alert(error.message);
     } finally {
@@ -38,10 +39,7 @@ export default function LoginPage() {
    * 소셜 로그인 버튼 클릭 시, 백엔드의 OAuth2 엔드포인트로 브라우저를 이동합니다.
    */
   const handleSocialLogin = (provider: "google" | "naver") => {
-    const url =
-      provider === "google"
-        ? "/oauth2/authorization/google"
-        : "/oauth2/authorization/naver";
+    const url = provider === "google" ? "/oauth2/authorization/google" : "/oauth2/authorization/naver";
     window.location.href = url;
   };
 
@@ -65,11 +63,7 @@ export default function LoginPage() {
       <div className="bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-2xl w-96 border-t-4 border-blue-500">
         <h2 className="text-center text-3xl font-bold text-blue-900 mb-6">로그인</h2>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <InputField
-            label="아이디"
-            placeholder="아이디"
-            register={register("id", { required: true })}
-          />
+          <InputField label="아이디" placeholder="아이디" register={register("id", { required: true })} />
           <InputField
             label="비밀번호"
             type="password"
@@ -109,10 +103,7 @@ export default function LoginPage() {
 
         {/* 회원가입 버튼 */}
         <div className="mt-6 text-center">
-          <button
-            onClick={() => router.push("/user/join")}
-            className="text-blue-500 hover:underline"
-          >
+          <button onClick={() => router.push("/user/join")} className="text-blue-500 hover:underline">
             회원가입
           </button>
         </div>
