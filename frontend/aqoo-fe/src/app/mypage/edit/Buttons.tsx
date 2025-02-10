@@ -14,7 +14,7 @@ export default function Buttons({ text }: ButtonsProps) {
     if (text === "BACK") {
       router.push("/mypage");
     } else if (text === "완료") {
-      router.push("/");
+      router.push("/mypage/edit");
     }
   };
 

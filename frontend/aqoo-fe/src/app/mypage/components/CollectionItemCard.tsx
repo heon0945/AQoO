@@ -10,26 +10,42 @@ interface CollectionItemCardProps {
   name: string;
   count: number;
   imageSrc: string;
+  isModal?: boolean;
+  isSelected?: boolean;
+  onClick: () => void;
 }
 
-export default function CollectionItemCard({ name, count, imageSrc }: CollectionItemCardProps) {
+export default function CollectionItemCard({
+  name,
+  count,
+  imageSrc,
+  isModal = false,
+  isSelected = false,
+  onClick,
+}: CollectionItemCardProps) {
   return (
     <div
-      className="
+      onClick={onClick}
+      className={`
         flex flex-col m-2
         w-[170px] h-[170px] flex-shrink-0
         items-center justify-center
         rounded-xl border border-black bg-white
-        [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset]
         text-[1.5em] font-bold
-      "
+        ${
+          isModal
+            ? "hover:border-4 hover:border-green-400 [box-shadow:0px_0px_0px_1px_rgba(0,0,0,0.5)]"
+            : "[box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset]"
+        }
+        ${isModal && isSelected ? "border-4 border-yellow-400" : ""}
+      `}
     >
       <div
-        className="
+        className={`
           w-[150px] h-[150px]
           flex flex-col items-center justify-center
           rounded-xl border border-black bg-white
-        "
+        `}
       >
         <div className="flex-1 flex items-center justify-center">
           <Image src={imageSrc} alt={name} width={130} height={130} style={{ objectFit: "cover" }} />

@@ -10,6 +10,8 @@ import ModalButtons from "./ModalButtons";
 import Buttons from "./Buttons";
 import PasswordChangeModal from "./PasswordChangeModal";
 import DeleteAccountModal from "./DeleteAccountModal";
+import MyFishChangeModal from "./MyFishChangeModal";
+import MyFishlist from "../components/MyFishList";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -17,6 +19,19 @@ import Link from "next/link";
 interface ProfileFormInputs {
   nickname: string;
 }
+
+const EditPage = () => {
+  const server = "https://i12e203.p.ssafy.io";
+  const userId = "moolgogi2";
+  const token = "your-access-token";
+
+  return (
+    <div>
+      <h1>내 어항</h1>
+      <MyFishlist server={server} userId={userId} token={token} />
+    </div>
+  );
+};
 
 export default function EditProfilePage() {
   const { register, handleSubmit, setValue } = useForm<ProfileFormInputs>();
@@ -31,6 +46,7 @@ export default function EditProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isMyFishModalOpen, setIsMyFishModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -106,9 +122,9 @@ export default function EditProfilePage() {
       <div className="absolute top-0 left-0 m-2">
         <Buttons text="BACK" />
       </div>
-      <div className="absolute bottom-0 right-0 m-2">
+      {/* <div className="absolute bottom-0 right-0 m-2">
         <Buttons text="완료" />
-      </div>
+      </div> */}
 
       <div
         className="
@@ -142,18 +158,13 @@ export default function EditProfilePage() {
               )}
             </div>
           </div>
-          <Link
-            href={"/mypage"}
-            className="            m-1 p-1
-            min-w-[200px] h-[40px] px-2
-            flex items-center justify-center
-            rounded-xl border border-[#040303] bg-white 
-            [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset]
-            text-[#070707] text-center font-[400] text-xl
-            "
-          >
-            대표 물고기 변경
-          </Link>
+          <ModalButtons
+            text="대표 물고기 변경"
+            isLoading={isLoading}
+            color="none"
+            onClick={() => setIsMyFishModalOpen(true)}
+            isSpecial={true}
+          />
         </div>
         <div className="flex-1">
           <div className="bg-white p-8 rounded-2xl shadow-lg w-[450px]">
@@ -162,21 +173,17 @@ export default function EditProfilePage() {
               <div>
                 <InputField label="아이디" placeholder={userData?.id || "로딩 중..."} variant="static" />
                 <InputField label="이메일" placeholder={userData?.email || "로딩 중..."} variant="static" />
-                <InputField
-                  label="닉네임"
-                  placeholder={userData?.nickname || "닉네임 입력"}
-                  register={register("nickname", { required: true })}
-                  variant="dynamic"
-                />
+                <div className="flex items-end justify-between gap-4 relative">
+                  <div className="relative w-full">
+                    <InputField
+                      label="닉네임"
+                      placeholder={userData?.nickname || "닉네임 입력"}
+                      register={register("nickname", { required: true })}
+                      variant="nickname"
+                    />
+                  </div>
+                </div>
               </div>
-              {/* <div>
-                <label className="block text-gray-700 font-medium mb-1">아이디</label>
-                <div className="bg-gray-200 px-3 py-2 rounded-md text-gray-700">{userData?.id || "로딩 중..."}</div>
-              </div>
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">이메일</label>
-                <div className="bg-gray-200 px-3 py-2 rounded-md text-gray-700">{userData?.email || "로딩 중..."}</div>
-              </div> */}
             </form>
             <div className="flex justify-between gap-4 mt-4">
               <ModalButtons
@@ -193,6 +200,7 @@ export default function EditProfilePage() {
               />
               {isPasswordModalOpen && <PasswordChangeModal onClose={() => setIsPasswordModalOpen(false)} />}
               {isDeleteModalOpen && <DeleteAccountModal onClose={() => setIsDeleteModalOpen(false)} />}
+              {isMyFishModalOpen && <MyFishChangeModal onClose={() => setIsMyFishModalOpen(false)} />}
             </div>
           </div>
         </div>

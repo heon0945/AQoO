@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-export default function ProfileInfo() {
+export default function Profile() {
   return (
     <div
       className="
