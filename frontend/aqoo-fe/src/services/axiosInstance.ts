@@ -5,7 +5,7 @@ import axios, {
     AxiosError,
 } from "axios";
 
-const BASE_URL = "https://i12e203.p.ssafy.io:8089/api/v1";
+const BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 const REFRESH_URL = "/auth/refresh";  // 토큰 갱신 API 엔드포인트
 
 const axiosInstance: AxiosInstance = axios.create({
