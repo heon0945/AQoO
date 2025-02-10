@@ -17,7 +17,6 @@ interface RoomUpdate {
 interface IntegratedRoomProps {
   roomId: string; // 예: "e0ec13d4-9101-4ae0-a22f-681b8c0fe32f"
   userName: string;
-  // 기존에 전달받던 isHost는 이제 무시하고, 서버에서 받은 값을 사용합니다.
 }
 
 export default function IntegratedRoom({
@@ -65,7 +64,6 @@ export default function IntegratedRoom({
             } else if (data.message === 'USER_LIST') {
               setUsers(data.users ?? []);
             }
-            // GAME_ENDED 관련 처리는 Game 컴포넌트에서 진행합니다.
           }
         );
         clearInterval(intervalId);

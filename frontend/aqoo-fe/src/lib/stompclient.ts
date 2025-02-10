@@ -5,7 +5,7 @@ let stompClient: Client | null = null;
 
 export const connectStompClient = (onConnect: () => void) => {
   stompClient = new Client({
-    webSocketFactory: () => new SockJS('http://localhost:8089/ws'),
+    webSocketFactory: () => new SockJS('https://i12e203.p.ssafy.io/ws'),
     reconnectDelay: 5000,
     debug: (str) => {
       console.log(str);
