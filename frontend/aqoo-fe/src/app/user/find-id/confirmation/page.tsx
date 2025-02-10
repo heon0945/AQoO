@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import axios from "axios";
 
@@ -12,7 +12,8 @@ interface FindIdResponseError {
   message: string;
 }
 
-export default function FindIdConfirmationPage() {
+// 실제 컨텐츠를 보여주는 컴포넌트
+function FindIdContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const email = searchParams.get("email") || "";
@@ -54,7 +55,6 @@ export default function FindIdConfirmationPage() {
       style={{ backgroundImage: "url('https://i12e203.p.ssafy.io/images/bg1.png')" }}
     >
       <div className="relative bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-2xl w-96 border-t-4 border-blue-500">
-        {/* 뒤로가기 버튼 */}
         <button
           onClick={() => router.back()}
           className="absolute top-4 left-4 text-blue-500 hover:underline"
@@ -75,5 +75,14 @@ export default function FindIdConfirmationPage() {
         )}
       </div>
     </div>
+  );
+}
+
+// 메인 페이지 컴포넌트
+export default function FindIdConfirmationPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <FindIdContent />
+    </Suspense>
   );
 }
