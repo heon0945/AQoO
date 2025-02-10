@@ -44,6 +44,18 @@ export default function IntegratedRoom({
   const hasSentJoinRef = useRef(false);
   const router = useRouter();
 
+  // userName이 없을 경우 랜덤 이름 생성 후 URL 업데이트 (리다이렉트)
+  useEffect(() => {
+    if (!userName || userName.trim() === '') {
+      const randomUserName = `User${Math.floor(Math.random() * 10000)}`;
+      // 현재 URL을 가져와서 userName 파라미터 설정
+      const currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.set('userName', randomUserName);
+      // router.replace를 사용하면 URL을 변경하면서 페이지를 다시 로드할 수 있습니다.
+      router.replace(currentUrl.toString());
+    }
+  }, [userName, router]);
+
   // STOMP 연결 활성화
   useEffect(() => {
     connectStompClient(() => {
@@ -83,7 +95,8 @@ export default function IntegratedRoom({
               // 서버에서 방송한 추방 메시지 처리
               if (data.targetUser === userName) {
                 // 만약 현재 사용자가 추방되었다면 방 선택 화면으로 이동
-                router.push('/room');
+                // router.push('/room');
+                router.push('/room?status=kicked');
               } else {
                 // 목록에서 추방된 사용자를 제거
                 setUsers((prevUsers) =>
