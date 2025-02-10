@@ -2,13 +2,37 @@
 
 import CollectionItemCard from "./CollectionItemCard";
 
+interface CustomCollectionTapProps {
+  customFishList:{
+  fishTypeId: number;
+  fishTypeName: string;
+  fishImage: string;
+}[];
+}
 // 탭 "커스텀" 화면
-export default function CustomCollectionTab() {
-  // 여기서는 예시로 단 1개의 아이템만 표시
-  // 실제로 여러 개를 표시하려면 Array.map() 형태로 구현해도 됩니다.
+export default function CustomCollectionTab({customFishList}:CustomCollectionTapProps) {
   return (
     <div className="flex flex-wrap">
-      <CollectionItemCard imageSrc="/images/대표이미지샘플.png" name="거북이" count={111} />
+      {customFishList.map((fish) => (
+      <CollectionItemCard 
+      key={fish.fishTypeId}
+      imageSrc={fish.fishImage}
+      name={fish.fishTypeName}/>
+      ))}
     </div>
   );
 }
+
+
+// {Array(50)
+//   .fill(null)
+//   .map((_, index) => {
+//     const fish = userFishList[index]; // 현재 index에 해당하는 물고기 가져오기
+//     const imageSrc = fish
+//       ? `${fish.fishImage}`
+//       : "/images/배경샘플.png"; // 물고기가 없으면 기본 배경 이미지 사용
+//     console.log(`이미지: ${imageSrc}`)
+//     const name = fish ? fish.fishTypeName : `미등록`; // 물고기가 없으면 기본 이름
+//     const count = fish ? fish.cnt : 0; // 기본 수량 (물고기가 없으면 0)
+//     return <CollectionItemCard key={index} imageSrc={imageSrc} name={name} count={count} />;
+//   })}

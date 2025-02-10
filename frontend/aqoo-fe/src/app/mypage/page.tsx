@@ -6,11 +6,13 @@ import Profile from "./components/Profile";
 
 import { useUserFishCollectionTest } from "@/hooks/useUserFishCollection";
 import { useAllFishCollectionTest } from "@/hooks/useAllFishCollection";
-import CollectionItemCard from "./components/CollectionItemCard";
+import { useCustomFishCollectionTest } from "@/hooks/useCustomFishCollection";
+
 
 export default function MyPage() {
   const { fishList: userFishList, isLoading: isUserLoading, error: userError } = useUserFishCollectionTest();
   const { fishList: allFishList, isLoading: isAllLoading, error: allError } = useAllFishCollectionTest();
+  const { fishList: customFishList, isLoading: isCustomLoading, error: customError} = useCustomFishCollectionTest()
 
   return (
     <div
@@ -50,15 +52,9 @@ export default function MyPage() {
             <p>🌊 전체 물고기 종류 수: {allFishList.length}</p>
           )}
 
-          {/* 물고기 리스트 출력 */}
-          {/* <div className="grid grid-cols-3 gap-4">
-            {fishList.map((fish) => (
-              <CollectionItemCard key={fish.id} imageSrc={fish.imageSrc} name={fish.name} count={fish.count} />
-            ))}
-          </div> */}
         </div>
         <Profile />
-        <MyCollection allFishList={allFishList}/>
+        <MyCollection allFishList={allFishList} userFishList={userFishList} customFishList={customFishList}/>
       </div>
     </div>
   );

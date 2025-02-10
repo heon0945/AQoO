@@ -8,7 +8,7 @@ import Image from "next/image";
 // imageSrc: 이미지 경로
 interface CollectionItemCardProps {
   name: string;
-  count: number;
+  count?: number;
   imageSrc: string;
   isModal?: boolean;
   isSelected?: boolean;
