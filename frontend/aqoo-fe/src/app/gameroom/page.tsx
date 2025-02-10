@@ -85,23 +85,36 @@ export default function GameRoomPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
-      <h1 className="text-3xl font-bold mb-6 text-gray-900 text-center">
-        참가자 관리 및 채팅방 생성
-      </h1>
+    <div
+      className="relative flex flex-col items-center justify-center min-h-screen bg-cover bg-center"
+      style={{ backgroundImage: "url('/images/background.png"}}
+    >
+      {/* 배경 */}
+      <div className="absolute inset-0 bg-white opacity-20"></div>
 
-      <div className="flex gap-6">
-        <FriendList />
-        <ParticipantList />
+      {/* 내용물 */}
+      <div className="relative z-10 flex flex-col items-center">
+        <h1 className="ext-4xl font-bold mb-6 text-black text-5xl">🎮 방 만들기 🕹️</h1>
+        <div className="flex gap-6">
+          <FriendList />
+          <ParticipantList />
+        </div>
       </div>
 
+      {/* 만들기 버튼 */}
       <button
-        onClick={handleCreateRoom}
-        disabled={!userName || participants.length === 0 || loading}
-        className="mt-6 w-60 px-4 py-3 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 disabled:opacity-50"
+        className="fixed bottom-10 right-7 px-10 py-1 rounded border border-black bg-white text-2xl"
+        onClick={handleCreateRoom} // 버튼 클릭 시 실행
       >
-        {loading ? "Creating..." : "채팅방 생성"}
+        만들기
+      </button>
+
+      {/* 뒤로가기 버튼 */}
+      <button className="fixed bottom-10 left-7 px-10 py-1 rounded border border-black bg-white text-2xl">
+        BACK
       </button>
     </div>
   );
+
+  
 }
