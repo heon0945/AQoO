@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -11,37 +11,44 @@ export default function SocialLoginCallbackClient() {
   const searchParams = useSearchParams();
   const { socialLogin } = useAuth();
 
-  useEffect(() => {
-    const handleRedirect = async () => {
+  const handleRedirect = useCallback(async () => {
+    const accessToken = searchParams.get("accessToken") || "";
+    const userId = searchParams.get("userId") || "";
+    const nickName = searchParams.get("nickName") || "";
+    const isNewUser = searchParams.get("isNewUser") === "true";
+
+    // socialLogin이 필요한 경우 먼저 실행
+    if (accessToken && userId) {
       try {
-        const accessToken = searchParams.get("accessToken") || "";
-        const userId = searchParams.get("userId") || "";
-        const nickName = searchParams.get("nickName") || "";
-        const isNewUser = searchParams.get("isNewUser") === "true";
-
-        if (isNewUser && accessToken === "" && nickName === "" && userId) {
-          await router.push(`/user/join?email=${encodeURIComponent(userId)}`);
-        }
-        else if (accessToken && userId) {
-          await socialLogin(accessToken, userId, nickName);
-          await router.push("/test-recoil-query");
-        }
-        else {
-          await router.push("/user/login");
-        }
+        await socialLogin(accessToken, userId, nickName);
       } catch (error) {
-        console.error("Redirect error:", error);
+        console.error("Social login failed:", error);
+        router.push("/user/login");
+        return;
       }
-    };
+    }
 
-    handleRedirect();
-
-    // cleanup 함수 추가
-    return () => {
-      // 필요한 cleanup 로직
-    };
+    // 라우팅 로직
+    if (isNewUser && accessToken === "" && nickName === "" && userId) {
+      router.replace(`/user/join?email=${encodeURIComponent(userId)}`);
+    } else if (accessToken && userId) {
+      router.replace("/test-recoil-query");
+    } else {
+      router.replace("/user/login");
+    }
   }, [router, searchParams, socialLogin]);
 
+  useEffect(() => {
+    let mounted = true;
+
+    if (mounted) {
+      handleRedirect();
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [handleRedirect]);
 
   return <div>로그인 중입니다...</div>;
 }
