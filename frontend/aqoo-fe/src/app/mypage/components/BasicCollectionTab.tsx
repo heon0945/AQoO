@@ -4,6 +4,9 @@ import Image from "next/image";
 import CollectionItemCard from "./CollectionItemCard";
 
 export default function BaicCollectionTab() {
+  const all_collection = "https://i12e203.p.ssafy.io/api/v1/fish/all-collection";
+  const my_collection_api = "https://i12e203.p.ssafy.io/api/v1/fish/collection/:user-id";
+
   // 도감 이미지 Dummy
   const images = [
     "대표이미지샘플 (2).png",

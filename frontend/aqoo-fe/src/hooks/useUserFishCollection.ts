@@ -1,44 +1,32 @@
 "use client";
 
+// ✅ 테스트용 훅 (Auth 없이 임의 userId 사용)
 import { useEffect, useState } from "react";
-import { fetchMyFish } from "@/lib/fish_api";
-import { useAuth } from "./useAuth";
+import { fetchUserFishCollectionTest } from "@/lib/api";
 
 interface FishData {
-  id: number;
-  name: string;
-  count: number;
-  imageSrc: string;
+  fishTypeId: number;
+  fishTypeName: string;
+  fishImage: string;
+  cnt: number;
 }
 
-/* 커스텀 훅: 물고기 목록을 불러오고, 로딩/에러 상태 등을 관리 */
-
-export function useFishCollection() {
-  const { auth } = useAuth;
+/**
+ * 테스트용 커스텀 훅 (로그인 없이 특정 userId의 물고기 도감을 가져옴)
+ */
+export function useUserFishCollectionTest() {
   const [fishList, setFishList] = useState<FishData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!auth?.isAuthenticated || !auth.user?.id || !auth.accessToken) {
-      setError(new Error("로그인 정보가 없습니다."));
-      setIsLoading(false);
-      return;
-    }
-
     async function loadFish() {
       try {
-        const data = await fetchMyFish(auth.user.id, auth.accessToken);
+        const data = await fetchUserFishCollectionTest();
         if (data) {
-          const formattedData: FishData[] = data.map((fish: any) => ({
-            id: fish.fishTypeId,
-            name: fish.fishTypeName,
-            count: 1,
-            imageSrc: fish.fishImage,
-          }));
-          setFishList(formattedData);
+          setFishList(data);
         } else {
-          setError(new Error("물고기 정보를 불러오는데 실패했습니다."));
+          setError(new Error("물고기 도감 데이터를 불러오지 못했습니다."));
         }
       } catch (e) {
         setError(e as Error);
@@ -46,8 +34,9 @@ export function useFishCollection() {
         setIsLoading(false);
       }
     }
+
     loadFish();
-  }, [auth]);
+  }, []);
 
   return { fishList, isLoading, error };
 }

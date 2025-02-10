@@ -12,7 +12,7 @@ interface CollectionItemCardProps {
   imageSrc: string;
   isModal?: boolean;
   isSelected?: boolean;
-  onClick: () => void;
+  onClick?: () => void;
 }
 
 export default function CollectionItemCard({
