@@ -13,7 +13,7 @@ export default function FriendList() {
 
   // 
 
-  const handleAddParticipant = (friend: Friend) => {
+  const handleAddParticipant = (friend: Friend) => {g
     // 참가자 추가 최대 5명으로 제한
     if (participants.length >= 5) {
       alert("최대 5명까지만 초대할 수 있습니다!")
