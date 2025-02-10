@@ -4,6 +4,7 @@ import { connectStompClient, getStompClient } from '@/lib/stompclient';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import Game from './game';
+import ChatBox from './chatbox';
 
 // 플레이어 타입 정의 (Game 컴포넌트와 동일한 구조)
 interface Player {
@@ -181,6 +182,9 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
                   ))}
                 </ul>
               </div>
+
+              {/* 채팅 영역 추가 */}
+              <ChatBox roomId={roomId} userName={userName} />
 
               {/* 버튼 영역 */}
               <div className="mt-6 flex flex-col items-center space-y-4">
