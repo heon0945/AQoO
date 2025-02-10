@@ -18,7 +18,7 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
   const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  const API_BASE_URL = "http://i12e203.p.ssafy.io:8089/api/v1";
+  const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
   // ✅ 친구 목록 API 호출
   useEffect(() => {
