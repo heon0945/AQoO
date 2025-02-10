@@ -79,23 +79,31 @@ export default function GameRoomPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
-      <h1 className="text-3xl font-bold mb-6 text-gray-900 text-center">
-        참가자 관리 및 채팅방 생성
-      </h1>
-
-      <div className="flex gap-6">
-        <FriendList />
-        <ParticipantList />
+    <div className="relative flex flex-col items-center justify-center min-h-screen">
+      {/* 배경 이미지 div */}
+      <div className="absolute inset-0 bg-cover bg-center bg-[url('/images/background.png')] opacity-80"></div>
+  
+      {/* 내부 콘텐츠 영역 */}
+      <div className="relative min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
+        <h1 className="text-3xl font-bold mb-6 text-gray-900 text-center">
+          🎮 방 만들기 🕹️
+        </h1>
+  
+        <div className="flex gap-6">
+          <FriendList />
+          <ParticipantList />
+        </div>
+  
+        <button
+          onClick={handleCreateRoom}
+          disabled={!userName || participants.length === 0 || loading}
+          className="mt-6 w-60 px-4 py-3 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 disabled:opacity-50"
+        >
+          {loading ? "Creating..." : "채팅방 생성"}
+        </button>
       </div>
-
-      <button
-        onClick={handleCreateRoom}
-        disabled={!userName || participants.length === 0 || loading} // ✅ userName이 없으면 버튼 비활성화
-        className="mt-6 w-60 px-4 py-3 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 disabled:opacity-50"
-      >
-        {loading ? "Creating..." : "채팅방 생성"}
-      </button>
     </div>
   );
+  
+  
 }

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Friend } from "@/store/participantAtom";
+import {  } from "@/store/participantAtom";
 
 // 친구목록 API 요청
 const fetchFriends = async (): Promise<Friend[]> => {
