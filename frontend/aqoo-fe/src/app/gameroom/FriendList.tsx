@@ -29,7 +29,7 @@ export default function FriendList() {
 
   const [myFriends, setMyFriends] = useState<Friend[]>([]);
   const [users, setUsers] = useRecoilState(usersState);
-  const API_BASE_URL = "http://i12e203.p.ssafy.io/api/v1";
+  const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
   // ✅ 친구 목록 API 호출
   useEffect(() => {
