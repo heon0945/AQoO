@@ -1,10 +1,7 @@
 // 파일: app/user/find-password/reset/page.tsx
 "use client";
 
-// 강제 동적 렌더링 (정적 프리렌더링 방지)
-export const dynamic = 'force-dynamic';
-
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useRouter, useSearchParams } from "next/navigation";
 import InputField from "@/app/user/find-password/components/InputField";
@@ -15,14 +12,14 @@ interface ResetPasswordFormInputs {
     confirmPassword: string;
 }
 
-export default function ResetPasswordPage() {
+// 내부 컴포넌트: useSearchParams()를 사용하여 userId를 가져옵니다.
+function ResetPasswordContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     // 쿼리 파라미터로 전달된 userId (없으면 빈 문자열)
     const userId = searchParams.get("userId") || "";
-    const { register, handleSubmit, formState: { errors } } = useForm<ResetPasswordFormInputs>();
 
-    // 로딩 상태 관리
+    const { register, handleSubmit, formState: { errors } } = useForm<ResetPasswordFormInputs>();
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const onSubmit: SubmitHandler<ResetPasswordFormInputs> = async (data) => {
@@ -84,5 +81,14 @@ export default function ResetPasswordPage() {
                 </form>
             </div>
         </div>
+    );
+}
+
+// 최상위 페이지 컴포넌트는 Suspense로 ResetPasswordContent를 감쌉니다.
+export default function ResetPasswordPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <ResetPasswordContent />
+        </Suspense>
     );
 }
