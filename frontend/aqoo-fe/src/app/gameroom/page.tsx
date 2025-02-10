@@ -7,21 +7,27 @@ import { usersState } from "@/store/participantAtom";
 import FriendList from "./FriendList";
 import ParticipantList from "./ParticipantList";
 
+// localStorage 안전하게 접근하는 헬퍼 함수
+const getLocalStorageItem = (key: string, defaultValue: string = "guest"): string => {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem(key) ?? defaultValue;
+  }
+  return defaultValue;
+};
+
 export default function GameRoomPage() {
   const [participants, setParticipants] = useRecoilState(usersState);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const [userName, setUserName] = useState<string | null>(null); // ✅ 초기값을 null로 설정
+  const [userName, setUserName] = useState<string | null>(null);
 
-  // ✅ 사용자 이름을 가져와 설정하는 useEffect 추가
+  // 클라이언트 사이드에서만 localStorage에 접근하여 사용자 이름을 설정
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedUserName = localStorage.getItem("loggedInUser") || "guest";
-      setUserName(storedUserName);
-    }
+    const storedUserName = getLocalStorageItem("loggedInUser", "guest");
+    setUserName(storedUserName);
   }, []);
 
-  // ✅ 방장 자동 지정 (이전 참가자가 있을 경우만)
+  // 방장 자동 지정 (이전 참가자가 있을 경우만)
   useEffect(() => {
     if (participants.length > 0 && !participants[0]?.isHost) {
       setParticipants((prev) => {
@@ -30,9 +36,9 @@ export default function GameRoomPage() {
         return updatedParticipants;
       });
     }
-  }, [participants.length]); // ✅ 무한 렌더링 방지
+  }, [participants.length]);
 
-  // ✅ 채팅방 생성 핸들러
+  // 채팅방 생성 핸들러
   const handleCreateRoom = async () => {
     if (participants.length === 0) {
       alert("⚠ 참가자를 한 명 이상 추가해주세요.");
@@ -64,7 +70,7 @@ export default function GameRoomPage() {
       const roomId = data.roomId;
       console.log("✅ Created roomId:", roomId);
 
-      // ✅ 새로운 경로로 이동
+      // 새로운 경로로 이동
       router.push(
         `/room/${roomId}?userName=${encodeURIComponent(userName)}&isHost=true`
       );
@@ -91,7 +97,7 @@ export default function GameRoomPage() {
 
       <button
         onClick={handleCreateRoom}
-        disabled={!userName || participants.length === 0 || loading} // ✅ userName이 없으면 버튼 비활성화
+        disabled={!userName || participants.length === 0 || loading}
         className="mt-6 w-60 px-4 py-3 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 disabled:opacity-50"
       >
         {loading ? "Creating..." : "채팅방 생성"}
