@@ -24,7 +24,7 @@ export interface InputFieldProps extends InputHTMLAttributes<HTMLInputElement> {
 
 const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
   ({ label, register, error, ...rest }, ref) => {
-    // register 객체에서 내부 ref 분리
+    // react-hook-form의 register에서 반환된 객체에서 내부 ref를 분리합니다.
     const { ref: registerRef, ...restRegister } = register;
     return (
       <div>
