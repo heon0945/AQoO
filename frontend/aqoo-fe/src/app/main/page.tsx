@@ -28,7 +28,7 @@ export default function MainPage() {
   const [fishes, setFishes] = useState<FishData[]>([]);
   const [aquariumData, setAquariumData] = useState<AquariumData | null>(null);
 
-  const API_BASE_URL = "http://i12e203.p.ssafy.io:8089/api/v1";
+  const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
   useEffect(() => {
     const savedBg = localStorage.getItem("background");

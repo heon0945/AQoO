@@ -22,7 +22,7 @@ export default function CleanComponent({
   const [selectedGesture, setSelectedGesture] = useState<"handMotion" | "rockGesture" | null>(null);
   const [isCameraReady, setIsCameraReady] = useState(false); // 📌 카메라 준비 상태 추가
 
-  const API_BASE_URL = "http://i12e203.p.ssafy.io:8089/api/v1";
+  const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
   // 좌우 반전 여부
   const [isMirrored, setIsMirrored] = useState<boolean>(true);

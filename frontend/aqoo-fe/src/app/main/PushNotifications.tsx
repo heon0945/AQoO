@@ -8,7 +8,7 @@ import { Notification } from "@/types";
 import { useAuth } from "@/hooks/useAuth"; // ✅ 로그인된 유저 정보 가져오기
 import { useRouter } from "next/navigation"; // ✅ next/navigation에서 import
 
-const API_BASE_URL = "http://i12e203.p.ssafy.io:8089/api/v1";
+const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
 export default function PushNotifications({ onClose }: { onClose: () => void }) {
   const { auth } = useAuth(); // ✅ 로그인된 사용자 정보 가져오기
@@ -57,9 +57,9 @@ export default function PushNotifications({ onClose }: { onClose: () => void }) 
               onFriendRequestClick={
                 notif.type === "FRIEND REQUEST"
                   ? () => {
-                      setSelectedFriendRequest(notif.data || null);
-                      setShowFriendRequestModal(true);
-                    }
+                    setSelectedFriendRequest(notif.data || null);
+                    setShowFriendRequestModal(true);
+                  }
                   : undefined
               }
             />
