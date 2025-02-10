@@ -10,7 +10,7 @@ import axios from "axios";
 interface JoinFormInputs {
   email: string;
   id: string;
-  password?: string;
+  pw?: string;
   nickName: string;
 }
 
@@ -30,7 +30,7 @@ function JoinPageContent() {
     defaultValues: {
       email: prefillEmail,
       id: prefillEmail, // 이메일과 아이디를 동일하게 채워줍니다.
-      password: "",
+      pw: "",
       nickName: "",
     },
   });
@@ -90,8 +90,8 @@ function JoinPageContent() {
               label="비밀번호"
               type="password"
               placeholder="비밀번호"
-              register={register("password", { required: "필수 입력 항목입니다." })}
-              error={errors.password?.message as string}
+              register={register("pw", { required: "필수 입력 항목입니다." })}
+              error={errors.pw?.message as string}
             />
           )}
 
