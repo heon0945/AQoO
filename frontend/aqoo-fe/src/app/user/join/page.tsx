@@ -39,7 +39,7 @@ function JoinPageContent() {
     // 요청 본문에 소셜 로그인 여부 추가
     const requestBody = { ...data, isSocialLogin: isSocialJoin };
     try {
-      console.log("보낼 데이터 : " + requestBody)
+      console.log("보낼 데이터 : " + requestBody.isSocialLogin)
       const response = await axios.post("https://i12e203.p.ssafy.io/api/v1/auth/register", requestBody);
       console.log("회원가입 성공:", response.data);
       router.push("/user/login");
