@@ -57,12 +57,9 @@ function ChatScreen() {
     }
   }, [searchParams]);
   
-  // ✅ 상태 변경 후 최신 participants 값을 감지하여 로그 출력
-  useEffect(() => {
-    console.log("📌 업데이트된 참가자 리스트:", participants);
-  }, [participants]);
-  
 
+
+  
   // ✅ 테스트 모드: 기존 참가자가 없을 경우에만 추가
   useEffect(() => {
     if (TEST_MODE && participants.length === 0) {
