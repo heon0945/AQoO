@@ -3,9 +3,6 @@
 import { useRecoilState } from "recoil";
 import { participantsState, addedFriendsState, Friend } from "@/store/participantAtom";
 
-import { useEffect } from "react";
-
-
 
 export default function ParticipantList() {
   const [participants, setParticipants] = useRecoilState(participantsState);

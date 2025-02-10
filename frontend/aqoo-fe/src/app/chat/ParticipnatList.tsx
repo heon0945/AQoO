@@ -20,11 +20,7 @@ export default function ChatParticipantList() {
             >
               {/* 닉네임 + 레벨 + 상태 */}
               <p className="text-sm font-bold flex items-center gap-2">
-                Lv.{participant.level || 1} {participant.nickname} 
-                {participant.isHOst && <span className="text-xs text-red-500">(방장)</span>}
-                <span className={`text-xs font-semibold ${participant.status === "READY" ? "text-green-500" : "text-gray-500"}`}>
-                  ({participant.status || "WAITING"})
-                </span>
+                Lv.{participant.level || 1} {participant.nickname}
               </p>
             </div>
           ))
