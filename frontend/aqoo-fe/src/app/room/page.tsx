@@ -1,9 +1,10 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 
-export default function CreateChatRoom() {
+// 실제 기능을 담당하는 컴포넌트를 별도로 분리합니다.
+function CreateChatRoomContent() {
   const [userName, setUserName] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -89,5 +90,14 @@ export default function CreateChatRoom() {
         </div>
       </div>
     </>
+  );
+}
+
+// Suspense 경계를 추가하여 클라이언트 훅 사용 시 발생하는 오류를 방지합니다.
+export default function CreateChatRoom() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CreateChatRoomContent />
+    </Suspense>
   );
 }
