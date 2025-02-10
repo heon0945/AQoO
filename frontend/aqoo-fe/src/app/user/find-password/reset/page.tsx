@@ -1,6 +1,9 @@
 // 파일: app/user/find-password/reset/page.tsx
 "use client";
 
+// 강제 동적 렌더링 (정적 프리렌더링 방지)
+export const dynamic = 'force-dynamic';
+
 import React, { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useRouter, useSearchParams } from "next/navigation";
