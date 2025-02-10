@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 
-interface LoginButtonProps {
+interface ModalButtonProps {
   text: string;
   onClick?: () => void;
   isLoading?: boolean;
@@ -9,14 +9,14 @@ interface LoginButtonProps {
   type?: "button" | "submit";
 }
 
-export default function LoginButton({
+export default function ModalButton({
   text,
   onClick,
   isLoading,
   color = "blue",
   icon,
   type = "submit",
-}: LoginButtonProps) {
+}: ModalButtonProps) {
   const colorClasses = {
     blue: "bg-blue-700 text-white hover:bg-blue-800",
     white: "bg-white text-gray-800 border border-gray-300 hover:bg-gray-100",

@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 
 import InputField from "./InputField";
-import LoginButton from "./LoginButton";
+import ModalButtons from "./ModalButtons";
 import Buttons from "./Buttons";
 import PasswordChangeModal from "./PasswordChangeModal";
 import DeleteAccountModal from "./DeleteAccountModal";
@@ -160,28 +160,32 @@ export default function EditProfilePage() {
             <h2 className="text-center text-3xl mb-6">회원정보 수정</h2>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
+                <InputField label="아이디" placeholder={userData?.id || "로딩 중..."} variant="static" />
+                <InputField label="이메일" placeholder={userData?.email || "로딩 중..."} variant="static" />
+                <InputField
+                  label="닉네임"
+                  placeholder={userData?.nickname || "닉네임 입력"}
+                  register={register("nickname", { required: true })}
+                  variant="dynamic"
+                />
+              </div>
+              {/* <div>
                 <label className="block text-gray-700 font-medium mb-1">아이디</label>
                 <div className="bg-gray-200 px-3 py-2 rounded-md text-gray-700">{userData?.id || "로딩 중..."}</div>
               </div>
               <div>
                 <label className="block text-gray-700 font-medium mb-1">이메일</label>
                 <div className="bg-gray-200 px-3 py-2 rounded-md text-gray-700">{userData?.email || "로딩 중..."}</div>
-              </div>
-
-              <InputField
-                label="닉네임"
-                placeholder={userData?.nickname || "닉네임 입력"}
-                register={register("nickname", { required: true })}
-              />
+              </div> */}
             </form>
             <div className="flex justify-between gap-4 mt-4">
-              <LoginButton
+              <ModalButtons
                 text="비밀번호 변경"
                 isLoading={isLoading}
                 color="blue"
                 onClick={() => setIsPasswordModalOpen(true)}
               />
-              <LoginButton
+              <ModalButtons
                 text="회원 탈퇴"
                 isLoading={isLoading}
                 color="red"

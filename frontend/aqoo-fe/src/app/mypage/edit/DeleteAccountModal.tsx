@@ -7,9 +7,9 @@ interface DeleteAccountModalProps {
 
 export default function DeleteAccountModal({ onClose }: DeleteAccountModalProps) {
   return (
-    <Modal onClose={onClose}>
-      <h3 className="text-lg font-semibold text-red-600">회원 탈퇴</h3>
-      <div>
+    <Modal onClose={onClose} className="w-[600px] h-[350px] flex flex-col items-center justify-center">
+      <h3 className="text-3xl font-semibold text-red-600">회원 탈퇴</h3>
+      <div className="flex gap-4 m-4 items-center">
         <div
           className="
                     w-[170px] h-[170px] flex-shrink-0
@@ -42,11 +42,11 @@ export default function DeleteAccountModal({ onClose }: DeleteAccountModalProps)
           헤엄치던 물고기들이 슬퍼할 거예요... 🐟💧
         </p>
       </div>
-      <div className="flex justify-end mt-4">
-        <button className="px-4 py-2 bg-gray-300 rounded mr-2" onClick={onClose}>
-          취소
+      <div className="flex justify-end m-4 gap-5">
+        <button className="px-4 py-2 bg-gray-300 rounded mr-2 w-[200px]" onClick={onClose}>
+          다시 한 번 생각한다.
         </button>
-        <button className="px-4 py-2 bg-red-600 text-white rounded">탈퇴하기</button>
+        <button className="px-4 py-2 bg-red-600 text-white rounded w-[200px]">차갑게 떠난다.</button>
       </div>
     </Modal>
   );
