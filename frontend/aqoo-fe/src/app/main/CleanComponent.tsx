@@ -1,12 +1,19 @@
 "use client";
 
 import { HAND_CONNECTIONS, Hands } from "@mediapipe/hands"; // 손 인식을 위한 라이브러리
+import axios, { AxiosResponse } from "axios";
 import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils"; // 손 랜드마크 그리기 라이브러리
 import { useEffect, useRef, useState } from "react";
 
 import { Camera } from "@mediapipe/camera_utils"; // 카메라 사용 라이브러리
 
-export default function CleanComponent({ onClose }: { onClose: () => void }) {
+export default function CleanComponent({
+  onClose,
+  onCleanSuccess, // ✅ 어항 상태 업데이트를 위한 콜백
+}: {
+  onClose: () => void;
+  onCleanSuccess: () => void; // ✅ 어항 상태 & 유저 경험치 업데이트 요청
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // 오류 메시지 저장
@@ -14,6 +21,8 @@ export default function CleanComponent({ onClose }: { onClose: () => void }) {
   // 현재 선택된 제스처(손 흔들기 / 주먹 쥐기)
   const [selectedGesture, setSelectedGesture] = useState<"handMotion" | "rockGesture" | null>(null);
   const [isCameraReady, setIsCameraReady] = useState(false); // 📌 카메라 준비 상태 추가
+
+  const API_BASE_URL = "http://i12e203.p.ssafy.io:8089/api/v1";
 
   // 좌우 반전 여부
   const [isMirrored, setIsMirrored] = useState<boolean>(true);
@@ -31,14 +40,13 @@ export default function CleanComponent({ onClose }: { onClose: () => void }) {
     }
   };
 
-  const gestureState = useRef<{
-    // 주먹을 감지했는지 여부
-    isRockDetected: boolean;
-    // 최근 제스처 감지 시간 기록(중복 방지)
-    lastGestureTime: number;
-  }>({
-    isRockDetected: false,
-    lastGestureTime: 0,
+  // 손이 좌우로 움직였는지 추적
+  const motionData = useRef<{ startX: number | null; movedLeft: boolean; movedRight: boolean }>({
+    // 손의 초기 위치 저장
+    startX: null,
+    // 좌우로 움직임 여부 저장
+    movedLeft: false,
+    movedRight: false,
   });
 
   useEffect(() => {
@@ -103,12 +111,7 @@ export default function CleanComponent({ onClose }: { onClose: () => void }) {
                 // 🏷️ 주요 랜드마크에 캡션 추가
                 // labelLandmarks(canvasCtx, landmarks);
 
-                // // 🔥 선택한 제스처만 감지 실행
-                // if (selectedGestureRef.current === "handMotion") {
-                //   detectHandMotion(landmarks);
-                // } else if (selectedGestureRef.current === "rockGesture") {
-                //   detectRockGesture(landmarks);
-                // }
+                detectHandMotion(landmarks);
               }
             }
 
@@ -130,6 +133,68 @@ export default function CleanComponent({ onClose }: { onClose: () => void }) {
       } catch (err) {
         setError("손 인식을 초기화하는 중 문제가 발생했습니다.");
         console.error("Error initializing hand recognition:", err);
+      }
+    };
+
+    const detectHandMotion = (landmarks: any) => {
+      const wrist = landmarks[0];
+      const currentX = wrist.x;
+
+      const sensitivity = 0.5;
+      const now = Date.now();
+
+      if (motionData.current.startX === null) {
+        motionData.current.startX = currentX;
+        return; // 초기값 설정 후 바로 리턴
+      }
+
+      const deltaX = currentX - motionData.current.startX;
+
+      if (deltaX > sensitivity && !motionData.current.movedRight) {
+        motionData.current.movedRight = true;
+        motionData.current.startX = currentX;
+      }
+      if (deltaX < -sensitivity && !motionData.current.movedLeft) {
+        motionData.current.movedLeft = true;
+        motionData.current.startX = currentX;
+      }
+
+      if (motionData.current.movedLeft && motionData.current.movedRight) {
+        alert("청소에 성공했어요! 🐟");
+        motionData.current = { startX: null, movedLeft: false, movedRight: false };
+
+        // TODO 청소 성공 시, 어항 상태 수정 API 호출
+        handleCleanSuccess();
+      }
+    };
+
+    const handleCleanSuccess = async () => {
+      try {
+        // ✅ 1. 어항 청소 API 호출
+        await axios.post(`${API_BASE_URL}/aquariums/update`, {
+          aquariumId: 6, // ✅ TODO 실제 ID로 변경
+          type: "clean",
+          data: "",
+        });
+
+        console.log("✅ 어항 청소 성공");
+
+        // ✅ 2. 경험치 지급 API 호출
+        await axios.post(`${API_BASE_URL}/users/exp-up`, {
+          // TODO 지금 더미라 userId 받아와야 함
+          userId: "ejoyee", // ✅ 실제 유저 ID로 변경
+          earnedExp: 10,
+        });
+
+        console.log("✅ 경험치 지급 성공");
+
+        // ✅ 3. 어항 상태 & 유저 정보 업데이트 요청
+        onCleanSuccess();
+
+        // ✅ 4. 모달 닫기
+        onClose();
+      } catch (error) {
+        console.error("❌ 청소 또는 경험치 지급 실패", error);
       }
     };
 

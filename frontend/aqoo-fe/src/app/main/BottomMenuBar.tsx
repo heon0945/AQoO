@@ -56,19 +56,15 @@ export default function BottomMenuBar({
       </div>
       {/* 중앙: 어항 상태 바 */}
       <div className="flex flex-col space-y-1 p-1">
-        <StatusBar
-          icon="waterIcon.png"
-          label="어항 수질"
-          value={aquariumData?.waterCondition ?? 0}
-          color="bg-blue-900"
-        />
+        <StatusBar icon="waterIcon.png" label="어항 수질" value={aquariumData?.waterStatus ?? 0} color="bg-blue-900" />
         <StatusBar
           icon="cleanIcon.png"
           label="청결도"
           value={aquariumData?.pollutionStatus ?? 0}
           color="bg-indigo-400"
         />
-        <StatusBar icon="feedIcon.png" label="포만감" value={3} color="bg-cyan-400" /> {/* 🔹 더미 데이터 */}
+        <StatusBar icon="feedIcon.png" label="포만감" value={aquariumData?.feedStatus ?? 0} color="bg-cyan-400" />{" "}
+        {/* 🔹 더미 데이터 */}
       </div>
 
       {/* 우측 메뉴 */}

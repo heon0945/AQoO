@@ -10,9 +10,9 @@ export interface UserInfo {
 export interface AquariumData {
   id: number;
   aquariumName: string;
-  waterCondition: number;
+  waterStatus: number;
   pollutionStatus: number;
-  fullness: number;
+  feedStatus: number;
 }
 
 // 친구 데이터 타입
@@ -32,4 +32,14 @@ export interface SearchUser {
   nickname: string; // 닉네임
   level: number; // 레벨
   mainFishImage: string | null; // 대표 물고기 이미지 (없으면 null)
+}
+
+export interface Notification {
+  id: number;
+  userId: string;
+  type: string;
+  data?: number;
+  message: string;
+  status: boolean;
+  createdAt: string;
 }

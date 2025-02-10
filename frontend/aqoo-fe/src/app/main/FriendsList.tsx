@@ -4,9 +4,12 @@ import { Friend, SearchUser } from "@/types";
 import axios, { AxiosResponse } from "axios";
 import { useEffect, useRef, useState } from "react";
 
+import axiosInstance from "@/services/axiosInstance"; // ✅ axiosInstance 사용
+import { useAuth } from "@/hooks/useAuth"; // ✅ useAuth 훅 사용
 import { useInput } from "@/hooks/useInput"; // useInput 훅을 사용
 
 export default function FriendsList({ onClose, userId }: { onClose: () => void; userId: string }) {
+  const { auth, fetchUser } = useAuth();
   const [myFriends, setMyFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,6 +22,11 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
 
   // ✅ 친구 목록 API 호출
   useEffect(() => {
+    if (!auth.accessToken) {
+      console.warn("🔄 토큰 만료 감지 - 사용자 정보 재요청...");
+      fetchUser(); // ✅ 토큰 갱신 시도
+    }
+
     axios
       .get(`${API_BASE_URL}/friends/${userId}`)
       .then((response: AxiosResponse<{ count: number; friends: Friend[] }>) => {
@@ -57,24 +65,26 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
       .catch((error) => console.error("친구 삭제 실패", error));
   };
 
-  // 🔹 검색 API 호출
+  // ✅ 친구 검색 API 호출
   const handleSearch = () => {
     if (!searchInput.value.trim()) {
       setSearchResults([]);
       return;
     }
 
+    console.log("검색할 아이디 : ", searchInput.value);
+
     axios
-      .get(`${API_BASE_URL}/friends/find-users/${searchInput.value}`)
+      .get(`${API_BASE_URL}/friends/find-users/${searchInput.value}`, { withCredentials: true }) // ✅ BASE_URL 추가
       .then((response: AxiosResponse<SearchUser[]>) => {
-        // ✅ `SearchUser[]` 타입 적용
-        console.log("검색 결과:", response.data);
+        console.log("사용자 목록 조회:", response.data);
         setSearchResults(response.data);
       })
       .catch((error) => {
         console.error("사용자 검색 실패", error);
-        setSearchResults([]);
-      });
+        setError("사용자 목록을 불러오는데 실패했습니다.");
+      })
+      .finally(() => setLoading(false));
   };
 
   // 🔹 엔터 키 입력 시 검색 실행

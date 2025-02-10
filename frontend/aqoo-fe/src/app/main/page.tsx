@@ -7,20 +7,21 @@ import axios, { AxiosResponse } from "axios";
 import BottomMenuBar from "@/app/main/BottomMenuBar";
 import CleanComponent from "@/app/main/CleanComponent";
 import FriendsList from "@/app/main/FriendsList";
+import Image from "next/image";
 import Link from "next/link";
 import PushNotifications from "@/app/main/PushNotifications";
-import { Settings } from "lucide-react";
 import { gsap } from "gsap";
+import { useAuth } from "@/hooks/useAuth"; // ✅ 로그인 정보 가져오기
 
 // 🔹 물고기 데이터 타입 정의
 interface FishData {
-  id: number;
-  name: string;
-  image: string; // 물고기 이미지 URL
+  fishTypeId: number;
+  fishTypeName: string;
+  fishImage: string;
 }
-
 export default function MainPage() {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { auth } = useAuth(); // ✅ 로그인한 유저 정보 가져오기
+
   const [background, setBackground] = useState("/background-1.png");
   const [activeComponent, setActiveComponent] = useState<string | null>(null);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -28,7 +29,6 @@ export default function MainPage() {
   const [aquariumData, setAquariumData] = useState<AquariumData | null>(null);
 
   const API_BASE_URL = "http://i12e203.p.ssafy.io:8089/api/v1";
-  const userId = "ejoyee"; // dummy
 
   useEffect(() => {
     const savedBg = localStorage.getItem("background");
@@ -36,45 +36,51 @@ export default function MainPage() {
       setBackground(savedBg);
     }
 
+    if (!auth.user?.id) return; // ✅ 로그인한 유저 ID가 없으면 API 호출 안 함
+
     axios
-      .get(`${API_BASE_URL}/users/${userId}`)
+      .get(`${API_BASE_URL}/users/${auth.user.id}`)
       .then((response: AxiosResponse<UserInfo>) => {
-        console.log(response.data);
+        console.log("✅ 유저 정보:", response.data);
         setUserInfo(response.data);
       })
       .catch((error) => {
-        console.error("유저 정보 불러오기 실패", error);
+        console.error("❌ 유저 정보 불러오기 실패", error);
       });
-  }, []);
+  }, [auth.user?.id]); // ✅ 로그인한 유저 ID가 바뀔 때마다 실행
 
   useEffect(() => {
-    if (userInfo?.mainAquarium !== null && userInfo?.mainAquarium !== undefined) {
-      console.log("메인 아쿠아리움 id:", userInfo.mainAquarium);
+    if (!auth.user?.id) return;
 
-      axios
-        .get(`${API_BASE_URL}/aquariums/${userInfo.mainAquarium}`)
-        .then((res: AxiosResponse<AquariumData>) => {
-          console.log("어항 상세 정보 조회", res.data);
-          setAquariumData(res.data);
-        })
-        .catch((err) => console.error("어항 정보 불러오기 실패", err));
-    }
-  }, [userInfo]); // ✅ `userInfo`가 변경될 때 실행
+    // ✅ 물고기 데이터 불러오기 (API 호출)
+    axios
+      .get(`${API_BASE_URL}/fish/my-fish/${auth.user.id}`)
+      .then((response: AxiosResponse<FishData[]>) => {
+        console.log("🐠 내 물고기 목록:", response.data);
+        setFishes(response.data);
+      })
+      .catch((error) => {
+        console.error("❌ 물고기 데이터 불러오기 실패", error);
+      });
+  }, [auth.user?.id]); // ✅ 로그인한 유저 ID가 바뀔 때마다 실행
 
   useEffect(() => {
-    // ✅ API 대신 테스트용 더미 데이터 사용
-    const dummyFishData: FishData[] = [
-      { id: 1, name: "물고기1", image: "/fish-1.png" },
-      { id: 2, name: "물고기2", image: "/fish-2.png" },
-      { id: 3, name: "물고기3", image: "/fish-3.png" },
-      { id: 4, name: "물고기4", image: "/fish-4.png" },
-      { id: 5, name: "물고기5", image: "/fish-5.png" },
-    ];
-    setFishes(dummyFishData);
-  }, []);
+    if (!userInfo?.mainAquarium) return;
 
-  if (!userInfo) return <div>로딩 중...</div>;
-  else if (!aquariumData) return <div>아쿠아리움 정보 로딩중...</div>;
+    console.log("🐠 메인 아쿠아리움 ID:", userInfo.mainAquarium);
+
+    axios
+      .get(`${API_BASE_URL}/aquariums/${userInfo.mainAquarium}`)
+      .then((res: AxiosResponse<AquariumData>) => {
+        console.log("✅ 어항 상세 정보:", res.data);
+        setAquariumData(res.data);
+      })
+      .catch((err) => console.error("❌ 어항 정보 불러오기 실패", err));
+  }, [userInfo]); // ✅ `userInfo` 변경될 때 실행
+
+  // if (!auth.user?.id) return <div>로그인이 필요합니다.</div>;
+  if (!userInfo) return <div>유저 정보 불러오는 중...</div>;
+  if (!aquariumData) return <div>아쿠아리움 정보 로딩 중...</div>;
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
@@ -87,21 +93,8 @@ export default function MainPage() {
 
       {/* 🐠 떠다니는 물고기 렌더링 */}
       {fishes.map((fish) => (
-        <Fish key={fish.id} fish={fish} />
+        <Fish key={fish.fishTypeId} fish={fish} />
       ))}
-
-      {/* 🏠 상단 네비게이션 */}
-      {/* <div className="absolute top-4 left-4 z-10 mt-2 ml-10">
-        <Link href="/">
-          <span className="text-white text-5xl hover:text-yellow-300">AQoO</span>
-        </Link>
-      </div>
-      <button
-        className="absolute top-4 right-4 p-2 mt-2 mr-10 bg-white/30 rounded-full hover:bg-white/50 z-10"
-        onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-      >
-        <Settings className="w-6 h-6 text-white" />
-      </button> */}
 
       {/* 📌 하단 메뉴 바 */}
       <BottomMenuBar setActiveComponent={setActiveComponent} userInfo={userInfo} aquariumData={aquariumData} />
@@ -109,7 +102,32 @@ export default function MainPage() {
       {/* ✅ CleanComponent를 BottomMenuBar 위에 정확하게 배치 */}
       {activeComponent === "clean" && (
         <div className="absolute bottom-[130px] right-[100px] z-50">
-          <CleanComponent onClose={() => setActiveComponent(null)} />
+          <CleanComponent
+            onClose={() => setActiveComponent(null)}
+            onCleanSuccess={() => {
+              // ✅ 어항 상태 업데이트
+              if (userInfo?.mainAquarium) {
+                axios
+                  .get(`${API_BASE_URL}/aquariums/${userInfo.mainAquarium}`)
+                  .then((res: AxiosResponse<AquariumData>) => {
+                    console.log("✅ 어항 상태 업데이트:", res.data);
+                    setAquariumData(res.data);
+                  })
+                  .catch((err) => console.error("❌ 어항 상태 불러오기 실패", err));
+              }
+
+              // ✅ 유저 경험치 업데이트
+              axios
+                .get(`${API_BASE_URL}/users/${auth.user?.id}`)
+                .then((response: AxiosResponse<UserInfo>) => {
+                  console.log("✅ 유저 정보 업데이트:", response.data);
+                  setUserInfo(response.data);
+                })
+                .catch((error) => {
+                  console.error("❌ 유저 정보 불러오기 실패", error);
+                });
+            }}
+          />
         </div>
       )}
 
@@ -131,7 +149,7 @@ export default function MainPage() {
 }
 function Fish({ fish }: { fish: FishData }) {
   const fishRef = useRef<HTMLImageElement | null>(null);
-  const directionRef = useRef(-1); // 기본 방향: 왼쪽 (-1)
+  const directionRef = useRef(1); // 기본 방향: 왼쪽 (-1)
 
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -164,7 +182,7 @@ function Fish({ fish }: { fish: FishData }) {
     gsap.set(fishRef.current, {
       x: randomStartX,
       y: randomStartY,
-      scaleX: directionRef.current, // 기본적으로 왼쪽 (-1)
+      scaleX: -1, // ✅ 기본 방향 유지 (왼쪽을 바라봄)
     });
 
     const moveFish = () => {
@@ -192,24 +210,28 @@ function Fish({ fish }: { fish: FishData }) {
       // 경계 제한
       if (newX < safeMargin) {
         newX = safeMargin + Math.random() * 50;
-        directionRef.current = -1;
+        moveDistanceX = Math.abs(moveDistanceX); // ✅ 오른쪽 이동하도록 값 변경
       }
       if (newX > windowWidth - safeMargin) {
         newX = windowWidth - safeMargin - Math.random() * 50;
-        directionRef.current = 1;
+        moveDistanceX = -Math.abs(moveDistanceX); // ✅ 왼쪽 이동하도록 값 변경
       }
       if (newY < 50) newY = 50 + Math.random() * 30;
       if (newY > windowHeight - bottomMargin) newY = windowHeight - bottomMargin - Math.random() * 30;
+
+      // 방향 업데이트: 오른쪽 이동 시 -1, 왼쪽 이동 시 1
+      directionRef.current = moveDistanceX > 0 ? -1 : 1;
 
       // 애니메이션 적용
       gsap.to(fishRef.current, {
         x: newX,
         y: newY,
+        scaleX: directionRef.current, // ✅ 방향 반대로 적용
         duration: randomSpeed,
         ease: "power2.inOut",
         onUpdate: () => {
           const prevX = parseFloat(gsap.getProperty(fishRef.current, "x") as string);
-          directionRef.current = newX > prevX ? 1 : -1;
+          directionRef.current = newX > prevX ? -1 : 1;
           gsap.set(fishRef.current, { scaleX: directionRef.current });
         },
         onComplete: moveFish, // 계속 이동 반복
@@ -222,14 +244,12 @@ function Fish({ fish }: { fish: FishData }) {
   return (
     <img
       ref={fishRef}
-      src={fish.image}
-      alt={fish.name}
+      src={fish.fishImage}
+      alt={fish.fishTypeName}
       className="absolute max-w-64 h-16 transform-gpu"
-      style={{
-        transformOrigin: "center",
-        transform: "translate(-50%, -50%)",
-      }}
       onClick={handleClick}
     />
+
+    // <Image src={fish.fishImage} alt={fish.fishTypeName} fill className="absolute max-w-64 h-16 transform-gpu"></Image>
   );
 }
