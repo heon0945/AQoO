@@ -58,7 +58,7 @@ export default function MyPage() {
           </div> */}
         </div>
         <Profile />
-        <MyCollection />
+        <MyCollection allFishList={allFishList}/>
       </div>
     </div>
   );

@@ -3,9 +3,12 @@
 import Image from "next/image";
 import CollectionItemCard from "./CollectionItemCard";
 
-export default function BaicCollectionTab() {
-  const all_collection = "https://i12e203.p.ssafy.io/api/v1/fish/all-collection";
-  const my_collection_api = "https://i12e203.p.ssafy.io/api/v1/fish/collection/:user-id";
+interface BasicCollectionTabProps {
+  allFishList: { id: number; fishName: string; imageUrl: string; rarity: string }[];
+}
+
+export default function BasicCollectionTab({allFishList = []}:BasicCollectionTabProps) {
+  const IMAGE_SERVER = process.env.NEXT_PUBLIC_IMAGE_API_SERVER;
 
   // 도감 이미지 Dummy
   const images = [
@@ -24,10 +27,14 @@ export default function BaicCollectionTab() {
       {Array(50)
         .fill(null)
         .map((_, index) => {
-          // index에 해당하는 이미지가 있으면 쓰고, 없으면 배경 샘플
-          const imageSrc = images[index] ? `/images/${images[index]}` : `/images/배경샘플.png`;
-
-          return <CollectionItemCard key={index} imageSrc={imageSrc} name={`거북이 ${index + 1}`} count={11} />;
+          const fish = allFishList[index]; // 현재 index에 해당하는 물고기 가져오기
+          const imageSrc = fish
+            ? `${IMAGE_SERVER}/${fish.fishName}.png`
+            : "/images/배경샘플.png"; // 물고기가 없으면 기본 배경 이미지 사용
+          console.log(`이미지: ${imageSrc}`)
+          const name = fish ? fish.fishName : `미등록`; // 물고기가 없으면 기본 이름
+          const count = fish ? 1 : 0; // 기본 수량 (물고기가 없으면 0)
+          return <CollectionItemCard key={index} imageSrc={imageSrc} name={name} count={11} />;
         })}
     </div>
   );

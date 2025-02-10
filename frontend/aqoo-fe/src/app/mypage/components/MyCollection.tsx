@@ -5,7 +5,11 @@ import Link from "next/link";
 import BasicCollectionTab from "./BasicCollectionTab";
 import CustomCollectionTab from "./CustomCollectionTab";
 
-export default function MyCollection() {
+interface MyCollectionProps {
+  allFishList: { id: number; fishName: string; imageUrl: string; rarity:string }[];
+}
+
+export default function MyCollection({allFishList}: MyCollectionProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const selectedTab = searchParams.get("tab") || "basic";
@@ -79,7 +83,7 @@ export default function MyCollection() {
       >
         <div className="flex-1 overflow-y-auto bg-white w-full h-full rounded-[30px]">
           <div className="bg-white overflow-hidden">
-            {selectedTab === "basic" && <BasicCollectionTab />}
+            {selectedTab === "basic" && <BasicCollectionTab allFishList={allFishList}/>}
             {selectedTab === "custom" && <CustomCollectionTab />}
           </div>
         </div>

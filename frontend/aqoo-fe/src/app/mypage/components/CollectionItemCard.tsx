@@ -23,6 +23,7 @@ export default function CollectionItemCard({
   isSelected = false,
   onClick,
 }: CollectionItemCardProps) {
+  console.log("🔹 CollectionItemCard imageSrc:", imageSrc);
   return (
     <div
       onClick={onClick}
@@ -48,7 +49,7 @@ export default function CollectionItemCard({
         `}
       >
         <div className="flex-1 flex items-center justify-center">
-          <Image src={imageSrc} alt={name} width={130} height={130} style={{ objectFit: "cover" }} />
+          <Image src={imageSrc} alt={name} width={130} height={130} style={{ objectFit: "cover" }} unoptimized/>
         </div>
         <div
           className="
