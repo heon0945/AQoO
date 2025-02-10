@@ -1,8 +1,7 @@
-// components/ChatBox.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
 import { getStompClient } from '@/lib/stompclient';
+import { useEffect, useRef, useState } from 'react';
 
 // 채팅 메시지 타입 (필요에 따라 ChatMessageDto를 사용해도 됩니다)
 interface ChatMessage {
@@ -21,15 +20,26 @@ export default function ChatBox({ roomId, userName }: ChatBoxProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
 
+  // 메시지 목록의 끝을 가리킬 ref
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  // 메시지가 업데이트될 때마다 스크롤을 맨 아래로 이동
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
   // WebSocket 구독: 채팅 메시지를 받음
   useEffect(() => {
     const client = getStompClient();
     if (client) {
       // ChatWebSocketController의 sendMessage 메서드가 "/topic/{roomId}" 로 메시지를 전송한다고 가정
-      const subscription = client.subscribe(`/topic/${roomId}`, (messageFrame) => {
-        const message: ChatMessage = JSON.parse(messageFrame.body);
-        setMessages((prev) => [...prev, message]);
-      });
+      const subscription = client.subscribe(
+        `/topic/${roomId}`,
+        (messageFrame) => {
+          const message: ChatMessage = JSON.parse(messageFrame.body);
+          setMessages((prev) => [...prev, message]);
+        }
+      );
       return () => subscription.unsubscribe();
     }
   }, [roomId]);
@@ -56,8 +66,8 @@ export default function ChatBox({ roomId, userName }: ChatBoxProps) {
   };
 
   return (
-    <div className="border rounded p-4 mt-6">
-      <div className="h-64 overflow-y-auto mb-4">
+    <div className='border rounded p-4 mt-6'>
+      <div className='h-64 overflow-y-auto mb-4'>
         {messages.map((msg, index) => (
           <div
             key={index}
@@ -68,10 +78,12 @@ export default function ChatBox({ roomId, userName }: ChatBoxProps) {
             <strong>{msg.sender}</strong>: {msg.content}
           </div>
         ))}
+        {/* 이 빈 div에 ref를 연결하여 스크롤을 맨 아래로 이동시킵니다 */}
+        <div ref={messagesEndRef} />
       </div>
-      <div className="flex">
+      <div className='flex'>
         <input
-          type="text"
+          type='text'
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           onKeyDown={(e) => {
@@ -80,12 +92,12 @@ export default function ChatBox({ roomId, userName }: ChatBoxProps) {
               sendMessage();
             }
           }}
-          className="flex-grow border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Type your message..."
+          className='flex-grow border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+          placeholder='Type your message...'
         />
         <button
           onClick={sendMessage}
-          className="ml-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          className='ml-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors'
         >
           Send
         </button>
