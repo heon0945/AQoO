@@ -50,9 +50,13 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
       })
       .then((response: AxiosResponse<{ relationshipId: number }>) => {
         console.log("친구 추가 요청 성공:", response.data);
-        setSearchResults((prev) => prev.map((user) => (user.friendId === friendId ? { ...user, isFriend: 1 } : user)));
+        alert("친구 요청을 했습니다.");
+        // setSearchResults((prev) => prev.map((user) => (user.friendId === friendId ? { ...user, isFriend: 1 } : user)));
       })
-      .catch((error) => console.error("친구 추가 요청 실패", error));
+      .catch((error) => {
+        alert("친구 추가에 실패했습니다. 다시 시도하세요.");
+        console.error("친구 추가 요청 실패", error);
+      });
   };
 
   // 🔹 친구 삭제 함수
@@ -202,15 +206,23 @@ function SearchResultItem({
         <div>
           <p className="text-xs">Lv. {user.level}</p>
           <p className="font-bold">{user.nickname}</p>
-          <p className="text-sm text-gray-500">@{user.userId}</p>
+          <p className="text-sm text-gray-500">@{user.friendId}</p>
         </div>
       </div>
-      <button
-        onClick={() => handleAddFriend(user.friendId)}
-        className="px-3 py-1 bg-blue-500 text-white text-xs rounded-md"
-      >
-        친구 추가
-      </button>
+
+      {/* ✅ isFriend 값에 따라 버튼 표시 */}
+      {user.isFriend === 1 ? (
+        <button className="px-3 py-1 bg-gray-400 text-white text-xs rounded-md cursor-default" disabled>
+          친구
+        </button>
+      ) : (
+        <button
+          onClick={() => handleAddFriend(user.friendId)}
+          className="px-3 py-1 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600"
+        >
+          친구 추가
+        </button>
+      )}
     </div>
   );
 }

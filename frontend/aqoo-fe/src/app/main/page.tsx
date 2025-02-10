@@ -2,6 +2,9 @@
 
 import { AquariumData, UserInfo } from "@/types";
 import React, { useEffect, useRef, useState } from "react";
+import { increaseUserExp } from "@/services/userService";
+import LevelUpModal from "@/components/LevelUpModal"; // ✅ 레벨업 모달 추가
+
 import axios, { AxiosResponse } from "axios";
 
 import BottomMenuBar from "@/app/main/BottomMenuBar";
@@ -27,8 +30,54 @@ export default function MainPage() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [fishes, setFishes] = useState<FishData[]>([]);
   const [aquariumData, setAquariumData] = useState<AquariumData | null>(null);
+  const [levelUpInfo, setLevelUpInfo] = useState<{ level: number; expProgress: number } | null>(null);
 
   const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
+
+  // ✅ 어항 상태 새로고침 함수 추가
+  const refreshAquariumData = async () => {
+    if (!userInfo?.mainAquarium) return;
+
+    try {
+      const response = await axios.get(`${API_BASE_URL}/aquariums/${userInfo.mainAquarium}`);
+      console.log("✅ 어항 상태 갱신:", response.data);
+      setAquariumData(response.data);
+    } catch (error) {
+      console.error("❌ 어항 상태 불러오기 실패", error);
+    }
+  };
+
+  // ✅ 경험치 증가 & 레벨업 체크 함수
+  const handleIncreaseExp = async (earnedExp: number) => {
+    if (!auth.user?.id) return;
+
+    const prevLevel = userInfo?.level ?? 1; // 기존 레벨 저장
+
+    // ✅ 경험치 증가 API 호출
+    const updatedExpData = await increaseUserExp(auth.user.id, earnedExp);
+
+    if (updatedExpData) {
+      await refreshUserInfo();
+
+      // ✅ 레벨업 확인
+      if (updatedExpData.userLevel > prevLevel) {
+        console.log("🎉 레벨업 발생! 새로운 레벨:", updatedExpData.userLevel);
+        setLevelUpInfo({ level: updatedExpData.userLevel, expProgress: updatedExpData.expProgress });
+      }
+    }
+  };
+
+  const refreshUserInfo = async () => {
+    if (!auth.user?.id) return;
+
+    try {
+      const response = await axios.get(`${API_BASE_URL}/users/${auth.user.id}`);
+      console.log("✅ 유저 정보 갱신 완료:", response.data);
+      setUserInfo(response.data);
+    } catch (error) {
+      console.error("❌ 유저 정보 불러오기 실패", error);
+    }
+  };
 
   useEffect(() => {
     const savedBg = localStorage.getItem("background");
@@ -97,7 +146,14 @@ export default function MainPage() {
       ))}
 
       {/* 📌 하단 메뉴 바 */}
-      <BottomMenuBar setActiveComponent={setActiveComponent} userInfo={userInfo} aquariumData={aquariumData} />
+      <BottomMenuBar
+        setActiveComponent={setActiveComponent}
+        userInfo={userInfo}
+        aquariumData={aquariumData}
+        refreshAquariumData={refreshAquariumData}
+        refreshUserData={() => handleIncreaseExp(0)} // ✅ 경험치 0으로 유저 정보만 업데이트
+        handleIncreaseExp={handleIncreaseExp} // ✅ Water/Feed에서도 사용
+      />
 
       {/* ✅ CleanComponent를 BottomMenuBar 위에 정확하게 배치 */}
       {activeComponent === "clean" && (
@@ -143,6 +199,16 @@ export default function MainPage() {
         <div className="absolute bottom-[130px] left-[100px] z-50">
           <PushNotifications onClose={() => setActiveComponent(null)} />
         </div>
+      )}
+
+      {/* 📌 레벨업 모달 */}
+      {/* TODO 레벨업 시 레벨업 모달 뜨게 하도록 구현 */}
+      {levelUpInfo && (
+        <LevelUpModal
+          level={levelUpInfo.level}
+          expProgress={levelUpInfo.expProgress}
+          onClose={() => setLevelUpInfo(null)}
+        />
       )}
     </div>
   );
@@ -246,7 +312,7 @@ function Fish({ fish }: { fish: FishData }) {
       ref={fishRef}
       src={fish.fishImage}
       alt={fish.fishTypeName}
-      className="absolute max-w-64 h-16 transform-gpu"
+      className="absolute max-w-64 max-h-16 transform-gpu"
       onClick={handleClick}
     />
 
