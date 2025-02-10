@@ -163,7 +163,6 @@ export default function CleanComponent({
         alert("청소에 성공했어요! 🐟");
         motionData.current = { startX: null, movedLeft: false, movedRight: false };
 
-        // TODO 청소 성공 시, 어항 상태 수정 API 호출
         handleCleanSuccess();
       }
     };

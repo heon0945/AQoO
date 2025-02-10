@@ -16,7 +16,7 @@ export default function PushNotifications({ onClose }: { onClose: () => void }) 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFriendRequestModal, setShowFriendRequestModal] = useState(false);
-  const [selectedFriendRequest, setSelectedFriendRequest] = useState<number | null>(null);
+  const [selectedFriendRequest, setSelectedFriendRequest] = useState<string | null>(null);
 
   useEffect(() => {
     if (!auth.user?.id) return; // ✅ 로그인되지 않은 경우 API 호출 안함
@@ -27,6 +27,10 @@ export default function PushNotifications({ onClose }: { onClose: () => void }) 
       .then((response: AxiosResponse<Notification[]>) => {
         console.log("🔔 알림 데이터:", response.data);
         setNotifications(response.data);
+
+        // ✅ 안 읽은 알림들만 읽음 처리 API 호출
+        const unreadNotifications = response.data.filter((notif) => notif.status === false);
+        markNotificationsAsRead(unreadNotifications);
       })
       .catch((error) => {
         console.error("❌ 알림 불러오기 실패", error);
@@ -34,6 +38,29 @@ export default function PushNotifications({ onClose }: { onClose: () => void }) 
       })
       .finally(() => setLoading(false));
   }, [auth.user?.id]); // ✅ 로그인한 유저 ID가 바뀌면 다시 호출
+
+  // ✅ 읽음 처리 API 호출 함수
+  const markNotificationsAsRead = async (unreadNotifs: Notification[]) => {
+    if (unreadNotifs.length === 0) return; // 📌 안 읽은 알림이 없으면 요청 안 함
+
+    try {
+      await Promise.all(
+        unreadNotifs.map((notif) => axios.post(`${API_BASE_URL}/notification/read`, { notificationId: notif.id }))
+      );
+      console.log("✅ 알림 읽음 처리 완료");
+
+      // ✅ 상태 업데이트 (노란 점 제거)
+      // setNotifications((prevNotifs) =>
+      //   prevNotifs.map((notif) =>
+      //     unreadNotifs.some((unread) => unread.id === notif.id)
+      //       ? { ...notif, status: true } // ✅ 읽음 상태로 변경
+      //       : notif
+      //   )
+      // );
+    } catch (error) {
+      console.error("❌ 알림 읽음 처리 실패", error);
+    }
+  };
 
   return (
     <div className="relative w-[400px] h-[600px] bg-white bg-opacity-70 border border-black rounded-lg shadow-lg p-4">
@@ -57,9 +84,9 @@ export default function PushNotifications({ onClose }: { onClose: () => void }) 
               onFriendRequestClick={
                 notif.type === "FRIEND REQUEST"
                   ? () => {
-                    setSelectedFriendRequest(notif.data || null);
-                    setShowFriendRequestModal(true);
-                  }
+                      setSelectedFriendRequest(notif.data || null);
+                      setShowFriendRequestModal(true);
+                    }
                   : undefined
               }
             />
@@ -126,10 +153,23 @@ function NotificationItem({
   );
 }
 
-// TODO 게임 초대용 알림으로 대체
 // 🔹 게임 초대 알림 (입장 버튼 추가)
-function GameInviteNotification({ message, gameRoomId }: { message: string; gameRoomId?: number }) {
+function GameInviteNotification({ message, gameRoomId }: { message: string; gameRoomId?: string }) {
   const router = useRouter(); // ✅ Next.js App Router 사용
+  const { auth } = useAuth(); // ✅ 로그인한 유저 정보 가져오기
+
+  const handleEnterGame = () => {
+    if (!gameRoomId || !auth.user?.id) {
+      console.error("❌ 게임방 ID 또는 유저 ID가 없음");
+      return;
+    }
+
+    // ✅ 게임 입장 URL 생성
+    const gameUrl = `https://i12e203.p.ssafy.io/room/${gameRoomId}?userName=${auth.user.id}`;
+
+    console.log(`🎮 게임 입장 URL: ${gameUrl}`);
+    router.push(gameUrl); // ✅ Next.js에서 페이지 이동
+  };
 
   return (
     <div className="flex items-center justify-between w-full">
@@ -138,10 +178,7 @@ function GameInviteNotification({ message, gameRoomId }: { message: string; game
         <p className="text-sm text-gray-500">{message}</p>
       </div>
       {gameRoomId && (
-        <button
-          onClick={() => router.push(`/gameroom/${gameRoomId}`)} // ✅ 페이지 이동
-          className="px-3 py-1 bg-blue-500 text-white text-xs rounded-md"
-        >
+        <button onClick={handleEnterGame} className="px-3 py-1 bg-blue-500 text-white text-xs rounded-md">
           입장
         </button>
       )}
@@ -170,7 +207,7 @@ const getNotificationLabel = (type: string) => {
 };
 
 // 🔹 친구 요청 모달 컴포넌트
-function FriendRequestModal({ relationshipId, onClose }: { relationshipId: number; onClose: () => void }) {
+function FriendRequestModal({ relationshipId, onClose }: { relationshipId: string; onClose: () => void }) {
   const handleAcceptFriend = () => {
     console.log("친구 수락 코드 : ", relationshipId);
 

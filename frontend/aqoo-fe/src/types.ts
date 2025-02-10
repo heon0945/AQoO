@@ -38,7 +38,7 @@ export interface Notification {
   id: number;
   userId: string;
   type: string;
-  data?: number;
+  data?: string;
   message: string;
   status: boolean;
   createdAt: string;
