@@ -5,7 +5,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 
-import InputField from "@/app/login/componets/InputField";
+import InputField from "./InputField";
 import LoginButton from "./LoginButton";
 import Buttons from "./Buttons";
 import PasswordChangeModal from "./PasswordChangeModal";
