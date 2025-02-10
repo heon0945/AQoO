@@ -5,6 +5,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { useSearchParams, useRouter } from "next/navigation";
 import InputField from "@/app/user/join/components/InputField";
 import axiosInstance from "@/services/axiosInstance" // axios 인스턴스 import (경로는 환경에 맞게 조정)
+import axios from "axios";
 
 interface JoinFormInputs {
   email: string;
@@ -38,8 +39,8 @@ function JoinPageContent() {
     // 요청 본문에 소셜 로그인 여부 추가
     const requestBody = { ...data, isSocialLogin: isSocialJoin };
     try {
-      // 회원가입 요청 (BASE_URL과 결합되어 "https://i12e203.p.ssafy.io/api/v1/auth/register"로 요청됨)
-      const response = await axiosInstance.post("/auth/register", requestBody);
+      console.log("보낼 데이터 : " + requestBody)
+      const response = await axios.post("https://i12e203.p.ssafy.io/api/v1/auth/register", requestBody);
       console.log("회원가입 성공:", response.data);
       router.push("/user/login");
     } catch (error: any) {
