@@ -36,6 +36,32 @@ function JoinPageContent() {
     },
   });
 
+  // 이메일 유효성 검사 함수
+  const validateEmail = async (value: string): Promise<boolean | string> => {
+    try {
+      const response = await axios.post(
+        "https://i12e203.p.ssafy.io/api/v1/auth/validate-email",
+        { email: value }
+      );
+      return response.data.valid || "이미 사용 중인 이메일입니다.";
+    } catch (error) {
+      return "이메일 검증 중 오류가 발생했습니다.";
+    }
+  };
+
+  // 아이디 유효성 검사 함수
+  const validateId = async (value: string): Promise<boolean | string> => {
+    try {
+      const response = await axios.post(
+        "https://i12e203.p.ssafy.io/api/v1/auth/validate-id",
+        { userId: value }
+      );
+      return response.data.valid || "이미 사용 중인 아이디입니다.";
+    } catch (error) {
+      return "아이디 검증 중 오류가 발생했습니다.";
+    }
+  };
+
   const onSubmit: SubmitHandler<JoinFormInputs> = async (data) => {
     // 일반 가입인 경우, 비밀번호와 비밀번호 확인이 일치하는지 검증합니다.
     if (!isSocialJoin && data.password !== data.pw) {
@@ -87,7 +113,7 @@ function JoinPageContent() {
                 placeholder="example@sea.com"
                 register={register("email", {
                   required: "필수 입력 항목입니다.",
-                  validate: /* 이메일 유효성 검사 함수 */ undefined,
+                  validate: validateEmail,
                 })}
                 error={errors.email?.message as string}
               />
@@ -97,7 +123,7 @@ function JoinPageContent() {
                 placeholder="아이디"
                 register={register("id", {
                   required: "필수 입력 항목입니다.",
-                  validate: /* 아이디 유효성 검사 함수 */ undefined,
+                  validate: validateId,
                 })}
                 error={errors.id?.message as string}
               />

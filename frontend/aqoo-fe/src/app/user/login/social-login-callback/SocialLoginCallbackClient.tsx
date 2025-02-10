@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -11,27 +11,44 @@ export default function SocialLoginCallbackClient() {
   const searchParams = useSearchParams();
   const { socialLogin } = useAuth();
 
-  useEffect(() => {
-    // 각 값들을 기본값을 ""로 설정
+  const handleRedirect = useCallback(async () => {
     const accessToken = searchParams.get("accessToken") || "";
     const userId = searchParams.get("userId") || "";
     const nickName = searchParams.get("nickName") || "";
     const isNewUser = searchParams.get("isNewUser") === "true";
 
-    // 만약 accessToken와 nickName이 빈 문자열이고, isNewUser가 true이면 회원가입 페이지로 이동
+    // socialLogin이 필요한 경우 먼저 실행
+    if (accessToken && userId) {
+      try {
+        await socialLogin(accessToken, userId, nickName);
+      } catch (error) {
+        console.error("Social login failed:", error);
+        router.push("/user/login");
+        return;
+      }
+    }
+
+    // 라우팅 로직
     if (isNewUser && accessToken === "" && nickName === "" && userId) {
-      router.push(`/user/join?email=${encodeURIComponent(userId)}`);
-    }
-    // 그렇지 않고 accessToken과 userId 값이 존재하면 소셜 로그인 후 메인 페이지로 이동
-    else if (accessToken && userId) {
-      socialLogin(accessToken, userId, nickName);
-      router.push("/test-recoil-query");
-    }
-    // 그 외의 경우는 로그인 페이지로 이동
-    else {
-      router.push("/user/login");
+      router.replace(`/user/join?email=${encodeURIComponent(userId)}`);
+    } else if (accessToken && userId) {
+      router.replace("/test-recoil-query");
+    } else {
+      router.replace("/user/login");
     }
   }, [router, searchParams, socialLogin]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    if (mounted) {
+      handleRedirect();
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [handleRedirect]);
 
   return <div>로그인 중입니다...</div>;
 }
