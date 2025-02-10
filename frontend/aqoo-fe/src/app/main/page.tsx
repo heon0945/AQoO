@@ -91,7 +91,7 @@ export default function MainPage() {
       ))}
 
       {/* 🏠 상단 네비게이션 */}
-      <div className="absolute top-4 left-4 z-10 mt-2 ml-10">
+      {/* <div className="absolute top-4 left-4 z-10 mt-2 ml-10">
         <Link href="/">
           <span className="text-white text-5xl hover:text-yellow-300">AQoO</span>
         </Link>
@@ -101,7 +101,7 @@ export default function MainPage() {
         onClick={() => setIsSettingsOpen(!isSettingsOpen)}
       >
         <Settings className="w-6 h-6 text-white" />
-      </button>
+      </button> */}
 
       {/* 📌 하단 메뉴 바 */}
       <BottomMenuBar setActiveComponent={setActiveComponent} userInfo={userInfo} aquariumData={aquariumData} />
