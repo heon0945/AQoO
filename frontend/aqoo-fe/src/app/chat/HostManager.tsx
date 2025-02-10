@@ -1,16 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react"; // ✅ useEffect 추가
 import axios from "axios";
-import { Friend } from "@/store/participantAtom";
-import { useAuth } from "@/hooks/useAuth"; // 로그인 정보 가져오기
+import { User } from "@/store/participantAtom";
+import { useAuth } from "@/hooks/useAuth"; 
 
 const API_BASE_URL = "http://i12e203.p.ssafy.io:8089/api/v1";
 
 interface HostManagerProps {
   TEST_MODE: boolean;
   TEST_USER_ID: string;
-  setHostUser: (user: Friend | null) => void;
+  setHostUser: (user: User | null) => void;
 }
 
 // ✅ 방장 정보를 가져오는 컴포넌트
@@ -18,14 +18,15 @@ export default function HostManager({ TEST_MODE, TEST_USER_ID, setHostUser }: Ho
   const { auth } = useAuth();
   console.log("🔍 useAuth에서 가져온 사용자 정보:", auth);
 
-  useEffect(() => {
+  useEffect(() => { // ✅ useEffect 추가
     if (TEST_MODE) {
-      // ✅ 테스트 모드: 가짜 유저 데이터 사용
-      const testUser: Friend = {
+      const testUser: User = {
         id: TEST_USER_ID,
-        friendId: TEST_USER_ID, // ✅ friendId 추가
-        nickname: "eejj",
+        friendId: TEST_USER_ID,
+        nickname: "테스트 방장",
         level: 1,
+        ready: false,
+        isHost: true,
       };
       setHostUser(testUser);
     } else {
@@ -33,11 +34,13 @@ export default function HostManager({ TEST_MODE, TEST_USER_ID, setHostUser }: Ho
         .get(`${API_BASE_URL}/users/me`, { withCredentials: true })
         .then((response) => {
           if (response.data) {
-            const host = {
+            const host: User = {
               id: response.data.id,
-              friendId: response.data.id, // ✅ friendId 추가
+              friendId: response.data.id,
               nickname: response.data.nickname,
               level: response.data.level || 1,
+              ready: false,
+              isHost: true,
             };
             setHostUser(host);
           }
@@ -47,7 +50,7 @@ export default function HostManager({ TEST_MODE, TEST_USER_ID, setHostUser }: Ho
           setHostUser(null);
         });
     }
-  }, [TEST_MODE, TEST_USER_ID, setHostUser]);
+  }, [TEST_MODE, TEST_USER_ID, setHostUser]); // ✅ 의존성 배열 확인
 
   return null; // ✅ UI 없이 로직만 실행
 }

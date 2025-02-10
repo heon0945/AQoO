@@ -1,13 +1,19 @@
 "use client";
 
 import { useRecoilState } from "recoil";
-import { usersState, User } from "@/store/participantAtom"; // ✅ import 경로 확인
+import { usersState, User } from "@/store/participantAtom";
 
 export default function ParticipantList() {
-  const [users, setUsers] = useRecoilState(usersState);
+  const [users, setUsers] = useRecoilState(usersState); // ✅ Recoil 상태 사용
 
+  // 참가자 제거 함수
   const handleRemoveParticipant = (participant: User) => {
-    setUsers(users.filter((u) => u.friendId !== participant.friendId)); // ✅ friendId 기준으로 제거
+    console.log("참가자 제거:", participant);
+
+    // ✅ 안전한 상태 업데이트 방식 (prevUsers 사용)
+    setUsers((prevUsers) =>
+      prevUsers.filter((u) => u.friendId !== participant.friendId)
+    );
   };
 
   return (
@@ -16,7 +22,10 @@ export default function ParticipantList() {
       <div className="overflow-y-auto h-72 flex flex-col gap-2">
         {users.length > 0 ? (
           users.map((participant) => (
-            <div key={participant.friendId} className="flex justify-between items-center px-2 border rounded-lg">
+            <div
+              key={participant.friendId}
+              className="flex justify-between items-center px-2 border rounded-lg"
+            >
               <div className="flex items-center gap-3">
                 <img
                   src={participant.fishImage ? participant.fishImage : "/fish/default.png"}

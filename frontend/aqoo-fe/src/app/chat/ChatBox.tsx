@@ -1,25 +1,27 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react"; // ✅ useEffect, useState 추가
 import { useRouter, useSearchParams } from "next/navigation"; 
 import { useRecoilState } from "recoil"; 
-import { participantsState, Friend } from "@/store/participantAtom"; 
+import { usersState, User } from "@/store/participantAtom"; 
 
 import ChatBox from "@/app/chat/ChatBox";  
-import ParticipantList from "@/app/chat/ParticipnatList";
+import ParticipantList from "@/app/chat/ParticipantList"; // ✅ 파일명 오타 수정
 
 export default function ChatPage() {
     const router = useRouter();
     const searchParams = useSearchParams(); 
-    const [participants, setParticipants] = useRecoilState(participantsState);  // ✅ 수정
+    const [participants, setParticipants] = useRecoilState(usersState);  
 
-    // ✅ 테스트 모드 설정 (임시 유저 추가)
+    // ✅ 테스트 모드 설정
     const TEST_MODE = true;
-    const TEST_USER: Friend = {
+    const TEST_USER: User = {
       id: "eejj",
-      friendId: "eejj",  // ✅ 필드 추가
+      friendId: "eejj",
       nickname: "테스트 유저",
       level: 1,
+      ready: false,
+      isHost: false,
     };
 
     useEffect(() => {
@@ -28,14 +30,14 @@ export default function ChatPage() {
 
         if (data) {
             try {
-                const parsedData: Friend[] = JSON.parse(decodeURIComponent(data));
+                const parsedData: User[] = JSON.parse(decodeURIComponent(data));
                 console.log("파싱된 참가자 데이터:", parsedData);
 
                 if (parsedData.length === 0 && TEST_MODE) {
                   console.log("⚠ 참가자가 없음. 테스트 유저 추가!");
-                  setParticipants((prev) => [...prev, TEST_USER]);  // ✅ 기존 값 유지하면서 추가
+                  setParticipants((prev) => [...prev, TEST_USER]);  
                 } else {
-                  setParticipants((prev) => [...prev, ...parsedData]);  // ✅ 기존 값 유지하면서 추가
+                  setParticipants((prev) => [...prev, ...parsedData]);  
                 }
                 
             } catch (error) {
@@ -45,7 +47,7 @@ export default function ChatPage() {
             console.log("⚠ 참가자 데이터가 없음. 테스트 유저 추가!");
             setParticipants([TEST_USER]);
         }
-    }, [searchParams, setParticipants]);
+    }, [searchParams, setParticipants]); // ✅ 의존성 배열 확인
 
     return (
         <div className="relative flex flex-col items-center justify-center min-h-screen bg-cover bg-center p-6"

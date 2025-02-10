@@ -1,88 +1,100 @@
 "use client";
 
-import { useState } from "react";
-import axios from "axios";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { RecoilRoot, useRecoilValue } from "recoil";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { participantsState, Friend } from "@/store/participantAtom";
+import { useRecoilState } from "recoil";
+import { usersState } from "@/store/participantAtom";
+import FriendList from "./FriendList";
+import ParticipantList from "./ParticipantList";
 
-import FriendList from "@/app/gameroom/FriendList";
-import ParticipantList from "@/app/gameroom/ParticipantList";
-
-const API_BASE_URL = "http://i12e203.p.ssafy.io:8089/api/v1";
-
-export default function GameRoom() {
-  const [queryClient] = useState(() => new QueryClient());
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <RecoilRoot>
-        <RoomCreationScreen />
-      </RecoilRoot>
-    </QueryClientProvider>
-  );
-}
-
-function RoomCreationScreen() {
-  const participants = useRecoilValue(participantsState);
+export default function GameRoomPage() {
+  const [participants, setParticipants] = useRecoilState(usersState);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const [userName, setUserName] = useState<string | null>(null); // ✅ 초기값을 null로 설정
 
+  // ✅ 사용자 이름을 가져와 설정하는 useEffect 추가
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedUserName = localStorage.getItem("loggedInUser") || "guest";
+      setUserName(storedUserName);
+    }
+  }, []);
+
+  // ✅ 방장 자동 지정 (이전 참가자가 있을 경우만)
+  useEffect(() => {
+    if (participants.length > 0 && !participants[0]?.isHost) {
+      setParticipants((prev) => {
+        const updatedParticipants = [...prev];
+        updatedParticipants[0] = { ...updatedParticipants[0], isHost: true };
+        return updatedParticipants;
+      });
+    }
+  }, [participants.length]); // ✅ 무한 렌더링 방지
+
+  // ✅ 채팅방 생성 핸들러
   const handleCreateRoom = async () => {
     if (participants.length === 0) {
-      alert("⚠ 참가자가 없습니다! 최소 1명 이상 추가해주세요.");
+      alert("⚠ 참가자를 한 명 이상 추가해주세요.");
       return;
     }
-  
+
+    if (!userName) {
+      alert("⚠ 사용자 이름을 확인할 수 없습니다.");
+      return;
+    }
+
+    setLoading(true);
     try {
-      console.log("🚀 [TEST] 채팅방 생성 요청 시작 (실제 API 없음)");
-  
-      // ✅ 1️⃣ 가짜 채팅방 ID 생성 (실제 API가 없으므로)
-      const fakeRoomId = `test_room_${Date.now()}`;
-      console.log("✅ [TEST] 채팅방 생성 성공, Room ID:", fakeRoomId);
-  
-      // ✅ 2️⃣ 가짜 친구 초대 처리 (실제 API 없음)
-      const invitedUsers = participants.slice(1).map((friend) => friend.id);
-      console.log("✅ [TEST] 친구 초대 완료:", invitedUsers);
-  
-      // ✅ 3️⃣ 채팅방으로 이동 (가짜 Room ID 사용)
-      const encodedData = encodeURIComponent(JSON.stringify(participants));
-      router.push(`/chat?data=${encodedData}&roomId=${fakeRoomId}`);
-  
+      const response = await fetch(
+        `https://i12e203.p.ssafy.io/api/v1/chatrooms?userId=${encodeURIComponent(userName)}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Room creation failed");
+      }
+
+      const data = await response.json();
+      const roomId = data.roomId;
+      console.log("✅ Created roomId:", roomId);
+
+      // ✅ 새로운 경로로 이동
+      router.push(
+        `/room/${roomId}?userName=${encodeURIComponent(userName)}&isHost=true`
+      );
     } catch (error) {
-      console.error("❌ [TEST] 채팅방 생성 또는 초대 실패", error);
-      alert("테스트 환경에서 채팅방을 생성하는 데 실패했습니다.");
+      console.error("❌ Error creating room:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "알 수 없는 오류 발생";
+      alert(`채팅방 생성 실패: ${errorMessage}`);
+    } finally {
+      setLoading(false);
     }
   };
-  
 
   return (
-    <div
-      className="relative flex flex-col items-center justify-center min-h-screen bg-cover bg-center"
-      style={{ backgroundImage: "url('/images/background.png')" }}
-    >
-      <div className="absolute inset-0 bg-white opacity-20"></div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
+      <h1 className="text-3xl font-bold mb-6 text-gray-900 text-center">
+        참가자 관리 및 채팅방 생성
+      </h1>
 
-      <div className="relative z-10 flex flex-col items-center">
-        <h1 className="text-5xl font-bold mb-6 text-black">🎮 방 만들기 🕹️</h1>
-        <div className="flex gap-6">
-          <FriendList />
-          <ParticipantList />
-        </div>
+      <div className="flex gap-6">
+        <FriendList />
+        <ParticipantList />
       </div>
 
       <button
-        className="fixed bottom-10 right-7 px-10 py-2 rounded-lg border border-black bg-white text-2xl shadow-md hover:bg-gray-100"
         onClick={handleCreateRoom}
+        disabled={!userName || participants.length === 0 || loading} // ✅ userName이 없으면 버튼 비활성화
+        className="mt-6 w-60 px-4 py-3 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 disabled:opacity-50"
       >
-        만들기
-      </button>
-
-      <button
-        className="fixed bottom-10 left-7 px-10 py-2 rounded-lg border border-black bg-white text-2xl shadow-md hover:bg-gray-100"
-        onClick={() => router.push("/")}
-      >
-        BACK
+        {loading ? "Creating..." : "채팅방 생성"}
       </button>
     </div>
   );
