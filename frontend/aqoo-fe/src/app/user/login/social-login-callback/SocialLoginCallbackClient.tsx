@@ -42,5 +42,6 @@ export default function SocialLoginCallbackClient() {
     };
   }, [router, searchParams, socialLogin]);
 
+
   return <div>로그인 중입니다...</div>;
 }

@@ -5,13 +5,21 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import Game from './game';
 
+// 플레이어 타입 정의 (Game 컴포넌트와 동일한 구조)
+interface Player {
+  userName: string;
+  totalPressCount: number;
+}
+
 type ScreenState = 'chat' | 'game';
 
 interface RoomUpdate {
   roomId: string;
   message: string;
-  // 게임 관련 메시지와 함께 유저 목록 업데이트용 필드 추가
+  // 게임 관련 메시지와 함께 유저 목록 업데이트용 필드 (채팅방 사용자용)
   users?: { userName: string; ready: boolean; isHost: boolean }[];
+  // GAME_STARTED 메시지의 경우 players 필드가 포함됨
+  players?: Player[];
 }
 
 interface IntegratedRoomProps {
@@ -22,6 +30,7 @@ interface IntegratedRoomProps {
 export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps) {
   const [screen, setScreen] = useState<ScreenState>('chat');
   const [users, setUsers] = useState<{ userName: string; ready: boolean; isHost: boolean }[]>([]);
+  const [gamePlayers, setGamePlayers] = useState<Player[]>([]); // 추가: 게임 시작 시 사용할 플레이어 목록
   const [currentIsHost, setCurrentIsHost] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const hasSentJoinRef = useRef(false);
@@ -55,6 +64,8 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
           const data: RoomUpdate = JSON.parse(message.body);
           console.log('Room update received:', data);
           if (data.message === 'GAME_STARTED') {
+            // GAME_STARTED 메시지에는 players 필드가 포함되어 있어야 함
+            setGamePlayers(data.players ?? []);
             setScreen('game');
           } else if (data.message === 'USER_LIST') {
             setUsers(data.users ?? []);
@@ -248,7 +259,12 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
 
           {screen === 'game' && (
             <div className="max-w-2xl mx-auto p-6 bg-white rounded shadow">
-              <Game roomId={roomId} userName={userName} onResultConfirmed={handleResultConfirmed} />
+              <Game
+                roomId={roomId}
+                userName={userName}
+                initialPlayers={gamePlayers} // GAME_STARTED 메시지에서 setGamePlayers로 설정된 값 사용
+                onResultConfirmed={handleResultConfirmed}
+              />
             </div>
           )}
         </>

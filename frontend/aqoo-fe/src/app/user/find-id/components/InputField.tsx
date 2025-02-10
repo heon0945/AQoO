@@ -3,7 +3,13 @@
 import React, { forwardRef, InputHTMLAttributes } from "react";
 import { UseFormRegisterReturn } from "react-hook-form";
 
-// 여러 개의 ref를 하나로 병합하는 헬퍼 함수
+export interface InputFieldProps extends InputHTMLAttributes<HTMLInputElement> {
+  label: string;
+  register: UseFormRegisterReturn;
+  error?: string;
+}
+
+// 여러 ref를 하나로 합치는 헬퍼 함수
 function mergeRefs<T>(...refs: (React.Ref<T> | undefined)[]): React.RefCallback<T> {
   return (value: T) => {
     refs.forEach(ref => {
@@ -16,16 +22,11 @@ function mergeRefs<T>(...refs: (React.Ref<T> | undefined)[]): React.RefCallback<
   };
 }
 
-export interface InputFieldProps extends InputHTMLAttributes<HTMLInputElement> {
-  label: string;
-  register: UseFormRegisterReturn;
-  error?: string;
-}
-
 const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
   ({ label, register, error, ...rest }, ref) => {
-    // react-hook-form의 register에서 반환된 객체에서 내부 ref를 분리합니다.
+    // register 객체에서 ref를 분리하고 나머지 속성은 그대로 사용
     const { ref: registerRef, ...restRegister } = register;
+
     return (
       <div>
         <label className="block text-sm font-semibold text-blue-800 mb-1">
