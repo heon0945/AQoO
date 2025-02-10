@@ -23,15 +23,22 @@ export default function FriendList() {
   const { auth } = useAuth();
   console.log("useAuth에서 가져온 사용자 정보", auth);
 
-  // ✅ TEST_MODE 삭제 및 실제 userId 사용
-  const loggedInUser = localStorage.getItem("loggedInUser") || "";
-  console.log("현재 아이디", loggedInUser);
-
+  // localStorage 접근을 위한 상태 변수
+  const [loggedInUser, setLoggedInUser] = useState("");
   const [myFriends, setMyFriends] = useState<Friend[]>([]);
   const [users, setUsers] = useRecoilState(usersState);
   const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
-  // ✅ 친구 목록 API 호출
+  // 클라이언트 사이드에서만 localStorage 접근
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedUser = localStorage.getItem("loggedInUser") || "";
+      setLoggedInUser(storedUser);
+      console.log("현재 아이디", storedUser);
+    }
+  }, []);
+
+  // 친구 목록 API 호출
   useEffect(() => {
     if (!loggedInUser) {
       console.warn("⚠ userId가 없음. API 요청을 중단합니다.");
@@ -49,7 +56,7 @@ export default function FriendList() {
       });
   }, [loggedInUser]);
 
-  // ✅ 참가자 추가 함수
+  // 참가자 추가 함수
   const handleAddParticipant = (friend: Friend) => {
     if (users.some((u) => u.friendId === friend.friendId)) return;
   
