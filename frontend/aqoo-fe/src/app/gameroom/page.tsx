@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useRecoilState } from "recoil";
-import { usersState } from "@/store/participantAtom";
+
 import FriendList from "./FriendList";
 import ParticipantList from "./ParticipantList";
+import { useRecoilState } from "recoil";
+import { useRouter } from "next/navigation";
+import { usersState } from "@/store/participantAtom";
 
 // localStorage 안전하게 접근하는 헬퍼 함수
 const getLocalStorageItem = (key: string, defaultValue: string = "guest"): string => {
@@ -71,13 +72,10 @@ export default function GameRoomPage() {
       console.log("✅ Created roomId:", roomId);
 
       // 새로운 경로로 이동
-      router.push(
-        `/room/${roomId}?userName=${encodeURIComponent(userName)}&isHost=true`
-      );
+      router.push(`/room/${roomId}?userName=${encodeURIComponent(userName)}&isHost=true`);
     } catch (error) {
       console.error("❌ Error creating room:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "알 수 없는 오류 발생";
+      const errorMessage = error instanceof Error ? error.message : "알 수 없는 오류 발생";
       alert(`채팅방 생성 실패: ${errorMessage}`);
     } finally {
       setLoading(false);
@@ -86,9 +84,7 @@ export default function GameRoomPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
-      <h1 className="text-3xl font-bold mb-6 text-gray-900 text-center">
-        참가자 관리 및 채팅방 생성
-      </h1>
+      <h1 className="text-3xl font-bold mb-6 text-gray-900 text-center">참가자 관리 및 채팅방 생성</h1>
 
       <div className="flex gap-6">
         <FriendList />
