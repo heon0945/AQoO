@@ -1,3 +1,4 @@
+import { User } from "@/store/authAtom";
 import axios from "axios";
 
 const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
@@ -21,4 +22,13 @@ export const increaseUserExp = async (userId: string, earnedExp: number) => {
     console.error("❌ 경험치 증가 실패", error);
     return null;
   }
+};
+
+// 테스트용 더미 API
+const API_URL = "https://jsonplaceholder.typicode.com/users"; // ✅ 더미 API
+
+// ✅ 반환 타입을 User[]로 명확히 지정
+export const getUsers = async (): Promise<User[]> => {
+  const response = await axios.get(API_URL);
+  return response.data;
 };
