@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class GameAPlayer {
     private String userName;
-    private int score;
+    private int totalPressCount;
     private String mainFishImage;
     private String nickname;
 }

@@ -64,12 +64,12 @@ public class GameAService {
                         UserInfoResponse userInfo = userService.getUserInfo(userName);
                         String mainFishImage = userInfo.getMainFishImage();
                         String nickname = userInfo.getNickname();
-                        return new GameAPlayerDto(userName, score, mainFishImage, nickname);
-                    })
+            return new GameAPlayerDto(userName, score, mainFishImage, nickname);
+        })
                     .collect(Collectors.toList());
 
-            // RoomResponse에 directionSequence 필드를 추가했다고 가정합니다.
-            RoomResponse response = new RoomResponse(roomId, players, "GAME_A_STARTED", null, null, directionSequence);
+        // RoomResponse에 directionSequence 필드를 추가했다고 가정합니다.
+        RoomResponse response = new RoomResponse(roomId, players, "GAME_A_STARTED", null, null, directionSequence);
             messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
             log.info("Broadcasted GAME_A_STARTED message for roomId: {}", roomId);
         } else {
