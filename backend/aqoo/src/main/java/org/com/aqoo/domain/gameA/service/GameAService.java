@@ -69,9 +69,9 @@ public class GameAService {
                     .collect(Collectors.toList());
 
             // RoomResponse에 directionSequence 필드를 추가했다고 가정합니다.
-            RoomResponse response = new RoomResponse(roomId, players, "GAME_STARTED", null, null, directionSequence);
+            RoomResponse response = new RoomResponse(roomId, players, "GAME_A_STARTED", null, null, directionSequence);
             messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
-            log.info("Broadcasted GAME_STARTED message for roomId: {}", roomId);
+            log.info("Broadcasted GAME_A_STARTED message for roomId: {}", roomId);
         } else {
             log.error("ChatRoom not found for roomId: {}", roomId);
         }
