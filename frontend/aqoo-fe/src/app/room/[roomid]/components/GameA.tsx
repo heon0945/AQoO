@@ -1,30 +1,19 @@
 'use client';
 
+import { useSFX } from '@/hooks/useSFX';
 import { getStompClient } from '@/lib/stompclient';
 import axiosInstance from '@/services/axiosInstance';
 import { User } from '@/store/authAtom';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-interface GameProps {
-  roomId: string;
-  userName: string;
-  initialPlayers: Player[];
-  onResultConfirmed: () => void;
-  user: User; // 로그인한 사용자의 정보 (레벨, 닉네임 등)
-}
-
-interface Player {
-  userName: string;
-  totalPressCount: number;
+//
+// ----- 타입 선언들 -----
+//
+interface GameAPlayer {
+  userName: string; // 서버에서 내려주는 식별자
+  totalPressCount: number; // 실제로는 서버의 score(= 맞춘 횟수)
   mainFishImage: string;
-}
-
-interface RoomResponse {
-  roomId: string;
-  players: Player[];
-  message: string;
-  winner?: string;
-  finishOrder?: string[];
+  nickname: string;
 }
 
 interface ExpResponse {
@@ -37,71 +26,109 @@ interface ExpResponse {
 
 interface TicketResponse {
   userId: string;
-  fishTicket: number; // 증가 후 현재 티켓 수
+  fishTicket: number;
 }
 
-// 등수별 경험치 계산 함수
-function getExpByRank(rank: number): number {
-  if (rank === 1) return 20;
-  if (rank === 2) return 10;
-  if (rank === 3) return 5;
-  return 3; // 4등~6등은 3
+/** 서버가 내려주는 메시지 중 players, finishOrder 등이 들어있는 형태 */
+interface RoomResponse {
+  roomId: string;
+  players: GameAPlayer[];
+  message: string; // 'PRESS_UPDATED' | 'GAME_ENDED' | ...
+  winner?: string;
+  finishOrder?: string[];
+  directionSequence?: number[];
 }
+
+/** GameA 컴포넌트가 부모로부터 받는 props */
+interface GameAProps {
+  roomId: string;
+  // userName은 사용자 식별 (닉네임)이라 가정
+  userName: string;
+  // 서버에서 처음에 GAME_A_STARTED로 내려준 플레이어 목록
+  initialPlayers: GameAPlayer[];
+  // 서버에서 내려준 방향키 시퀀스 (UI 표시용)
+  initialDirectionSequence: number[];
+  onResultConfirmed: () => void;
+  user: User; // 로그인된 사용자 정보 (레벨 등)
+}
+
+/** 방향 번호 -> 아이콘 변환 */
+const getArrowIcon = (direction: number) => {
+  switch (direction) {
+    case 0:
+      return '↑';
+    case 1:
+      return '→';
+    case 2:
+      return '↓';
+    case 3:
+      return '←';
+    default:
+      return '';
+  }
+};
 
 export default function GameA({
   roomId,
   userName,
   initialPlayers,
+  initialDirectionSequence,
   onResultConfirmed,
   user,
-}: GameProps) {
-  // 1) 게임 시작 전 레벨
+}: GameAProps) {
+  //
+  // ----- (1) 기본 상태 ------
+  //
   const [prevLevel] = useState<number>(user.level ?? 0);
 
-  // 2) 모달 표시 상태
+  // 보상 모달
   const [showExpModal, setShowExpModal] = useState(false);
   const [showLevelUpModal, setShowLevelUpModal] = useState(false);
 
-  // 3) 티켓, 경험치 정보
+  // 티켓, 경험치
   const [myTicket, setMyTicket] = useState<number | null>(null);
   const [myExpInfo, setMyExpInfo] = useState<ExpResponse | null>(null);
-
-  // **추가**: “획득 경험치(earnedExp)”를 저장할 상태
   const [myEarnedExp, setMyEarnedExp] = useState<number>(0);
 
-  // 4) 게임 진행 상태
+  // 게임 진행
   const [countdown, setCountdown] = useState(3);
   const [hasCountdownFinished, setHasCountdownFinished] = useState(false);
+  const [currentPlayers, setCurrentPlayers] =
+    useState<GameAPlayer[]>(initialPlayers);
 
-  const [players, setPlayers] = useState<Player[]>(initialPlayers);
+  const directionSequence = initialDirectionSequence;
+
+  // 게임 종료 제어
   const [gameEnded, setGameEnded] = useState(false);
   const [winner, setWinner] = useState<string | null>(null);
   const [finishOrder, setFinishOrder] = useState<string[]>([]);
 
-  const [isTapping, setIsTapping] = useState(false);
-  const [windEffects, setWindEffects] = useState<Record<string, boolean>>({});
+  // finishOrder의 닉네임 스냅샷
+  const [finishOrderSnapshot, setFinishOrderSnapshot] = useState<string[]>([]);
 
+  const [isStunned, setIsStunned] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [gameTime, setGameTime] = useState(30);
-
   const [modalDismissed, setModalDismissed] = useState(false);
 
-  // 5) 이전 players
-  const previousPlayersRef = useRef<Player[]>(initialPlayers);
-
-  // 6) 트랙 크기 측정
+  // 트랙 크기 측정
   const trackRef = useRef<HTMLDivElement>(null);
   const [trackDims, setTrackDims] = useState({ width: 0, height: 0 });
-
   const totalLanes = 6;
   const laneAreaFactor = 0.7;
   const laneAreaHeight = trackDims.height * laneAreaFactor;
   const laneAreaTopOffset = (trackDims.height - laneAreaHeight) / 2;
   const laneHeight = laneAreaHeight ? laneAreaHeight / totalLanes : 120;
 
-  // -----------------------------
-  // (A) 트랙 사이즈 측정
-  // -----------------------------
+  // 효과음
+  // 짜잔.mp3 = 축하 사운드라면, 혹은 오답 사운드라면 이름을 맞춰 바꿔주세요
+  const { play: correctSound } = useSFX('/sounds/clickeffect-03.mp3');
+  const { play: errorSound } = useSFX('/sounds/짜잔.mp3');
+  const { play: levelUpSound } = useSFX('/sounds/levelupRank.mp3');
+
+  //
+  // ----- (2) 트랙 사이즈 측정 -----
+  //
   useEffect(() => {
     function updateDims() {
       if (trackRef.current) {
@@ -114,107 +141,151 @@ export default function GameA({
     return () => window.removeEventListener('resize', updateDims);
   }, []);
 
-  // (B) STOMP 전송 함수
-  const publishMessage = (destination: string, message: object) => {
+  //
+  // ----- (3) STOMP 메시지 구독 -----
+  //     - data.message === 'PRESS_UPDATED' => currentPlayers 갱신
+  //     - data.message === 'GAME_ENDED'    => setGameEnded(true) + finishOrder 설정
+  //
+  useEffect(() => {
     const client = getStompClient();
-    if (client && client.connected) {
-      client.publish({
-        destination,
-        body: JSON.stringify(message),
-      });
-    } else {
-      console.error('STOMP client is not connected yet.');
-    }
-  };
+    if (!client) return;
 
-  // (C) 카운트다운
+    const subscription = client.subscribe(
+      `/topic/room/${roomId}`,
+      (messageFrame) => {
+        const data: RoomResponse = JSON.parse(messageFrame.body);
+        if (data.message === 'PRESS_UPDATED' && data.players) {
+          // 플레이어 목록 갱신
+          setCurrentPlayers(data.players);
+          // console.log('PRESS_UPDATED received:', data.players);
+        } else if (data.message === 'GAME_ENDED') {
+          // 게임 종료
+          setGameEnded(true);
+          setCurrentPlayers(data.players || []);
+          setFinishOrder(data.finishOrder || []);
+          setWinner(data.winner || null);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [roomId]);
+
+  //
+  // ----- (4) 카운트다운 -----
+  //
   useEffect(() => {
     if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown((prev) => prev - 1), 1000);
+      const timer = setTimeout(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
       return () => clearTimeout(timer);
     }
     setHasCountdownFinished(true);
   }, [countdown]);
 
-  // (D) 탭(스페이스바 또는 마우스 클릭) 시 호출되는 함수
-  const handleTap = useCallback(() => {
-    if (!hasCountdownFinished || gameEnded) return;
-    const me = players.find((p) => p.userName === userName);
-    if (me && me.totalPressCount >= 100) {
-      return;
-    }
-    if (!hasStarted) {
-      setHasStarted(true);
-    }
-    setIsTapping(true);
-    setTimeout(() => setIsTapping(false), 300);
-
-    publishMessage('/app/game.press', { roomId, userName, pressCount: 1 });
-  }, [hasCountdownFinished, gameEnded, players, userName, hasStarted, roomId]);
-
-  // (E) 스페이스바 keyup 이벤트 핸들러
-  const handleKeyPress = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.code !== 'Space') return;
-      e.preventDefault();
-      handleTap();
-    },
-    [handleTap]
-  );
-
-  // (F) countdown 끝 → keyup, click 이벤트 등록
+  // 카운트다운 끝나면 서버에 '준비 해제' 메시지 (선택)
   useEffect(() => {
     if (hasCountdownFinished) {
-      window.addEventListener('keyup', handleKeyPress);
-      window.addEventListener('click', handleTap);
-      return () => {
-        window.removeEventListener('keyup', handleKeyPress);
-        window.removeEventListener('click', handleTap);
-      };
-    }
-  }, [hasCountdownFinished, handleKeyPress, handleTap]);
-
-  // (G) STOMP 구독
-  useEffect(() => {
-    const client = getStompClient();
-    if (client) {
-      const sub = client.subscribe(`/topic/room/${roomId}`, (message) => {
-        const data: RoomResponse = JSON.parse(message.body);
-        setPlayers(data.players ?? []);
-        if (data.message === 'GAME_ENDED') {
-          setGameEnded(true);
-          setWinner(data.winner || null); // 서버 우승자
-          if (data.finishOrder) {
-            setFinishOrder(data.finishOrder);
-          }
-        }
-      });
-      return () => sub.unsubscribe();
-    }
-  }, [roomId]);
-
-  // (H) wind effect
-  useEffect(() => {
-    players.forEach((player) => {
-      if (player.userName !== userName) {
-        const prevPlayer = previousPlayersRef.current.find(
-          (p) => p.userName === player.userName
-        );
-        if (
-          !prevPlayer ||
-          player.totalPressCount > prevPlayer.totalPressCount
-        ) {
-          setWindEffects((prev) => ({ ...prev, [player.userName]: true }));
-          setTimeout(() => {
-            setWindEffects((prev) => ({ ...prev, [player.userName]: false }));
-          }, 300);
-        }
+      const client = getStompClient();
+      if (client && client.connected) {
+        client.publish({
+          destination: '/app/chat.clearReady',
+          body: JSON.stringify({ roomId, sender: userName }),
+        });
       }
-    });
-    previousPlayersRef.current = players;
-  }, [players, userName]);
+    }
+  }, [hasCountdownFinished, roomId, userName]);
 
-  // (I) 1초마다 gameTime--
+  //
+  // ----- (5) 현재 타겟 방향(로컬 표시용) -----
+  //     - 서버도 동일한 로직으로 (score=인덱스) 검사하므로 일관성 있음
+  //
+  const currentTarget = useMemo(() => {
+    const me = currentPlayers.find((p) => p.userName === userName);
+    if (!directionSequence || !me) return null;
+    const index = me.totalPressCount; // 내가 맞힌 횟수 => 다음에 맞춰야 할 인덱스
+    if (directionSequence[index] !== undefined) {
+      return directionSequence[index];
+    }
+    return null;
+  }, [directionSequence, currentPlayers, userName]);
+
+  //
+  // ----- (6) 방향키 입력 핸들러 -----
+  //     - 로컬에서 “오답”이면 1초 스턴 처리, “정답”이면 서버에 메시지
+  //     - 실제 판정은 서버가 “PRESS_UPDATED”로 결과 반영
+  //
+  const handleArrowKey = useCallback(
+    (e: KeyboardEvent) => {
+      // 게임 끝났거나 카운트다운 전이면 무시
+      if (gameEnded || !hasCountdownFinished) return;
+
+      let direction: number | null = null;
+      if (e.key === 'ArrowUp') direction = 0;
+      if (e.key === 'ArrowRight') direction = 1;
+      if (e.key === 'ArrowDown') direction = 2;
+      if (e.key === 'ArrowLeft') direction = 3;
+
+      if (direction === null) return;
+
+      // 로컬 stun 체크
+      if (isStunned) {
+        console.log('Input ignored: stunned');
+        return;
+      }
+
+      // 첫 입력이면 게임 시작
+      if (!hasStarted) {
+        setHasStarted(true);
+      }
+
+      // 로컬에서 “정답” 판단 (서버도 어차피 재검증)
+      if (currentTarget !== null && direction === currentTarget) {
+        correctSound();
+
+        // 서버에 입력 전달
+        const client = getStompClient();
+        if (client && client.connected) {
+          client.publish({
+            destination: '/app/gameA.press',
+            body: JSON.stringify({ roomId, userName, direction }),
+          });
+        }
+      } else {
+        // 오답
+        errorSound();
+        setIsStunned(true);
+        setTimeout(() => setIsStunned(false), 1000);
+      }
+    },
+    [
+      gameEnded,
+      hasCountdownFinished,
+      isStunned,
+      hasStarted,
+      currentTarget,
+      correctSound,
+      errorSound,
+      roomId,
+      userName,
+    ]
+  );
+
+  // 키 이벤트 등록/해제
+  useEffect(() => {
+    window.addEventListener('keydown', handleArrowKey);
+    return () => {
+      window.removeEventListener('keydown', handleArrowKey);
+    };
+  }, [handleArrowKey]);
+
+  //
+  // ----- (7) 로컬 게임 타이머 (옵션) -----
+  //     - 여기서는 단순히 화면에만 표시
+  //     - 시간이 0이 되어도 로컬에서 setGameEnded(true)는 하지 않음
+  //       (실제 종료는 서버가 “GAME_ENDED” 브로드캐스트)
+  //
   useEffect(() => {
     if (!hasStarted || gameEnded) return;
     const timer = setInterval(() => {
@@ -223,50 +294,28 @@ export default function GameA({
     return () => clearInterval(timer);
   }, [hasStarted, gameEnded]);
 
-  // (J) gameTime=0 or 모두 100탭 → 종료
+  // 타임아웃 후 서버에 종료 요청을 보낼 수도 있음. (선택)
   useEffect(() => {
-    if (!hasStarted || gameEnded) return;
-    if (
-      gameTime <= 0 ||
-      (players.length > 0 && players.every((p) => p.totalPressCount >= 100))
-    ) {
-      setGameEnded(true);
-
-      const maxPlayer = players.reduce(
-        (prev, cur) =>
-          cur.totalPressCount > prev.totalPressCount ? cur : prev,
-        players[0]
-      );
-      setWinner(maxPlayer?.userName || null);
-
-      publishMessage('/app/game.end', { roomId });
+    if (gameTime <= 0 && !gameEnded && hasStarted) {
+      // 여기서 서버에 “endGame” 요청
+      // publishMessage('/app/gameA.end', { roomId });
+      // console.log('Time over -> requesting server to end game...');
     }
-  }, [gameTime, players, hasStarted, gameEnded]);
+  }, [gameTime, gameEnded, hasStarted, roomId]);
 
-  // (K) countdown 끝났는데 안시작 → 강제 tap
-  useEffect(() => {
-    if (hasCountdownFinished && !hasStarted) {
-      setTimeout(() => {
-        window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Space' }));
-      }, 0);
-    }
-  }, [hasCountdownFinished, hasStarted]);
-
-  // (L) 게임 종료 & finishOrder가 있으면, 내 등수별로 exp-up
+  //
+  // ----- (8) “GAME_ENDED” 이후 finishOrder가 클라이언트에 도착하면 경험치 계산 -----
+  //
   useEffect(() => {
     if (!gameEnded || finishOrder.length === 0) return;
 
-    // 내 등수
     const rank = finishOrder.indexOf(userName) + 1;
-    if (rank <= 0) {
-      console.log('내 이름이 finishOrder에 없음 (관전자?)');
-      return;
-    }
-    // 등수별 경험치
-    const earnedExp = getExpByRank(rank);
-    setMyEarnedExp(earnedExp); // ★ 획득 경험치 저장
+    if (rank <= 0) return; // finishOrder에 없는 경우
 
-    // exp-up API 호출 (axiosInstance 사용)
+    // 간단한 규칙
+    const earnedExp = rank === 1 ? 20 : rank === 2 ? 10 : rank === 3 ? 5 : 3;
+    setMyEarnedExp(earnedExp);
+
     (async () => {
       try {
         const response = await axiosInstance.post('/users/exp-up', {
@@ -274,45 +323,60 @@ export default function GameA({
           earnedExp,
         });
         setMyExpInfo(response.data);
-        console.log('내 경험치 갱신 성공:', response.data);
       } catch (err) {
         console.error('경험치 지급 에러:', err);
       }
     })();
   }, [gameEnded, finishOrder, userName]);
 
-  // (M) 현재 유저 도착 체크
-  const me = players.find((p) => p.userName === userName);
+  // finishOrderSnapshot = 닉네임 기반
+  useEffect(() => {
+    if (
+      gameEnded &&
+      finishOrder.length > 0 &&
+      finishOrderSnapshot.length === 0
+    ) {
+      const snapshot = finishOrder.map((u) => {
+        const player = currentPlayers.find((p) => p.userName === u);
+        return player ? player.nickname : u;
+      });
+      setFinishOrderSnapshot(snapshot);
+    }
+  }, [gameEnded, finishOrder, finishOrderSnapshot, currentPlayers]);
+
+  //
+  // ----- (9) 도착 모달 -----
+  //
+  const me = currentPlayers.find((p) => p.userName === userName);
   const hasArrived = me ? me.totalPressCount >= 100 : false;
 
-  // (N) 결과 확인 버튼
+  const handleModalClose = () => setModalDismissed(true);
   const handleResultCheck = () => onResultConfirmed();
 
-  // (O) 결승점 모달 닫기
-  const handleModalClose = () => setModalDismissed(true);
-
-  // (P) 내 expInfo 생성 시, 경험치 모달 표시
+  //
+  // ----- (10) 경험치/레벨업 모달 -----
+  //
   useEffect(() => {
     if (myExpInfo) {
       setShowExpModal(true);
+      errorSound(); // 짜잔.mp3가 축하 사운드라면 이름만 변경
     }
-  }, [myExpInfo]);
+  }, [myExpInfo, errorSound]);
 
-  // (Q) 경험치 모달 닫기 -> 레벨 업 확인
   const handleExpModalClose = () => {
     setShowExpModal(false);
     if (!myExpInfo) return;
-
-    // 레벨 업이면 모달 열기 + 티켓 +1
+    // 레벨업?
     if (myExpInfo.userLevel > prevLevel) {
+      levelUpSound();
       setShowLevelUpModal(true);
 
+      // 티켓 +3
       (async () => {
         try {
           const ticketRes = await axiosInstance.get(`/fish/ticket/${userName}`);
           const ticketData: TicketResponse = ticketRes.data;
           setMyTicket(ticketData.fishTicket);
-          console.log('티켓 +1 성공:', ticketData.fishTicket);
         } catch (err) {
           console.error('티켓 증가 에러:', err);
         }
@@ -320,14 +384,13 @@ export default function GameA({
     }
   };
 
-  // (R) 레벨 업 모달 닫기
   const handleLevelUpModalClose = () => {
     setShowLevelUpModal(false);
   };
 
-  // -----------------------------
-  // 게임 종료 화면
-  // -----------------------------
+  //
+  // ----- (11) 만약 gameEnded라면 최종 화면 표시 -----
+  //
   if (gameEnded) {
     return (
       <div className='flex items-center justify-center min-h-screen bg-gradient-to-br'>
@@ -335,32 +398,29 @@ export default function GameA({
           <h1 className='text-4xl font-extrabold text-gray-800 mb-6'>
             Game Over
           </h1>
-
-          {/* (1) 우승자 (서버에서 준 winner) */}
           <p className='text-xl text-gray-600 mb-6'>
             Winner:{' '}
             <span className='font-bold text-gray-900'>
               {winner || 'No Winner'}
             </span>
           </p>
-
-          {/* (2) 전체 순위 */}
-          {finishOrder.length > 0 && (
+          {/* 전체 순위 */}
+          {finishOrderSnapshot.length > 0 && (
             <div className='mb-8'>
               <h2 className='text-3xl font-bold text-gray-800 mb-4'>
                 전체 순위
               </h2>
               <div className='bg-gray-100 rounded-lg shadow-md p-4'>
                 <ol className='divide-y divide-gray-300'>
-                  {finishOrder.map((user, index) => (
+                  {finishOrderSnapshot.map((nickname, index) => (
                     <li
-                      key={user}
+                      key={nickname}
                       className='py-2 flex justify-between items-center'
                     >
                       <span className='font-semibold text-gray-700'>
                         {index + 1}.
                       </span>
-                      <span className='text-gray-900'>{user}</span>
+                      <span className='text-gray-900'>{nickname}</span>
                     </li>
                   ))}
                 </ol>
@@ -376,19 +436,16 @@ export default function GameA({
           </button>
         </div>
 
-        {/* (S) 경험치 모달 */}
+        {/* 경험치 모달 */}
         {showExpModal && myExpInfo && (
           <div className='absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50'>
             <div className='relative bg-white w-[350px] p-8 rounded-lg shadow-xl text-center'>
               <h2 className='text-2xl font-extrabold text-blue-700 mb-4'>
                 경험치 획득!
               </h2>
-
-              {/* ★ 내가 저장한 “myEarnedExp” 표시 */}
               <p className='text-lg text-gray-700 mb-2'>
                 획득 경험치: <strong>+{myEarnedExp}</strong>
               </p>
-
               <p className='text-lg text-gray-700 mb-2'>
                 현재 레벨: <strong>{myExpInfo.userLevel}</strong>
               </p>
@@ -397,9 +454,8 @@ export default function GameA({
                 <strong>
                   {myExpInfo.curExp} / {myExpInfo.expToNextLevel}
                 </strong>
-                &nbsp;({myExpInfo.expProgress}%)
+                &nbsp;({myExpInfo.expProgress.toFixed(2)}%)
               </p>
-
               <div className='mt-6'>
                 <button
                   onClick={handleExpModalClose}
@@ -412,14 +468,13 @@ export default function GameA({
           </div>
         )}
 
-        {/* (T) 레벨 업 모달 */}
+        {/* 레벨업 모달 */}
         {showLevelUpModal && (
           <div className='absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50'>
             <div className='relative bg-white w-[350px] p-8 rounded-lg shadow-xl text-center'>
               <h2 className='text-3xl font-extrabold text-black mb-2 flex justify-center items-center'>
                 🎉 <span className='mx-2'>레벨 업!</span> 🎉
               </h2>
-
               <p className='text-lg font-medium text-gray-700 mt-3'>
                 레벨{' '}
                 <span className='text-blue-500 font-bold'>
@@ -427,20 +482,19 @@ export default function GameA({
                 </span>{' '}
                 달성!
               </p>
-
               <hr className='my-4 border-gray-300' />
-
               <p className='text-lg font-medium text-gray-600 mb-6'>
-                티켓 +1
+                티켓 +3
                 {myTicket !== null && (
                   <span className='text-gray-700 ml-1'>
                     (현재 {myTicket}개)
                   </span>
                 )}
               </p>
-
               <button
-                onClick={handleLevelUpModalClose}
+                onClick={() => {
+                  handleLevelUpModalClose();
+                }}
                 className='px-6 py-3 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 transition-colors'
               >
                 확인
@@ -452,25 +506,25 @@ export default function GameA({
     );
   }
 
-  // -----------------------------
-  // 게임 진행 중 화면
-  // -----------------------------
+  //
+  // ----- (12) 게임 진행 중 화면 -----
+  //
   return (
     <div
       className='w-full h-screen bg-cover bg-center bg-no-repeat relative overflow-hidden'
       style={{ backgroundImage: "url('/chat_images/game_bg.gif')" }}
       ref={trackRef}
     >
-      {/* 결승점 도착 모달 */}
+      {/* 결승 모달 (내가 이미 100점에 도달했지만 게임 자체는 안 끝난 상태) */}
       {!gameEnded && hasArrived && !modalDismissed && (
         <div className='absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30'>
           <div className='bg-white p-8 rounded-lg shadow-lg text-center'>
             <h2 className='text-2xl font-bold mb-4'>결승점 도착!</h2>
             <p className='text-xl mb-4'>
-              다른 물고기들이 도착할 때까지 기다려주세요!
+              다른 플레이어들이 도착할 때까지 기다려주세요!
             </p>
             <button
-              onClick={() => setModalDismissed(true)}
+              onClick={handleModalClose}
               className='px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded'
             >
               확인
@@ -479,54 +533,41 @@ export default function GameA({
         </div>
       )}
 
-      {/* Start 라인 */}
-      {trackDims.height > 0 && (
-        <div
-          className='absolute pointer-events-none'
-          style={{
-            left: trackDims.width ? trackDims.width * 0.1 : 95,
-            top: laneAreaTopOffset,
-            height: laneAreaHeight,
-          }}
-        >
-          <div className='h-full border-l-4 border-green-500'></div>
-          <div className='absolute inset-0 flex items-center justify-center'>
-            <span className='text-green-500 font-bold text-lg bg-white/70 px-2 py-1 rounded'>
-              Start
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Goal 라인 */}
-      {trackDims.width > 0 && (
-        <div
-          className='absolute pointer-events-none'
-          style={{
-            left: trackDims.width ? trackDims.width * 0.9 : 0,
-            top: laneAreaTopOffset,
-            height: laneAreaHeight,
-          }}
-        >
-          <div className='h-full border-l-4 border-red-500'></div>
-          <div className='absolute inset-0 flex items-center justify-center'>
-            <span className='text-red-500 font-bold text-lg bg-white/70 px-2 py-1 rounded'>
-              Goal
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* 상단 중앙에 남은 시간 */}
-      {hasCountdownFinished && !gameEnded && (
-        <div className='absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/80 px-4 py-2 rounded text-xl text-gray-800'>
-          Time: {gameTime}s
-        </div>
-      )}
-
-      {/* 레인 구분선 */}
+      {/* 트랙 선 (Start / Goal) */}
       {trackDims.height > 0 && (
         <>
+          <div
+            className='absolute pointer-events-none'
+            style={{
+              left: trackDims.width * 0.1,
+              top: laneAreaTopOffset,
+              height: laneAreaHeight,
+            }}
+          >
+            <div className='h-full border-l-4 border-green-500'></div>
+            <div className='absolute inset-0 flex items-center justify-center'>
+              <span className='text-green-500 font-bold text-lg bg-white/70 px-2 py-1 rounded'>
+                Start
+              </span>
+            </div>
+          </div>
+          <div
+            className='absolute pointer-events-none'
+            style={{
+              left: trackDims.width * 0.9,
+              top: laneAreaTopOffset,
+              height: laneAreaHeight,
+            }}
+          >
+            <div className='h-full border-l-4 border-red-500'></div>
+            <div className='absolute inset-0 flex items-center justify-center'>
+              <span className='text-red-500 font-bold text-lg bg-white/70 px-2 py-1 rounded'>
+                Goal
+              </span>
+            </div>
+          </div>
+
+          {/* Lane 구분선 */}
           <div
             className='absolute left-0 w-full border-t border-gray-300 pointer-events-none'
             style={{ top: `${laneAreaTopOffset}px`, zIndex: 2 }}
@@ -551,114 +592,117 @@ export default function GameA({
         </>
       )}
 
-      {/* 물고기(플레이어) 렌더링 */}
-      {players.map((player, index) => {
-        // 총 6개 레인 중, 실제 플레이어 수에 맞춰 중앙 정렬
+      {/* 플레이어 표시 */}
+      {currentPlayers.map((player) => {
         const offset =
-          players.length < totalLanes
-            ? Math.floor((totalLanes - players.length) / 2)
+          currentPlayers.length < totalLanes
+            ? Math.floor((totalLanes - currentPlayers.length) / 2)
             : 0;
-        const laneIndex = index + offset;
+        const laneIndex = currentPlayers.indexOf(player) + offset;
         const fishSize = laneHeight * 0.8;
         const topPos =
           laneAreaTopOffset +
           laneIndex * laneHeight +
           (laneHeight - fishSize) / 2;
 
-        const startOffset = trackDims.width ? trackDims.width * 0.1 : 95;
-        const moveFactor = trackDims.width ? trackDims.width * 0.016 : 25;
+        const startOffset = trackDims.width * 0.1;
+        const moveFactor = trackDims.width * 0.016;
+
+        // 아직 시작 전일 때, 내 캐릭터는 start 라인에 위치
         const leftPos =
-          player.userName === userName && !hasStarted
+          player.nickname === userName && !hasStarted
             ? startOffset
             : startOffset + Math.floor(player.totalPressCount / 2) * moveFactor;
 
         return (
           <div
-            key={player.userName}
+            key={player.nickname}
             className='absolute'
             style={{ top: `${topPos}px`, left: `${leftPos}px`, zIndex: 10 }}
           >
             <div
               className='relative'
-              style={{ width: `${fishSize}px`, height: `${fishSize}px` }}
+              style={{ width: fishSize, height: fishSize }}
             >
               <img
                 src={player.mainFishImage}
-                alt={`${player.userName}의 대표 물고기`}
+                alt={`${player.nickname}의 대표 물고기`}
                 style={{ width: fishSize, height: fishSize }}
                 className='object-contain scale-x-[-1]'
               />
-              {(player.userName === userName
-                ? isTapping
-                : windEffects[player.userName]) && (
-                <img
-                  src='/chat_images/wind_overlay.png'
-                  alt='Wind effect'
-                  style={{
-                    width: fishSize * 0.4,
-                    height: fishSize * 0.4,
-                    position: 'absolute',
-                    top: '50%',
-                    left: `-${fishSize * 0.4}px`,
-                    transform: 'translateY(-50%) scaleX(-1)',
-                  }}
-                  className='object-contain pointer-events-none'
-                />
-              )}
             </div>
-            {/* 텍스트의 top 값을 줄여서 물고기 바로 아래에 위치시킴 */}
             <span
-              className='absolute text-xl font-medium text-gray-900'
+              className='absolute text-xl font-medium text-gray-900 whitespace-nowrap'
               style={{
                 top: `${fishSize - 16}px`,
                 left: '50%',
                 transform: 'translateX(-50%)',
               }}
             >
-              {player.userName}
+              {player.nickname}
             </span>
           </div>
         );
       })}
 
-      {/* 하단 안내 */}
-      <p className='absolute bottom-4 left-1/2 transform -translate-x-1/2 text-2xl text-gray-900'>
-        Press the <span className='font-bold'>Spacebar</span> or touch anywhere
-        to tap!
-      </p>
+      {/* 화면 상단: 현재 요구되는 방향 & 타이머 표시 */}
+      {hasCountdownFinished && !gameEnded && (
+        <div className='absolute top-4 left-1/2 transform -translate-x-1/2 flex items-center gap-4 bg-white/80 px-4 py-2 rounded text-xl text-gray-800'>
+          {currentTarget !== null && (
+            <>
+              <span>현재 방향:</span>
+              <span className='text-2xl font-bold'>
+                {getArrowIcon(currentTarget)}
+              </span>
+            </>
+          )}
+          <div className='ml-4'>Time: {gameTime}</div>
+        </div>
+      )}
 
-      {/* 카운트다운 & 게임 설명 */}
+      {/* 디버그 정보 */}
+      <div className='absolute bottom-4 left-4 bg-white/80 p-2 rounded text-sm z-50'>
+        <pre>
+          {JSON.stringify(
+            {
+              hasCountdownFinished,
+              hasStarted,
+              gameEnded,
+              currentTarget,
+              currentPlayers,
+              initialPlayers,
+            },
+            null,
+            2
+          )}
+        </pre>
+      </div>
+
+      {/* 카운트다운 오버레이 */}
       {!hasCountdownFinished && (
         <div className='absolute inset-0 flex flex-col justify-center items-center bg-white/80 z-20 p-4'>
           <div className='max-w-6xl w-full text-center bg-white/90 border-2 border-gray-600 rounded-lg shadow-lg p-6'>
-            <h3 className='mb-4 text-lg sm:text-lg md:text-2xl lg:text-3xl font-bold flex items-center justify-center'>
+            <h3 className='mb-4 text-lg md:text-2xl font-bold flex items-center justify-center'>
               <img
                 src='/chat_images/game_stick.png'
-                alt='스페이스바'
-                className='w-10 sm:w-12 md:w-14 lg:w-16 xl:w-20 h-auto mx-2 inline-block'
+                alt='방향키'
+                className='w-10 md:w-14 h-auto mx-2 inline-block'
               />
               게임 설명
               <img
                 src='/chat_images/game_stick.png'
-                alt='스페이스바'
-                className='w-10 sm:w-12 md:w-14 lg:w-16 xl:w-20 h-auto mx-2 inline-block'
+                alt='방향키'
+                className='w-10 md:w-14 h-auto mx-2 inline-block'
               />
             </h3>
-            <p className='text-lg md:text-xl lg:text-5xl font-medium text-gray-800 mt-4'>
-              물고기 경주에 오신 걸 환영합니다!
+            <p className='text-lg md:text-2xl font-medium text-gray-800 mt-4'>
+              방향키 맞추기 게임에 오신 걸 환영합니다!
             </p>
-            <p className='text-md md:text-lg lg:text-4xl text-gray-700 mt-4'>
-              물고기 경주는 친구들과 함께
+            <p className='text-md md:text-xl text-gray-700 mt-4'>
+              화면 상단에 표시되는 방향과 동일한 방향키(↑, →, ↓, ←)를 눌러
+              점수를 올리세요.
               <br />
-              누가 먼저 Goal에 도착하는지 대결하는 게임입니다.
-            </p>
-            <p className='text-md md:text-lg lg:text-4xl text-gray-700 mt-4 flex items-center justify-center'>
-              <img
-                src='/chat_images/spacebar.png'
-                alt='스페이스바'
-                className='w-10 sm:w-12 md:w-14 lg:w-16 xl:w-20 h-auto mx-2 inline-block'
-              />
-              스페이스바 or 터치로 친구보다 먼저 Goal에 도착하세요!
+              잘못 누르면 1초간 입력이 중지됩니다.
             </p>
             <p className='mt-8 text-2xl text-gray-800'>
               {countdown} 초 후 게임 시작
