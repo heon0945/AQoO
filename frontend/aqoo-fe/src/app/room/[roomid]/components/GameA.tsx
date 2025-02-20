@@ -6,12 +6,9 @@ import axiosInstance from '@/services/axiosInstance';
 import { User } from '@/store/authAtom';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-//
-// ----- 타입 선언들 -----
-//
 interface GameAPlayer {
-  userName: string; // 서버에서 내려주는 식별자
-  totalPressCount: number; // 실제로는 서버의 score(= 맞춘 횟수)
+  userName: string;
+  totalPressCount: number; // 서버 점수 == 내가 맞춘 횟수
   mainFishImage: string;
   nickname: string;
 }
@@ -29,27 +26,22 @@ interface TicketResponse {
   fishTicket: number;
 }
 
-/** 서버가 내려주는 메시지 중 players, finishOrder 등이 들어있는 형태 */
 interface RoomResponse {
   roomId: string;
   players: GameAPlayer[];
-  message: string; // 'PRESS_UPDATED' | 'GAME_ENDED' | ...
+  message: string; // 'PRESS_UPDATED' | 'GAME_ENDED'...
   winner?: string;
   finishOrder?: string[];
   directionSequence?: number[];
 }
 
-/** GameA 컴포넌트가 부모로부터 받는 props */
 interface GameAProps {
   roomId: string;
-  // userName은 사용자 식별 (닉네임)이라 가정
   userName: string;
-  // 서버에서 처음에 GAME_A_STARTED로 내려준 플레이어 목록
   initialPlayers: GameAPlayer[];
-  // 서버에서 내려준 방향키 시퀀스 (UI 표시용)
   initialDirectionSequence: number[];
   onResultConfirmed: () => void;
-  user: User; // 로그인된 사용자 정보 (레벨 등)
+  user: User;
 }
 
 /** 방향 번호 -> 아이콘 변환 */
@@ -76,16 +68,12 @@ export default function GameA({
   onResultConfirmed,
   user,
 }: GameAProps) {
-  //
-  // ----- (1) 기본 상태 ------
-  //
+  // --- (기존 로직들: 상태, 모달, 타이머 등) ---
   const [prevLevel] = useState<number>(user.level ?? 0);
 
-  // 보상 모달
+  // 모달
   const [showExpModal, setShowExpModal] = useState(false);
   const [showLevelUpModal, setShowLevelUpModal] = useState(false);
-
-  // 티켓, 경험치
   const [myTicket, setMyTicket] = useState<number | null>(null);
   const [myExpInfo, setMyExpInfo] = useState<ExpResponse | null>(null);
   const [myEarnedExp, setMyEarnedExp] = useState<number>(0);
@@ -95,23 +83,19 @@ export default function GameA({
   const [hasCountdownFinished, setHasCountdownFinished] = useState(false);
   const [currentPlayers, setCurrentPlayers] =
     useState<GameAPlayer[]>(initialPlayers);
-
   const directionSequence = initialDirectionSequence;
 
-  // 게임 종료 제어
   const [gameEnded, setGameEnded] = useState(false);
   const [winner, setWinner] = useState<string | null>(null);
   const [finishOrder, setFinishOrder] = useState<string[]>([]);
-
-  // finishOrder의 닉네임 스냅샷
   const [finishOrderSnapshot, setFinishOrderSnapshot] = useState<string[]>([]);
 
   const [isStunned, setIsStunned] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
-  const [gameTime, setGameTime] = useState(30);
+  const [gameTime, setGameTime] = useState(60);
   const [modalDismissed, setModalDismissed] = useState(false);
 
-  // 트랙 크기 측정
+  // 트랙 크기
   const trackRef = useRef<HTMLDivElement>(null);
   const [trackDims, setTrackDims] = useState({ width: 0, height: 0 });
   const totalLanes = 6;
@@ -120,15 +104,17 @@ export default function GameA({
   const laneAreaTopOffset = (trackDims.height - laneAreaHeight) / 2;
   const laneHeight = laneAreaHeight ? laneAreaHeight / totalLanes : 120;
 
-  // 효과음
-  // 짜잔.mp3 = 축하 사운드라면, 혹은 오답 사운드라면 이름을 맞춰 바꿔주세요
+  // 사운드
   const { play: correctSound } = useSFX('/sounds/clickeffect-03.mp3');
   const { play: errorSound } = useSFX('/sounds/짜잔.mp3');
   const { play: levelUpSound } = useSFX('/sounds/levelupRank.mp3');
 
-  //
-  // ----- (2) 트랙 사이즈 측정 -----
-  //
+  // 꼭 넣어주라고 하신 부분
+  useEffect(() => {
+    setCurrentPlayers(initialPlayers);
+  }, [initialPlayers]);
+
+  // (1) 트랙 크기 측정
   useEffect(() => {
     function updateDims() {
       if (trackRef.current) {
@@ -141,50 +127,36 @@ export default function GameA({
     return () => window.removeEventListener('resize', updateDims);
   }, []);
 
-  //
-  // ----- (3) STOMP 메시지 구독 -----
-  //     - data.message === 'PRESS_UPDATED' => currentPlayers 갱신
-  //     - data.message === 'GAME_ENDED'    => setGameEnded(true) + finishOrder 설정
-  //
+  // (2) STOMP 구독
   useEffect(() => {
     const client = getStompClient();
     if (!client) return;
 
-    const subscription = client.subscribe(
-      `/topic/room/${roomId}`,
-      (messageFrame) => {
-        const data: RoomResponse = JSON.parse(messageFrame.body);
-        if (data.message === 'PRESS_UPDATED' && data.players) {
-          // 플레이어 목록 갱신
-          setCurrentPlayers(data.players);
-          // console.log('PRESS_UPDATED received:', data.players);
-        } else if (data.message === 'GAME_ENDED') {
-          // 게임 종료
-          setGameEnded(true);
-          setCurrentPlayers(data.players || []);
-          setFinishOrder(data.finishOrder || []);
-          setWinner(data.winner || null);
-        }
+    const subscription = client.subscribe(`/topic/room/${roomId}`, (msg) => {
+      const data: RoomResponse = JSON.parse(msg.body);
+      if (data.message === 'PRESS_UPDATED' && data.players) {
+        setCurrentPlayers(data.players);
+      } else if (data.message === 'GAME_ENDED') {
+        setGameEnded(true);
+        setCurrentPlayers(data.players || []);
+        setFinishOrder(data.finishOrder || []);
+        setWinner(data.winner || null);
       }
-    );
+    });
 
     return () => subscription.unsubscribe();
   }, [roomId]);
 
-  //
-  // ----- (4) 카운트다운 -----
-  //
+  // (3) 카운트다운
   useEffect(() => {
     if (countdown > 0) {
-      const timer = setTimeout(() => {
-        setCountdown((prev) => prev - 1);
-      }, 1000);
+      const timer = setTimeout(() => setCountdown((prev) => prev - 1), 1000);
       return () => clearTimeout(timer);
     }
     setHasCountdownFinished(true);
   }, [countdown]);
 
-  // 카운트다운 끝나면 서버에 '준비 해제' 메시지 (선택)
+  // (4) 카운트다운 끝나면 /app/chat.clearReady
   useEffect(() => {
     if (hasCountdownFinished) {
       const client = getStompClient();
@@ -197,54 +169,65 @@ export default function GameA({
     }
   }, [hasCountdownFinished, roomId, userName]);
 
-  //
-  // ----- (5) 현재 타겟 방향(로컬 표시용) -----
-  //     - 서버도 동일한 로직으로 (score=인덱스) 검사하므로 일관성 있음
-  //
-  const currentTarget = useMemo(() => {
-    const me = currentPlayers.find((p) => p.userName === userName);
-    if (!directionSequence || !me) return null;
-    const index = me.totalPressCount; // 내가 맞힌 횟수 => 다음에 맞춰야 할 인덱스
-    if (directionSequence[index] !== undefined) {
-      return directionSequence[index];
-    }
-    return null;
-  }, [directionSequence, currentPlayers, userName]);
+  // (5) me, hasArrived
+  const me = currentPlayers.find((p) => p.userName === userName);
+  const hasArrived = me ? me.totalPressCount >= 100 : false;
 
-  //
-  // ----- (6) 방향키 입력 핸들러 -----
-  //     - 로컬에서 “오답”이면 1초 스턴 처리, “정답”이면 서버에 메시지
-  //     - 실제 판정은 서버가 “PRESS_UPDATED”로 결과 반영
-  //
+  // (A) “슬라이드 인덱스”를 관리 (기본은 0)
+  //     매번 me.totalPressCount가 바뀔 때, 해당 값으로 갱신
+  const [slideIndex, setSlideIndex] = useState(0);
+  const prevPressCountRef = useRef<number>(me?.totalPressCount || 0);
+
+  const currentDirection = useMemo(() => {
+    if (!me || !directionSequence) return null;
+    const idx = me.totalPressCount;
+    return directionSequence[idx] ?? null;
+  }, [me, directionSequence]);
+
+  // me가 변할 때마다, totalPressCount 변화를 감지해서 slideIndex 갱신
+  useEffect(() => {
+    if (me) {
+      if (prevPressCountRef.current !== me.totalPressCount) {
+        setSlideIndex(me.totalPressCount);
+        prevPressCountRef.current = me.totalPressCount;
+      }
+    }
+  }, [me]);
+
+  // (B) 실제 표시할 방향 배열: 현재 인덱스 ~ 다음 5개
+  //     (전체를 표시해도 되지만, 여기서는 6개만 표시)
+  const displayedDirections = useMemo(() => {
+    if (!directionSequence || !me) return [];
+    return directionSequence.slice(me.totalPressCount, me.totalPressCount + 6);
+  }, [directionSequence, me]);
+
+  // 한 아이템의 가로 폭
+  const itemWidth = 40;
+
+  // (6) 현재 목표
+  const currentTarget = useMemo(() => {
+    if (!directionSequence || !me) return null;
+    const idx = me.totalPressCount;
+    if (idx >= directionSequence.length) return null;
+    return directionSequence[idx];
+  }, [directionSequence, me]);
+
+  // (7) 키 입력 핸들러
   const handleArrowKey = useCallback(
     (e: KeyboardEvent) => {
-      // 게임 끝났거나 카운트다운 전이면 무시
       if (gameEnded || !hasCountdownFinished) return;
-
       let direction: number | null = null;
       if (e.key === 'ArrowUp') direction = 0;
       if (e.key === 'ArrowRight') direction = 1;
       if (e.key === 'ArrowDown') direction = 2;
       if (e.key === 'ArrowLeft') direction = 3;
-
       if (direction === null) return;
 
-      // 로컬 stun 체크
-      if (isStunned) {
-        console.log('Input ignored: stunned');
-        return;
-      }
+      if (isStunned) return;
+      if (!hasStarted) setHasStarted(true);
 
-      // 첫 입력이면 게임 시작
-      if (!hasStarted) {
-        setHasStarted(true);
-      }
-
-      // 로컬에서 “정답” 판단 (서버도 어차피 재검증)
       if (currentTarget !== null && direction === currentTarget) {
         correctSound();
-
-        // 서버에 입력 전달
         const client = getStompClient();
         if (client && client.connected) {
           client.publish({
@@ -253,7 +236,6 @@ export default function GameA({
           });
         }
       } else {
-        // 오답
         errorSound();
         setIsStunned(true);
         setTimeout(() => setIsStunned(false), 1000);
@@ -272,20 +254,12 @@ export default function GameA({
     ]
   );
 
-  // 키 이벤트 등록/해제
   useEffect(() => {
     window.addEventListener('keydown', handleArrowKey);
-    return () => {
-      window.removeEventListener('keydown', handleArrowKey);
-    };
+    return () => window.removeEventListener('keydown', handleArrowKey);
   }, [handleArrowKey]);
 
-  //
-  // ----- (7) 로컬 게임 타이머 (옵션) -----
-  //     - 여기서는 단순히 화면에만 표시
-  //     - 시간이 0이 되어도 로컬에서 setGameEnded(true)는 하지 않음
-  //       (실제 종료는 서버가 “GAME_ENDED” 브로드캐스트)
-  //
+  // (8) 게임 타이머
   useEffect(() => {
     if (!hasStarted || gameEnded) return;
     const timer = setInterval(() => {
@@ -294,42 +268,42 @@ export default function GameA({
     return () => clearInterval(timer);
   }, [hasStarted, gameEnded]);
 
-  // 타임아웃 후 서버에 종료 요청을 보낼 수도 있음. (선택)
+  // 타임아웃 -> 서버 endGame
   useEffect(() => {
     if (gameTime <= 0 && !gameEnded && hasStarted) {
-      // 여기서 서버에 “endGame” 요청
-      // publishMessage('/app/gameA.end', { roomId });
-      // console.log('Time over -> requesting server to end game...');
+      const client = getStompClient();
+      if (client && client.connected) {
+        client.publish({
+          destination: '/app/gameA.end',
+          body: JSON.stringify({ roomId }),
+        });
+      }
     }
   }, [gameTime, gameEnded, hasStarted, roomId]);
 
-  //
-  // ----- (8) “GAME_ENDED” 이후 finishOrder가 클라이언트에 도착하면 경험치 계산 -----
-  //
+  // (9) gameEnded 후 -> finishOrder -> 경험치
   useEffect(() => {
     if (!gameEnded || finishOrder.length === 0) return;
-
     const rank = finishOrder.indexOf(userName) + 1;
-    if (rank <= 0) return; // finishOrder에 없는 경우
+    if (rank <= 0) return;
 
-    // 간단한 규칙
     const earnedExp = rank === 1 ? 20 : rank === 2 ? 10 : rank === 3 ? 5 : 3;
     setMyEarnedExp(earnedExp);
 
     (async () => {
       try {
-        const response = await axiosInstance.post('/users/exp-up', {
+        const res = await axiosInstance.post('/users/exp-up', {
           userId: userName,
           earnedExp,
         });
-        setMyExpInfo(response.data);
+        setMyExpInfo(res.data);
       } catch (err) {
-        console.error('경험치 지급 에러:', err);
+        console.error('EXP error', err);
       }
     })();
   }, [gameEnded, finishOrder, userName]);
 
-  // finishOrderSnapshot = 닉네임 기반
+  // (10) finishOrderSnapshot
   useEffect(() => {
     if (
       gameEnded &&
@@ -337,36 +311,28 @@ export default function GameA({
       finishOrderSnapshot.length === 0
     ) {
       const snapshot = finishOrder.map((u) => {
-        const player = currentPlayers.find((p) => p.userName === u);
-        return player ? player.nickname : u;
+        const p = currentPlayers.find((x) => x.userName === u);
+        return p ? p.nickname : u;
       });
       setFinishOrderSnapshot(snapshot);
     }
   }, [gameEnded, finishOrder, finishOrderSnapshot, currentPlayers]);
 
-  //
-  // ----- (9) 도착 모달 -----
-  //
-  const me = currentPlayers.find((p) => p.userName === userName);
-  const hasArrived = me ? me.totalPressCount >= 100 : false;
-
+  // (11) 도착 모달
   const handleModalClose = () => setModalDismissed(true);
   const handleResultCheck = () => onResultConfirmed();
 
-  //
-  // ----- (10) 경험치/레벨업 모달 -----
-  //
+  // (12) 경험치 & 레벨업 모달
   useEffect(() => {
     if (myExpInfo) {
       setShowExpModal(true);
-      errorSound(); // 짜잔.mp3가 축하 사운드라면 이름만 변경
+      errorSound();
     }
   }, [myExpInfo, errorSound]);
 
   const handleExpModalClose = () => {
     setShowExpModal(false);
     if (!myExpInfo) return;
-    // 레벨업?
     if (myExpInfo.userLevel > prevLevel) {
       levelUpSound();
       setShowLevelUpModal(true);
@@ -378,7 +344,7 @@ export default function GameA({
           const ticketData: TicketResponse = ticketRes.data;
           setMyTicket(ticketData.fishTicket);
         } catch (err) {
-          console.error('티켓 증가 에러:', err);
+          console.error('Ticket error', err);
         }
       })();
     }
@@ -388,9 +354,7 @@ export default function GameA({
     setShowLevelUpModal(false);
   };
 
-  //
-  // ----- (11) 만약 gameEnded라면 최종 화면 표시 -----
-  //
+  // --- 게임 종료 화면 ---
   if (gameEnded) {
     return (
       <div className='flex items-center justify-center min-h-screen bg-gradient-to-br'>
@@ -404,7 +368,7 @@ export default function GameA({
               {winner || 'No Winner'}
             </span>
           </p>
-          {/* 전체 순위 */}
+
           {finishOrderSnapshot.length > 0 && (
             <div className='mb-8'>
               <h2 className='text-3xl font-bold text-gray-800 mb-4'>
@@ -436,7 +400,6 @@ export default function GameA({
           </button>
         </div>
 
-        {/* 경험치 모달 */}
         {showExpModal && myExpInfo && (
           <div className='absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50'>
             <div className='relative bg-white w-[350px] p-8 rounded-lg shadow-xl text-center'>
@@ -468,7 +431,6 @@ export default function GameA({
           </div>
         )}
 
-        {/* 레벨업 모달 */}
         {showLevelUpModal && (
           <div className='absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50'>
             <div className='relative bg-white w-[350px] p-8 rounded-lg shadow-xl text-center'>
@@ -492,9 +454,7 @@ export default function GameA({
                 )}
               </p>
               <button
-                onClick={() => {
-                  handleLevelUpModalClose();
-                }}
+                onClick={() => handleLevelUpModalClose()}
                 className='px-6 py-3 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 transition-colors'
               >
                 확인
@@ -506,16 +466,14 @@ export default function GameA({
     );
   }
 
-  //
-  // ----- (12) 게임 진행 중 화면 -----
-  //
+  // --- 게임 진행 중 화면 ---
   return (
     <div
       className='w-full h-screen bg-cover bg-center bg-no-repeat relative overflow-hidden'
       style={{ backgroundImage: "url('/chat_images/game_bg.gif')" }}
       ref={trackRef}
     >
-      {/* 결승 모달 (내가 이미 100점에 도달했지만 게임 자체는 안 끝난 상태) */}
+      {/* 100점 도달했지만 게임 안끝났을때 */}
       {!gameEnded && hasArrived && !modalDismissed && (
         <div className='absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30'>
           <div className='bg-white p-8 rounded-lg shadow-lg text-center'>
@@ -524,7 +482,7 @@ export default function GameA({
               다른 플레이어들이 도착할 때까지 기다려주세요!
             </p>
             <button
-              onClick={handleModalClose}
+              onClick={() => setModalDismissed(true)}
               className='px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded'
             >
               확인
@@ -533,7 +491,7 @@ export default function GameA({
         </div>
       )}
 
-      {/* 트랙 선 (Start / Goal) */}
+      {/* 트랙 라인 */}
       {trackDims.height > 0 && (
         <>
           <div
@@ -566,8 +524,6 @@ export default function GameA({
               </span>
             </div>
           </div>
-
-          {/* Lane 구분선 */}
           <div
             className='absolute left-0 w-full border-t border-gray-300 pointer-events-none'
             style={{ top: `${laneAreaTopOffset}px`, zIndex: 2 }}
@@ -608,7 +564,6 @@ export default function GameA({
         const startOffset = trackDims.width * 0.1;
         const moveFactor = trackDims.width * 0.016;
 
-        // 아직 시작 전일 때, 내 캐릭터는 start 라인에 위치
         const leftPos =
           player.nickname === userName && !hasStarted
             ? startOffset
@@ -645,38 +600,54 @@ export default function GameA({
         );
       })}
 
-      {/* 화면 상단: 현재 요구되는 방향 & 타이머 표시 */}
-      {hasCountdownFinished && !gameEnded && (
-        <div className='absolute top-4 left-1/2 transform -translate-x-1/2 flex items-center gap-4 bg-white/80 px-4 py-2 rounded text-xl text-gray-800'>
-          {currentTarget !== null && (
-            <>
-              <span>현재 방향:</span>
-              <span className='text-2xl font-bold'>
-                {getArrowIcon(currentTarget)}
-              </span>
-            </>
-          )}
-          <div className='ml-4'>Time: {gameTime}</div>
+      {/* 현재 방향 + 다음 방향(최대 5개) 슬라이드  */}
+      {hasCountdownFinished && !gameEnded && displayedDirections.length > 0 && (
+        <div className='absolute top-8 left-1/2 transform -translate-x-1/2 bg-white/70 backdrop-blur-md rounded-full shadow-lg px-4 py-2 flex flex-col items-center gap-2'>
+          {/* 남은 시간 표시 */}
+          <div className='text-lg font-semibold text-gray-700 flex items-center gap-4'>
+            <span className='px-3 py-1 bg-blue-100 text-blue-600 rounded-full shadow'>
+              TIME: {gameTime}s
+            </span>
+          </div>
+
+          {/* 슬라이드 영역: 현재 및 앞으로 눌러야 할 방향키만 표시 */}
+          <div className='relative w-[200px] h-10 overflow-hidden'>
+            <div className='flex gap-2'>
+              {directionSequence
+                .slice(me?.totalPressCount || 0)
+                .map((dir, i) => (
+                  <div
+                    key={i}
+                    className={`w-[40px] h-10 flex items-center justify-center text-2xl font-bold ${
+                      i === 0 ? 'text-red-600' : 'text-gray-800'
+                    }`}
+                  >
+                    {getArrowIcon(dir)}
+                  </div>
+                ))}
+            </div>
+          </div>
         </div>
       )}
 
-      {/* 디버그 정보 */}
-      <div className='absolute bottom-4 left-4 bg-white/80 p-2 rounded text-sm z-50'>
+      {/* 디버그 */}
+      {/* <div className='absolute bottom-4 left-4 bg-white/80 p-2 rounded text-sm z-50'>
         <pre>
           {JSON.stringify(
             {
+              countdown,
               hasCountdownFinished,
               hasStarted,
               gameEnded,
-              currentTarget,
+              slideIndex,
+              displayedDirections,
               currentPlayers,
-              initialPlayers,
             },
             null,
             2
           )}
         </pre>
-      </div>
+      </div> */}
 
       {/* 카운트다운 오버레이 */}
       {!hasCountdownFinished && (

@@ -524,8 +524,8 @@ export default function IntegratedRoom({
                         className='w-full px-4 py-2 border rounded'
                         disabled={!currentIsHost}
                       >
-                        <option value='Game'>Game</option>
-                        <option value='gameA'>Game A</option>
+                        <option value='Game'>스페이스바 게임</option>
+                        <option value='gameA'>방향키 게임</option>
                         <option value='gameB'>Game B</option>
                       </select>
                       <button
