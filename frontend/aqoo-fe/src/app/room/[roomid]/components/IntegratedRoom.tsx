@@ -105,7 +105,6 @@ export default function IntegratedRoom({
 
   useEffect(() => {
     if (users.length > prevUsersRef.current.length) {
-      console.log('🎵 참가자 추가됨! 효과음 실행');
       entranceRoom(); // 참가자 등장 효과음 실행
     }
 
@@ -167,17 +166,39 @@ export default function IntegratedRoom({
               setGamePlayers(data.players ?? []);
               if (data.directionSequence) {
                 setInitialDirectionSequence(data.directionSequence);
-                console.log(
-                  'Initial direction sequence received:',
-                  data.directionSequence
-                );
               }
               setScreen('game');
             } else if (data.message === 'GAME_STARTED') {
               setGamePlayers(data.players ?? []);
               setScreen('game');
             } else if (data.message === 'USER_LIST') {
+              const oldLength = users.length;
               setUsers(data.users ?? []);
+
+              const newLength = data.users?.length || 0;
+              if (newLength > oldLength) {
+                const me = data.users?.find((u) => u.userName === userName);
+                if (me?.isHost) {
+                  setSelectedGame((prev) => {
+                    if (!prev) {
+                      return 'Game'; 
+                    }
+                    // 다시 방송
+                    const client = getStompClient();
+                    if (client && client.connected) {
+                      client.publish({
+                        destination: '/app/chat.dropdown',
+                        body: JSON.stringify({
+                          roomId,
+                          sender: userName,
+                          gameType: prev, // 여기서는 prev가 곧 "현재 state 값"임
+                        }),
+                      });
+                    }
+                    return prev; // 상태 변경은 없고, 다시 방송만 하고 끝
+                  });
+                }
+              }
             } else if (data.message === 'USER_KICKED') {
               if (data.targetUser === userName) {
                 router.replace('/main?status=kicked');
@@ -507,7 +528,9 @@ export default function IntegratedRoom({
                         onChange={(e) => {
                           if (currentIsHost) {
                             const newGame = e.target.value;
-                            setSelectedGame(newGame);
+                            setSelectedGame(() => {
+                              return newGame; // 함수형 업데이트
+                            });
                             const client = getStompClient();
                             if (client && client.connected) {
                               client.publish({
@@ -526,7 +549,7 @@ export default function IntegratedRoom({
                       >
                         <option value='Game'>스페이스바 게임</option>
                         <option value='gameA'>방향키 게임</option>
-                        <option value='gameB'>Game B</option>
+                        <option value='gameB'>Comming soon..</option>
                       </select>
                       <button
                         onClick={() => {
