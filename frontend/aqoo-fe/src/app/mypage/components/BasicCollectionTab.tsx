@@ -61,8 +61,7 @@ export default function BasicCollectionTab({ allFishList = [], userFishList = []
         w-full h-screen gap-1 sm:gap-3
         pb-[100px] sm:pb-[120px] md:pb-[120px] lg:pb-[120px]
         sm:pl-1 sm:pr-1
-        grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5
-        flex flex-wrap items-start
+        flex flex-wrap justify-start items-start
         overflow-y-scroll max-h-[520px]
         scrollbar-none
       "
