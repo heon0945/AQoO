@@ -1,21 +1,25 @@
-import { useState } from "react";
 import Image from "next/image";
+import { useState } from "react";
 
 const guideSteps = [
   {
     image: "/guide/custom-step01.png", // 예시 이미지
-    text: "물고기의 머리가 왼쪽을 향하도록 그려주세요! \n 그래야 물고기가 똑바로 움직일 수 있어요!",
+    text: "한 손으로 그리고, \n 한 손으로 쉽게 조작할 수 있어요!",
   },
   {
     image: "/guide/custom-step02.png", // 예시 이미지
-    text: "그린 그림은 픽셀화하여 저장됩니다!",
+    text: "물고기의 머리가 왼쪽을 향하도록 그려주세요! \n 그래야 물고기가 똑바로 움직일 수 있어요!",
   },
   {
     image: "/guide/custom-step03.png", // 예시 이미지
-    text: "기존 물고기와 비슷한 느낌을 내고 싶다면 \n 두껍고 검은 테두리를 그려주세요!",
+    text: "그린 그림은 픽셀화하여 저장됩니다!",
   },
   {
     image: "/guide/custom-step04.png", // 예시 이미지
+    text: "기존 물고기와 비슷한 느낌을 내고 싶다면 \n 두껍고 검은 테두리를 그려주세요!",
+  },
+  {
+    image: "/guide/custom-step05.png", // 예시 이미지
     text: "색 채우기를 까먹지 마세요! \n 테두리 물고기가 되어버려요!",
   },
 ];
@@ -40,7 +44,7 @@ export default function GuideModal({ isOpen, onClose }: { isOpen: boolean; onClo
           className="mx-auto mb-4 "
         />
 
-        <p className="text-lg font-semibold whitespace-pre-line border-black border-[1px] p-2 mb-8">
+        <p className="text-lg whitespace-pre-line border-black border-[1px] p-2 mb-8">
           {guideSteps[currentSlide].text}
         </p>
 
