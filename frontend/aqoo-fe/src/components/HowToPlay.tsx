@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import { title } from "process";
 
 import { useState } from "react";
 
@@ -107,6 +108,21 @@ const FishTanks = [
   },
 ];
 
+const Game = [
+  {
+    title: "방 만들기",
+    description: "친구를 초대해 함께 게임을 즐길 수 있어요.\n친구 초대는 최대 5명까지 가능하며, 추가와 제거 버튼으로 손쉽게 참가자를 관리할 수 있어요.",
+    image: "/how_to_play/게임_방만들기.png",
+  },
+];
+
+const GameRoom = [
+  {
+    title: "채팅방",
+    description: ""
+  }
+];
+
 export default function HowToPlayModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -123,6 +139,8 @@ export default function HowToPlayModal({ isOpen, onClose }: { isOpen: boolean; o
     slides = MyPages;
   } else if (pathname === "/mypage/fishtank") {
     slides = FishTanks;
+  } else if (pathname === "/gameroom") {
+    slides = Game;
   } else {
     slides = [
       {
@@ -159,7 +177,7 @@ export default function HowToPlayModal({ isOpen, onClose }: { isOpen: boolean; o
       >
         {/* 닫기 버튼 */}
         <button
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 pointer-events-auto"
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 pointer-events-auto z-50"
           onClick={onClose}
         >
           <X size={24} />
