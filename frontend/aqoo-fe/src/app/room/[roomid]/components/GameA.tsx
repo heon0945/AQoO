@@ -230,6 +230,9 @@ export default function GameA({
   // (7) 키 입력 핸들러 (키보드용)
   const handleArrowKey = useCallback(
     (e: KeyboardEvent) => {
+      // 결승점 도달했으면 더 이상 입력 무시
+      if (hasArrived) return;
+
       if (gameEnded || !hasCountdownFinished) return;
       let direction: number | null = null;
       if (e.key === "ArrowUp") direction = 0;
@@ -266,6 +269,7 @@ export default function GameA({
       errorSound,
       roomId,
       userName,
+      hasArrived, // 결승점 도달 여부 추가
     ]
   );
 
@@ -277,15 +281,18 @@ export default function GameA({
   // (새로 추가) 모바일 터치를 위한 버튼 클릭 핸들러
   const handleArrowButton = useCallback(
     (direction: number) => {
+      // 결승점 도달했으면 입력 무시
+      if (hasArrived) return;
+
       // 진동 효과 추가 (50ms 진동)
       if (navigator.vibrate) {
         navigator.vibrate(50);
       }
-  
+
       if (gameEnded || !hasCountdownFinished) return;
       if (isStunned) return;
       if (!hasStarted) setHasStarted(true);
-  
+
       if (currentTarget !== null && direction === currentTarget) {
         correctSound();
         const client = getStompClient();
@@ -311,18 +318,18 @@ export default function GameA({
       errorSound,
       roomId,
       userName,
+      hasArrived, // 결승점 도달 여부 추가
     ]
   );
-  
 
   // (8) 게임 타이머
   useEffect(() => {
-    if (!hasStarted || gameEnded) return;
+    if (!hasCountdownFinished || gameEnded) return;
     const timer = setInterval(() => {
       setGameTime((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(timer);
-  }, [hasStarted, gameEnded]);
+  }, [hasCountdownFinished, gameEnded]);
 
   // 타임아웃 -> 서버 endGame
   useEffect(() => {
@@ -670,10 +677,10 @@ export default function GameA({
       })}
 
       {/* 현재 방향 + 다음 방향(최대 5개) 슬라이드  */}
-      {hasCountdownFinished && !gameEnded && displayedDirections.length > 0 && (
+      {hasCountdownFinished && (
         <div
           className="absolute left-1/2 transform -translate-x-1/2 bg-white/70 backdrop-blur-md rounded-sm shadow-lg px-4 py-2 flex flex-col items-center gap-2"
-          style={{ top: isMobile ? "62px" : "32px" }} // 모바일: 62px, 그 외: 32px (top-8)
+          style={{ top: isMobile ? "62px" : "32px" }} // 모바일: 62px, 그 외: 32px
         >
           {/* 남은 시간 표시 */}
           <div className="text-lg font-semibold text-gray-700 flex items-center gap-4">
@@ -682,23 +689,28 @@ export default function GameA({
             </span>
           </div>
 
-          {/* 슬라이드 영역: 현재 및 앞으로 눌러야 할 방향키만 표시 */}
-          <div className="relative w-[240px] h-10 overflow-hidden">
-            <div className="flex gap-2">
-              {directionSequence
-                .slice(me?.totalPressCount || 0)
-                .map((dir, i) => (
-                  <div
-                    key={i}
-                    className={`w-[40px] h-10 flex items-center justify-center text-3xl font-bold ${
-                      i === 0 ? "text-red-600" : "text-black"
-                    }`}
-                  >
-                    {getArrowIcon(dir, i === 0 ? dir : -1)}
-                  </div>
-                ))}
+          {/* 게임이 종료되지 않은 경우에만 방향키 슬라이더 표시 */}
+          {!gameEnded && displayedDirections.length > 0 && (
+            <div className="relative w-[240px] h-10 overflow-hidden">
+              <div className="flex gap-2">
+                {directionSequence
+                  .slice(
+                    me?.totalPressCount || 0,
+                    (me?.totalPressCount || 0) + 6
+                  )
+                  .map((dir, i) => (
+                    <div
+                      key={i}
+                      className={`w-[40px] h-10 flex items-center justify-center text-3xl font-bold ${
+                        i === 0 ? "text-red-600" : "text-black"
+                      }`}
+                    >
+                      {getArrowIcon(dir, i === 0 ? dir : -1)}
+                    </div>
+                  ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
