@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
+import { Plus, Check, X} from "lucide-react";
 import FishTankTabContent from "./FishTankTabContent";
 import { authAtom } from "@/store/authAtom";
 import axiosInstance from "@/services/axiosInstance";
@@ -232,13 +232,13 @@ export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) 
                   onChange={(e) => setEditingName(e.target.value)}
                   onBlur={handleTabNameUpdate}
                   onKeyDown={handleKeyDown}
-                  className="w-full h-full cursor-text inline-flex items-center justify-center rounded-t-xl border-t border-r border-l border-[#1c5e8d] bg-white text-[#070707] font-[NeoDunggeunmo_Pro] text-lg"
+                  className="w-full h-full cursor-text inline-flex items-center justify-center rounded-t-xl border-t border-r border-l border-[#1c5e8d] bg-white text-[#070707] font-[NeoDunggeunmo_Pro] text-[13px] sm:text-lg"
                   autoFocus
                 />
               ) : (
                 <button
                   onClick={() => handleTabClick(idx)}
-                  className={`w-full h-10 cursor-pointer inline-flex items-center justify-center rounded-t-xl border-t border-r border-l border-[#1c5e8d] shadow-inner text-[#070707] text-lg font-[NeoDunggeunmo_Pro] ${
+                  className={`w-full h-10 cursor-pointer inline-flex items-center justify-center rounded-t-xl border-t border-r border-l border-[#1c5e8d] shadow-inner text-[#070707] text-[13px] sm:text-lg font-[NeoDunggeunmo_Pro] ${
                     selectedIndex === idx ? "!bg-[#A3D8FF]" : "bg-white hover:bg-[#d1e9ff] hover:text-[#1c5e8d]"
                   }`}
                   title={selectedIndex === idx ? "클릭하여 이름 수정" : ""}
@@ -256,40 +256,41 @@ export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) 
                   e.stopPropagation();
                   handleDeleteClick(idx);
                 }}
-                className="absolute top-[-8px] right-1 text-gray-800 hover:text-gray-900 text-xl p-1"
+                className="absolute top-[-1px] right-1 text-gray-800 hover:text-gray-900 text-xl p-1"
                 title="어항 삭제"
               >
-                ×
+                <X className="w-3 h-3" />
               </button>
             </div>
           ))}
+
         </div>
 
         {/* 오른쪽 끝에 고정된 버튼들 */}
-        <div className="flex ml-auto mr-2 gap-2">
+        <div className="flex mb-1 ml-auto mr-2 gap-2">
           {/* 어항 생성하기 버튼 */}
           <button
             onClick={() => {
               playModal();
               handleAddTank();
             }}
-            className="cursor-pointer inline-flex items-center justify-center w-12 h-10 rounded-t-xl border-t border-r border-l border-[#1c5e8d] bg-white shadow-inner text-[#070707] text-4xl hover:bg-[#e0e0e0]"
+            className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center p-1 border-[1px] border-[#1c5e8d]/50 bg-[#A3D8FF] shadow-md rounded-full hover:bg-[#A3D8FF]/70"
             title="어항 생성하기"
           >
-            +
+            <Plus className="w-5 h-5 sm:w-6 sm:h-6 text-fwhite" />
           </button>
 
           {/* 체크 아이콘 버튼 */}
           <button
-            onClick={() => {
-              playModal();
-              handleGoBack();
-            }}
-            className="cursor-pointer inline-flex items-center justify-center w-12 h-10 rounded-t-xl border-t border-r border-l border-[#1c5e8d] bg-yellow-300 shadow-inner text-[#070707] text-2xl font-bold hover:bg-[#e0e050]"
-            title="마이페이지로 이동"
-          >
-            ✔
-          </button>
+  onClick={() => {
+    playModal();
+    handleGoBack();
+  }}
+  className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center p-1 border-[1px] border-[#1c5e8d]/50 bg-[#FFEB3B] shadow-md rounded-full hover:bg-[#FFEB3B]/70"
+  title="마이페이지로 이동"
+>
+  <Check className="w-5 h-5 sm:w-6 sm:h-6 text-fwhite" />
+</button>
         </div>
       </div>
 

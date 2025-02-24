@@ -48,7 +48,7 @@ export default function CollectionItemCard({
         items-center justify-center
         rounded-lg sm:rounded-xl border border-black bg-white
         text-[1.5em] font-bold
-        transition-all duration-200
+        transition-transform duration-300 ease-out transform hover:[transform:scale(1.01)] hover:shadow-xl
         ${
           isModal
             ? "hover:border-1 sm:hover:border-4 hover:border-green-400 [box-shadow:0px_0px_0px_1px_rgba(0,0,0,0.5)]"
@@ -56,9 +56,6 @@ export default function CollectionItemCard({
         }
         ${isModal && isSelected ? "border-1 sm:border-4 border-yellow-400" : ""}
       `}
-      style={{
-        transform: "scale(1)",
-      }}
     >
       <div
         className={`
@@ -75,36 +72,33 @@ export default function CollectionItemCard({
           count !== undefined &&
           count !== null &&
           count > 0 && (
-            <p
-              className="
-          absolute top-0 right-1
-          text-[10px] sm:text-[13px] text-gray-500"
-            >
+            <p className="absolute top-0 right-1 text-[12px] sm:text-[16px] text-gray-500">
               x {count}
             </p>
           )}
-        <div className="flex-1 flex items-center justify-center w-full h-auto aspect-square overflow-hidden">
-          <img src={imageSrc} alt={name} className="object-contain max-w-full max-h-full w-full h-full" />
+        <div className="flex-1 flex items-center justify-center w-auto h-auto aspect-square overflow-hidden">
+          <img
+            src={imageSrc}
+            alt={name}
+            className="object-contain sm:mt-3 w-[50px] h-[50px] sm:w-full sm:h-full"
+          />
         </div>
-        <div
-          className="
-          flex flex-col items-center gap-1 text-[15px] text-black
-        "
-        >
+        <div className="flex flex-col items-center text-[15px] text-black">
           {rarity && (
             <p
-              className={`px-1 sm:px-3 sm:mt-2 text-[8px] sm:text-xs sm:font-semibold border rounded-full ${getRarityColor(
-                rarity
-              )}`}
+              className={`px-2 sm:px-4 sm:mb-1 text-[9px] sm:text-[16px] sm:font-semibold border rounded-full 
+                  ${getRarityColor(rarity)}`}
             >
               {rarity}
             </p>
           )}
           <p
             className="
-          flex flex-col items-center gap-1
-          text-[11px] sm:text-[1.3em] text-black
-        "
+              flex flex-col items-center justify-center gap-1
+              text-[11px] sm:text-[22px] text-black
+              overflow-hidden whitespace-nowrap text-ellipsis
+              w-full
+            "
           >
             {name}
           </p>
@@ -120,6 +114,8 @@ export default function CollectionItemCard({
       `}</style>
     </div>
   );
+  
+  
 }
 
 {
