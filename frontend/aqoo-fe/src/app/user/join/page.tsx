@@ -29,6 +29,8 @@ function JoinPageContent() {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<JoinFormInputs>({
     defaultValues: {
@@ -39,6 +41,34 @@ function JoinPageContent() {
       nickName: "",
     },
   });
+
+  // 비밀번호와 비밀번호 확인 필드 감시
+  const password = watch("password");
+  const confirmPassword = watch("pw");
+
+  // 비밀번호 보안 수준을 판단하는 함수 (길이 기준 예시)
+  // 각 등급에 따라 다른 색상 적용: 하 - 빨강, 중 - 주황, 상 - 녹색
+  const getPasswordStrength = (password: string): { text: string; colorClass: string } => {
+    if (!password) return { text: "", colorClass: "" };
+    if (password.length < 6) return { text: "보안 : 하", colorClass: "text-red-500" };
+    if (password.length < 10) return { text: "보안 : 중", colorClass: "text-orange-500" };
+    return { text: "보안 : 상", colorClass: "text-green-500" };
+  };
+
+  // SQL 인젝션 관련 키워드 및 특수문자 검사 함수
+  const containsSQLInjection = (value: string): boolean => {
+    const sqlKeywords = ["select", "insert", "update", "delete", "drop", "alter", "truncate"];
+    const lowerValue = value.toLowerCase();
+    for (const keyword of sqlKeywords) {
+      if (lowerValue.includes(keyword)) {
+        return true;
+      }
+    }
+    if (value.includes("'") || value.includes('"') || value.includes("--") || value.includes(";")) {
+      return true;
+    }
+    return false;
+  };
 
   // 이메일 유효성 검사 함수
   const validateEmail = async (value: string): Promise<boolean | string> => {
@@ -61,13 +91,18 @@ function JoinPageContent() {
   };
 
   const onSubmit: SubmitHandler<JoinFormInputs> = async (data) => {
-    // 일반 가입인 경우, 비밀번호와 비밀번호 확인이 일치하는지 검증합니다.
+    // 제출 시에도 SQL 인젝션 검사 (최종 방어)
+    if (containsSQLInjection(data.id) || containsSQLInjection(data.password)) {
+      showToast("다른 아이디나 비밀번호를 입력하세요.", "warning");
+      return;
+    }
+
+    // 일반 가입인 경우, 비밀번호와 비밀번호 확인 일치 여부 확인
     if (!isSocialJoin && data.password !== data.pw) {
       showToast("비밀번호와 비밀번호 확인이 일치하지 않습니다.", "warning");
       return;
     }
 
-    // 요청 본문에 소셜 로그인 여부를 추가하고, 실제 비밀번호를 pw 필드로 설정합니다.
     const requestBody = {
       email: data.email,
       id: data.id,
@@ -77,9 +112,7 @@ function JoinPageContent() {
     };
 
     try {
-      // axios를 사용하여 회원가입 API 호출 (전체 경로: BASE_URL + /auth/register)
       const response = await axios.post("https://i12e203.p.ssafy.io/api/v1/auth/register", requestBody);
-      // console.log("회원가입 성공:", response.data);
       showToast("회원가입 성공!", "success");
       router.push("/user/login");
     } catch (error: any) {
@@ -88,9 +121,10 @@ function JoinPageContent() {
     }
   };
 
+  const passwordStrength = getPasswordStrength(password);
+
   return (
     <div className="flex justify-center items-center h-screen bg-cover bg-center relative">
-      {/* 배경 이미지 */}
       <div
         className="absolute inset-0 bg-black before:absolute before:inset-0 before:bg-white/30"
         style={{
@@ -100,13 +134,11 @@ function JoinPageContent() {
         }}
       ></div>
       <div className="relative bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-2xl w-96 border-t-4 border-blue-500">
-        {/* 뒤로가기 버튼 (카드 왼쪽 상단) */}
         <button onClick={() => router.back()} className="absolute top-4 left-4 text-blue-500 hover:underline">
           뒤로가기
         </button>
         <h2 className="text-center text-3xl font-bold text-blue-900 mb-6">회원가입</h2>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* 일반 가입인 경우에만 이메일, 아이디, 비밀번호, 비밀번호 확인 필드 렌더링 */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {!isSocialJoin && (
             <>
               <InputField
@@ -125,6 +157,13 @@ function JoinPageContent() {
                 placeholder="아이디"
                 register={register("id", {
                   required: "필수 입력 항목입니다.",
+                  onChange: (e) => {
+                    const value = e.target.value;
+                    if (containsSQLInjection(value)) {
+                      showToast("다른 아이디나 비밀번호를 입력하세요.", "warning");
+                      setValue("id", "");
+                    }
+                  },
                   validate: validateId,
                 })}
                 error={errors.id?.message as string}
@@ -133,9 +172,24 @@ function JoinPageContent() {
                 label="비밀번호"
                 type="password"
                 placeholder="비밀번호"
-                register={register("password", { required: "필수 입력 항목입니다." })}
+                register={register("password", {
+                  required: "필수 입력 항목입니다.",
+                  onChange: (e) => {
+                    const value = e.target.value;
+                    if (containsSQLInjection(value)) {
+                      showToast("다른 아이디나 비밀번호를 입력하세요.", "warning");
+                      setValue("password", "");
+                    }
+                  },
+                })}
                 error={errors.password?.message as string}
               />
+              {/* 비밀번호 보안 등급 안내 영역 */}
+              {password && (
+                <span className={`mt-0 text-sm ${passwordStrength.colorClass}`}>
+                  {passwordStrength.text}
+                </span>
+              )}
               <InputField
                 label="비밀번호 확인"
                 type="password"
@@ -143,9 +197,14 @@ function JoinPageContent() {
                 register={register("pw", { required: "필수 입력 항목입니다." })}
                 error={errors.pw?.message as string}
               />
+              {/* 비밀번호 일치 여부 안내 영역 */}
+              {confirmPassword && (
+                <span className={`mt-0 text-sm ${confirmPassword === password ? "text-green-500" : "text-red-500"}`}>
+                  {confirmPassword === password ? "비밀번호와 일치합니다." : "비밀번호와 다릅니다."}
+                </span>
+              )}
             </>
           )}
-          {/* 소셜 가입인 경우에는 이메일, 아이디, 비밀번호, 비밀번호 확인 필드를 숨기고 닉네임만 표시 */}
           <InputField
             label="닉네임"
             type="text"
