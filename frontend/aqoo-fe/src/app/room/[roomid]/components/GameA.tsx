@@ -57,7 +57,7 @@ const getArrowIcon = (direction: number) => {
       return '←';
     default:
       return '';
-  }
+  }6
 };
 
 export default function GameA({
@@ -92,7 +92,7 @@ export default function GameA({
 
   const [isStunned, setIsStunned] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
-  const [gameTime, setGameTime] = useState(60);
+  const [gameTime, setGameTime] = useState(3600);
   const [modalDismissed, setModalDismissed] = useState(false);
 
   // 트랙 크기
