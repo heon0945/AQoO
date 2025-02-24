@@ -22,12 +22,20 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     List<User> findByIdContainingIgnoreCase(String keyword);
 
-    @Query("SELECT u FROM User u " +
-            "WHERE u.id <> :userId " +
-            "  AND u.id NOT IN (" +
-            "      SELECT CASE WHEN fr.friend1Id = :userId THEN fr.friend2Id ELSE fr.friend1Id END " +
-            "      FROM FriendRelationship fr " +
-            "      WHERE fr.friend1Id = :userId OR fr.friend2Id = :userId" +
-            "  )")
+//    @Query("SELECT u FROM User u " +
+//            "WHERE u.id <> :userId " +
+//            "  AND u.id NOT IN (" +
+//            "      SELECT CASE WHEN fr.friend1Id = :userId THEN fr.friend2Id ELSE fr.friend1Id END " +
+//            "      FROM FriendRelationship fr " +
+//            "      WHERE fr.friend1Id = :userId OR fr.friend2Id = :userId" +
+//            "  )"
+@Query("SELECT u FROM User u " +
+        "WHERE u.id <> :userId " +
+        "  AND u.id NOT IN (" +
+        "      SELECT CASE WHEN fr.friend1Id = :userId THEN fr.friend2Id ELSE fr.friend1Id END " +
+        "      FROM FriendRelationship fr " +
+        "      WHERE fr.friend1Id = :userId OR fr.friend2Id = :userId" +
+        "  ) " +
+        "  AND (SELECT COUNT(uf.id) FROM UserFish uf WHERE uf.aquariumId = u.mainAquarium AND uf.aquariumId IS NOT NULL) >= 3")
     List<User> findNonFriends(@Param("userId") String userId);
 }
