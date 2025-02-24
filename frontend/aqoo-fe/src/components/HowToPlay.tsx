@@ -119,8 +119,24 @@ const Game = [
 const GameRoom = [
   {
     title: "채팅방",
-    description: ""
-  }
+    description: "게임을 시작하려면 레디 버튼을 누르거나 F5를 눌러주세요.\n채팅을 입력하면 내 대표 물고기 위에 말풍선이 나타나요.",
+    image: "/how_to_play/게임_채팅방.png",
+  },
+  {
+    title: "방장",
+    description: "여기서도 친구 초대가 가능해요!\n채팅창 아래에서 원하는 게임을 골라보세요.\n모두가 레디를 누르면 'Game Start' 버튼이 짠! 하고 나타나요.",
+    image: "/how_to_play/게임_친구초대.png",
+  },
+  {
+    title: "스페이스바 게임",
+    description: "스페이스바를 마구 눌러서 빠르게 골 지점을 통과해 보세요!",
+    image: "/how_to_play/게임_스페이스바.png",
+  },
+  {
+    title: "방향키 게임",
+    description: "화면에 나오는 방향과 같은 방향키를 빠르게 눌러주세요!",
+    image: "/how_to_play/게임_방향키.png",
+  },  
 ];
 
 export default function HowToPlayModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
@@ -141,6 +157,8 @@ export default function HowToPlayModal({ isOpen, onClose }: { isOpen: boolean; o
     slides = FishTanks;
   } else if (pathname === "/gameroom") {
     slides = Game;
+  } else if (pathname.startsWith("/room/")) {
+    slides = GameRoom;
   } else {
     slides = [
       {
