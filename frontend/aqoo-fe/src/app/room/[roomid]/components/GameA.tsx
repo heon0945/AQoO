@@ -6,7 +6,7 @@ import { User } from "@/store/authAtom";
 import axiosInstance from "@/services/axiosInstance";
 import { getStompClient } from "@/lib/stompclient";
 import { useSFX } from "@/hooks/useSFX";
-import { ArrowUp, ArrowRight, ArrowDown, ArrowLeft } from 'lucide-react';
+import { ArrowUp, ArrowRight, ArrowDown, ArrowLeft } from "lucide-react";
 
 interface GameAPlayer {
   userName: string;
@@ -49,11 +49,11 @@ interface GameAProps {
 /** 방향 번호 -> 아이콘 변환 */
 const getArrowIcon = (direction: number, currentDirection: number) => {
   const isCurrent = direction === currentDirection;
-  
+
   // 현재 아이콘은 빨간색, 나머지는 검은색
   const className = `
     w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 stroke-[2.5]
-    ${isCurrent ? 'text-red-500' : 'text-black'}
+    ${isCurrent ? "text-red-500" : "text-black"}
   `;
 
   switch (direction) {
@@ -69,7 +69,6 @@ const getArrowIcon = (direction: number, currentDirection: number) => {
       return null;
   }
 };
-
 
 export default function GameA({
   roomId,
@@ -92,7 +91,8 @@ export default function GameA({
   // 게임 진행
   const [countdown, setCountdown] = useState(3);
   const [hasCountdownFinished, setHasCountdownFinished] = useState(false);
-  const [currentPlayers, setCurrentPlayers] = useState<GameAPlayer[]>(initialPlayers);
+  const [currentPlayers, setCurrentPlayers] =
+    useState<GameAPlayer[]>(initialPlayers);
   const directionSequence = initialDirectionSequence;
 
   const [gameEnded, setGameEnded] = useState(false);
@@ -108,10 +108,15 @@ export default function GameA({
   // 트랙 크기
   const trackRef = useRef<HTMLDivElement>(null);
   const [trackDims, setTrackDims] = useState({ width: 0, height: 0 });
-  const totalLanes = 6;
-  const laneAreaFactor = 0.7;
+
+  // 모바일 뷰 여부 (예: 화면 폭이 640px 미만)
+  const isMobile = trackDims.width < 640;
+  const laneAreaFactor = isMobile ? 0.4 : 0.65;
   const laneAreaHeight = trackDims.height * laneAreaFactor;
-  const laneAreaTopOffset = (trackDims.height - laneAreaHeight) / 2;
+  const topOffsetAdjustment = 20; // 추가할 픽셀 값 (필요에 따라 조절)
+  const laneAreaTopOffset =
+    (trackDims.height - laneAreaHeight) / 2 + topOffsetAdjustment;
+  const totalLanes = 6;
   const laneHeight = laneAreaHeight ? laneAreaHeight / totalLanes : 120;
 
   // 사운드
@@ -222,7 +227,7 @@ export default function GameA({
     return directionSequence[idx];
   }, [directionSequence, me]);
 
-  // (7) 키 입력 핸들러
+  // (7) 키 입력 핸들러 (키보드용)
   const handleArrowKey = useCallback(
     (e: KeyboardEvent) => {
       if (gameEnded || !hasCountdownFinished) return;
@@ -251,13 +256,64 @@ export default function GameA({
         setTimeout(() => setIsStunned(false), 1000);
       }
     },
-    [gameEnded, hasCountdownFinished, isStunned, hasStarted, currentTarget, correctSound, errorSound, roomId, userName]
+    [
+      gameEnded,
+      hasCountdownFinished,
+      isStunned,
+      hasStarted,
+      currentTarget,
+      correctSound,
+      errorSound,
+      roomId,
+      userName,
+    ]
   );
 
   useEffect(() => {
     window.addEventListener("keydown", handleArrowKey);
     return () => window.removeEventListener("keydown", handleArrowKey);
   }, [handleArrowKey]);
+
+  // (새로 추가) 모바일 터치를 위한 버튼 클릭 핸들러
+  const handleArrowButton = useCallback(
+    (direction: number) => {
+      // 진동 효과 추가 (50ms 진동)
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+  
+      if (gameEnded || !hasCountdownFinished) return;
+      if (isStunned) return;
+      if (!hasStarted) setHasStarted(true);
+  
+      if (currentTarget !== null && direction === currentTarget) {
+        correctSound();
+        const client = getStompClient();
+        if (client && client.connected) {
+          client.publish({
+            destination: "/app/gameA.press",
+            body: JSON.stringify({ roomId, userName, direction }),
+          });
+        }
+      } else {
+        errorSound();
+        setIsStunned(true);
+        setTimeout(() => setIsStunned(false), 1000);
+      }
+    },
+    [
+      gameEnded,
+      hasCountdownFinished,
+      isStunned,
+      hasStarted,
+      currentTarget,
+      correctSound,
+      errorSound,
+      roomId,
+      userName,
+    ]
+  );
+  
 
   // (8) 게임 타이머
   useEffect(() => {
@@ -305,7 +361,11 @@ export default function GameA({
 
   // (10) finishOrderSnapshot
   useEffect(() => {
-    if (gameEnded && finishOrder.length > 0 && finishOrderSnapshot.length === 0) {
+    if (
+      gameEnded &&
+      finishOrder.length > 0 &&
+      finishOrderSnapshot.length === 0
+    ) {
       const snapshot = finishOrder.map((u) => {
         const p = currentPlayers.find((x) => x.userName === u);
         return p ? p.nickname : u;
@@ -355,19 +415,31 @@ export default function GameA({
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br">
         <div className="bg-white/80 shadow-xl rounded-2xl p-10 text-center max-w-md w-full mx-4">
-          <h1 className="text-4xl font-extrabold text-gray-800 mb-6">Game Over</h1>
+          <h1 className="text-4xl font-extrabold text-gray-800 mb-6">
+            Game Over
+          </h1>
           <p className="text-xl text-gray-600 mb-6">
-            Winner: <span className="font-bold text-gray-900">{winner || "No Winner"}</span>
+            Winner:{" "}
+            <span className="font-bold text-gray-900">
+              {winner || "No Winner"}
+            </span>
           </p>
 
           {finishOrderSnapshot.length > 0 && (
             <div className="mb-8">
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">전체 순위</h2>
+              <h2 className="text-3xl font-bold text-gray-800 mb-4">
+                전체 순위
+              </h2>
               <div className="bg-gray-100 rounded-lg shadow-md p-4">
                 <ol className="divide-y divide-gray-300">
                   {finishOrderSnapshot.map((nickname, index) => (
-                    <li key={nickname} className="py-2 flex justify-between items-center">
-                      <span className="font-semibold text-gray-700">{index + 1}.</span>
+                    <li
+                      key={nickname}
+                      className="py-2 flex justify-between items-center"
+                    >
+                      <span className="font-semibold text-gray-700">
+                        {index + 1}.
+                      </span>
                       <span className="text-gray-900">{nickname}</span>
                     </li>
                   ))}
@@ -387,7 +459,9 @@ export default function GameA({
         {showExpModal && myExpInfo && (
           <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
             <div className="relative bg-white w-[350px] p-8 rounded-lg shadow-xl text-center">
-              <h2 className="text-2xl font-extrabold text-blue-700 mb-4">경험치 획득!</h2>
+              <h2 className="text-2xl font-extrabold text-blue-700 mb-4">
+                경험치 획득!
+              </h2>
               <p className="text-lg text-gray-700 mb-2">
                 획득 경험치: <strong>+{myEarnedExp}</strong>
               </p>
@@ -420,12 +494,20 @@ export default function GameA({
                 🎉 <span className="mx-2">레벨 업!</span> 🎉
               </h2>
               <p className="text-lg font-medium text-gray-700 mt-3">
-                레벨 <span className="text-blue-500 font-bold">{myExpInfo?.userLevel}</span> 달성!
+                레벨{" "}
+                <span className="text-blue-500 font-bold">
+                  {myExpInfo?.userLevel}
+                </span>{" "}
+                달성!
               </p>
               <hr className="my-4 border-gray-300" />
               <p className="text-lg font-medium text-gray-600 mb-6">
                 티켓 +3
-                {myTicket !== null && <span className="text-gray-700 ml-1">(현재 {myTicket}개)</span>}
+                {myTicket !== null && (
+                  <span className="text-gray-700 ml-1">
+                    (현재 {myTicket}개)
+                  </span>
+                )}
               </p>
               <button
                 onClick={() => handleLevelUpModalClose()}
@@ -461,7 +543,9 @@ export default function GameA({
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30">
           <div className="bg-white p-8 rounded-lg shadow-lg text-center">
             <h2 className="text-2xl font-bold mb-4">결승점 도착!</h2>
-            <p className="text-xl mb-4">다른 플레이어들이 도착할 때까지 기다려주세요!</p>
+            <p className="text-xl mb-4">
+              다른 플레이어들이 도착할 때까지 기다려주세요!
+            </p>
             <button
               onClick={() => setModalDismissed(true)}
               className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded"
@@ -485,7 +569,9 @@ export default function GameA({
           >
             <div className="h-full border-l-4 border-green-500"></div>
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-green-500 font-bold text-lg bg-white/70 px-2 py-1 rounded">Start</span>
+              <span className="text-green-500 font-bold text-lg bg-white/70 px-2 py-1 rounded">
+                Start
+              </span>
             </div>
           </div>
           <div
@@ -498,7 +584,9 @@ export default function GameA({
           >
             <div className="h-full border-l-4 border-red-500"></div>
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-red-500 font-bold text-lg bg-white/70 px-2 py-1 rounded">Goal</span>
+              <span className="text-red-500 font-bold text-lg bg-white/70 px-2 py-1 rounded">
+                Goal
+              </span>
             </div>
           </div>
           <div
@@ -528,12 +616,19 @@ export default function GameA({
       {/* 플레이어 표시 */}
       {currentPlayers.map((player) => {
         const isMe = player.nickname === userName;
-        const isStunnedClass = isMe && isStunned ? "opacity-50 animate-pulse" : ""; // 기절 상태 효과
+        const isStunnedClass =
+          isMe && isStunned ? "opacity-50 animate-pulse" : ""; // 기절 상태 효과
 
-        const offset = currentPlayers.length < totalLanes ? Math.floor((totalLanes - currentPlayers.length) / 2) : 0;
+        const offset =
+          currentPlayers.length < totalLanes
+            ? Math.floor((totalLanes - currentPlayers.length) / 2)
+            : 0;
         const laneIndex = currentPlayers.indexOf(player) + offset;
         const fishSize = laneHeight * 0.8;
-        const topPos = laneAreaTopOffset + laneIndex * laneHeight + (laneHeight - fishSize) / 2;
+        const topPos =
+          laneAreaTopOffset +
+          laneIndex * laneHeight +
+          (laneHeight - fishSize) / 2;
 
         const startOffset = trackDims.width * 0.1;
         const moveFactor = trackDims.width * 0.016;
@@ -549,7 +644,10 @@ export default function GameA({
             className="absolute"
             style={{ top: `${topPos}px`, left: `${leftPos}px`, zIndex: 10 }}
           >
-            <div className={`relative ${isStunnedClass}`} style={{ width: fishSize, height: fishSize }}>
+            <div
+              className={`relative ${isStunnedClass}`}
+              style={{ width: fishSize, height: fishSize }}
+            >
               <img
                 src={player.mainFishImage}
                 alt={`${player.nickname}의 대표 물고기`}
@@ -573,66 +671,100 @@ export default function GameA({
 
       {/* 현재 방향 + 다음 방향(최대 5개) 슬라이드  */}
       {hasCountdownFinished && !gameEnded && displayedDirections.length > 0 && (
-        <div className="absolute top-8 left-1/2 transform -translate-x-1/2 bg-white/70 backdrop-blur-md rounded-sm shadow-lg px-4 py-2 flex flex-col items-center gap-2">
+        <div
+          className="absolute left-1/2 transform -translate-x-1/2 bg-white/70 backdrop-blur-md rounded-sm shadow-lg px-4 py-2 flex flex-col items-center gap-2"
+          style={{ top: isMobile ? "62px" : "32px" }} // 모바일: 62px, 그 외: 32px (top-8)
+        >
           {/* 남은 시간 표시 */}
           <div className="text-lg font-semibold text-gray-700 flex items-center gap-4">
-            <span className="px-3 py-1 bg-blue-100 text-blue-600 rounded-full shadow">TIME: {gameTime}s</span>
+            <span className="px-3 py-1 bg-blue-100 text-blue-600 rounded-full shadow">
+              TIME: {gameTime}s
+            </span>
           </div>
 
           {/* 슬라이드 영역: 현재 및 앞으로 눌러야 할 방향키만 표시 */}
           <div className="relative w-[240px] h-10 overflow-hidden">
             <div className="flex gap-2">
-              {directionSequence.slice(me?.totalPressCount || 0).map((dir, i) => (
-                <div
-                  key={i}
-                  className={`w-[40px] h-10 flex items-center justify-center text-3xl font-bold ${
-                    i === 0 ? "text-red-600" : "text-black"
-                  }`}
-                >
-                  {getArrowIcon(dir, i === 0 ? dir : -1)}
-                </div>
-              ))}
+              {directionSequence
+                .slice(me?.totalPressCount || 0)
+                .map((dir, i) => (
+                  <div
+                    key={i}
+                    className={`w-[40px] h-10 flex items-center justify-center text-3xl font-bold ${
+                      i === 0 ? "text-red-600" : "text-black"
+                    }`}
+                  >
+                    {getArrowIcon(dir, i === 0 ? dir : -1)}
+                  </div>
+                ))}
             </div>
           </div>
         </div>
       )}
-      {/* 디버그 */}
-      {/* <div className='absolute bottom-4 left-4 bg-white/80 p-2 rounded text-sm z-50'>
-        <pre>
-          {JSON.stringify(
-            {
-              countdown,
-              hasCountdownFinished,
-              hasStarted,
-              gameEnded,
-              slideIndex,
-              displayedDirections,
-              currentPlayers,
-            },
-            null,
-            2
-          )}
-        </pre>
-      </div> */}
+
+      {/* 모바일용 방향키 버튼 - 작은 화면에서만 보임 */}
+      {hasCountdownFinished && !gameEnded && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 sm:hidden">
+          <div className="flex flex-col items-center">
+            <button
+              onClick={() => handleArrowButton(0)}
+              className="p-3 bg-white rounded-full shadow-md mb-2"
+            >
+              <ArrowUp className="w-8 h-8 text-black" />
+            </button>
+            <div className="flex space-x-4">
+              <button
+                onClick={() => handleArrowButton(3)}
+                className="p-3 bg-white rounded-full shadow-md"
+              >
+                <ArrowLeft className="w-8 h-8 text-black" />
+              </button>
+              <button
+                onClick={() => handleArrowButton(2)}
+                className="p-3 bg-white rounded-full shadow-md"
+              >
+                <ArrowDown className="w-8 h-8 text-black" />
+              </button>
+              <button
+                onClick={() => handleArrowButton(1)}
+                className="p-3 bg-white rounded-full shadow-md"
+              >
+                <ArrowRight className="w-8 h-8 text-black" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 카운트다운 오버레이 */}
       {!hasCountdownFinished && (
         <div className="absolute inset-0 flex flex-col justify-center items-center bg-white/80 z-20 p-4">
           <div className="max-w-6xl w-full text-center bg-white/90 border-2 border-gray-600 rounded-lg shadow-lg p-6">
             <h3 className="mb-4 text-lg md:text-2xl font-bold flex items-center justify-center">
-              <img src="/chat_images/game_stick.png" alt="방향키" className="w-10 md:w-14 h-auto mx-2 inline-block" />
+              <img
+                src="/chat_images/game_stick.png"
+                alt="방향키"
+                className="w-10 md:w-14 h-auto mx-2 inline-block"
+              />
               게임 설명
-              <img src="/chat_images/game_stick.png" alt="방향키" className="w-10 md:w-14 h-auto mx-2 inline-block" />
+              <img
+                src="/chat_images/game_stick.png"
+                alt="방향키"
+                className="w-10 md:w-14 h-auto mx-2 inline-block"
+              />
             </h3>
             <p className="text-lg md:text-2xl font-medium text-gray-800 mt-4">
               방향키 맞추기 게임에 오신 걸 환영합니다!
             </p>
             <p className="text-md md:text-xl text-gray-700 mt-4">
-              화면 상단에 표시되는 방향과 동일한 방향키(↑, →, ↓, ←)를 눌러 점수를 올리세요.
+              화면 상단에 표시되는 방향과 동일한 방향키(↑, →, ↓, ←)를 눌러
+              점수를 올리세요.
               <br />
               잘못 누르면 1초간 입력이 중지됩니다.
             </p>
-            <p className="mt-8 text-2xl text-gray-800">{countdown} 초 후 게임 시작</p>
+            <p className="mt-8 text-2xl text-gray-800">
+              {countdown} 초 후 게임 시작
+            </p>
           </div>
         </div>
       )}
