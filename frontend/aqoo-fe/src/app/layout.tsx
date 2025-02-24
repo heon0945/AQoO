@@ -15,7 +15,7 @@ import { usePathname } from "next/navigation";
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  const hiddenNavPaths: string[] = ["/", "/user/login", "/register", "/some-other-page"];
+  const hiddenNavPaths: string[] = ["/", "/user/login", "/user/join", "/user/find-id", "/user/find-password"];
 
   return (
     <html lang="ko">
