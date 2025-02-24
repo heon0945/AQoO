@@ -29,7 +29,7 @@ export default function ParticipantList({
   currentIsHost,
   onKickUser,
 }: ParticipantListProps) {
-  const [isOpen, setIsOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="bg-white/70 border border-gray-300 rounded-lg shadow-lg p-2 z-10 w-[370px] h-auto">

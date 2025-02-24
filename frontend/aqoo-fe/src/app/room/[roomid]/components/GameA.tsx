@@ -6,6 +6,7 @@ import { User } from "@/store/authAtom";
 import axiosInstance from "@/services/axiosInstance";
 import { getStompClient } from "@/lib/stompclient";
 import { useSFX } from "@/hooks/useSFX";
+import { ArrowUp, ArrowRight, ArrowDown, ArrowLeft } from 'lucide-react';
 
 interface GameAPlayer {
   userName: string;
@@ -46,20 +47,29 @@ interface GameAProps {
 }
 
 /** 방향 번호 -> 아이콘 변환 */
-const getArrowIcon = (direction: number) => {
+const getArrowIcon = (direction: number, currentDirection: number) => {
+  const isCurrent = direction === currentDirection;
+  
+  // 현재 아이콘은 빨간색, 나머지는 검은색
+  const className = `
+    w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 stroke-[2.5]
+    ${isCurrent ? 'text-red-500' : 'text-black'}
+  `;
+
   switch (direction) {
     case 0:
-      return "⇧";
+      return <ArrowUp className={className} />;
     case 1:
-      return "⇨";
+      return <ArrowRight className={className} />;
     case 2:
-      return "⇩";
+      return <ArrowDown className={className} />;
     case 3:
-      return "⇦";
+      return <ArrowLeft className={className} />;
     default:
-      return "";
+      return null;
   }
 };
+
 
 export default function GameA({
   roomId,
@@ -570,23 +580,22 @@ export default function GameA({
           </div>
 
           {/* 슬라이드 영역: 현재 및 앞으로 눌러야 할 방향키만 표시 */}
-          <div className="relative w-[200px] h-10 overflow-hidden">
+          <div className="relative w-[240px] h-10 overflow-hidden">
             <div className="flex gap-2">
               {directionSequence.slice(me?.totalPressCount || 0).map((dir, i) => (
                 <div
                   key={i}
                   className={`w-[40px] h-10 flex items-center justify-center text-3xl font-bold ${
-                    i === 0 ? "text-red-600" : "text-gray-800"
+                    i === 0 ? "text-red-600" : "text-black"
                   }`}
                 >
-                  {getArrowIcon(dir)}
+                  {getArrowIcon(dir, i === 0 ? dir : -1)}
                 </div>
               ))}
             </div>
           </div>
         </div>
       )}
-
       {/* 디버그 */}
       {/* <div className='absolute bottom-4 left-4 bg-white/80 p-2 rounded text-sm z-50'>
         <pre>
