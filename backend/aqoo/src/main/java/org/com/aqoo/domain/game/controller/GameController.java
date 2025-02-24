@@ -22,7 +22,7 @@ public class GameController {
      */
     @MessageMapping("/game.start")
     public void startGame(@Payload StartGameMessage message) {
-        System.out.println("game.start received: " + message);
+//        System.out.println("game.start received: " + message);
         gameService.startGame(message.getRoomId());
     }
 
@@ -32,7 +32,7 @@ public class GameController {
      */
     @MessageMapping("/game.press")
     public void press(@Payload PressMessage message) {
-        System.out.println("game.press received: " + message);
+//        System.out.println("game.press received: " + message);
         gameService.processPress(message);
     }
 
@@ -42,7 +42,7 @@ public class GameController {
      */
     @MessageMapping("/game.end")
     public void endGame(@Payload EndGameMessage message) {
-        System.out.println("game.end received: " + message);
+//        System.out.println("game.end received: " + message);
         gameService.endGame(message.getRoomId());
     }
 }

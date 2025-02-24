@@ -2,6 +2,7 @@ package org.com.aqoo.domain.chat.service;
 
 import lombok.RequiredArgsConstructor;
 import org.com.aqoo.domain.auth.dto.UserInfoResponse;
+import org.com.aqoo.domain.auth.entity.User;
 import org.com.aqoo.domain.auth.service.UserService;
 import org.com.aqoo.domain.chat.dto.InviteRequest;
 import org.com.aqoo.domain.chat.dto.MemberDto;
@@ -9,13 +10,11 @@ import org.com.aqoo.domain.chat.dto.RoomUpdate;
 import org.com.aqoo.domain.chat.model.ChatRoom;
 import org.com.aqoo.domain.push.dto.PushRequest;
 import org.com.aqoo.domain.push.service.PushService;
+import org.com.aqoo.repository.UserRepository;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -28,6 +27,7 @@ public class ChatRoomService {
     private final SimpMessagingTemplate messagingTemplate;
     private final UserService userService;
     private final PushService pushService;
+    private final UserRepository userRepository;
 
     /** 모든 채팅방 목록 조회 */
     public List<ChatRoom> getAllRooms() {
@@ -224,6 +224,15 @@ public class ChatRoomService {
                 })
                 .collect(Collectors.toList());
         return memberDtos;
+    }
+
+    /**
+     * userId로 DB에서 User 엔티티를 조회하여 nickname을 반환합니다.
+     * 만약 사용자를 찾지 못하면 userId를 그대로 반환합니다.
+     */
+    public String getUserNickname(String userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        return userOpt.map(User::getNickname).orElse(userId);
     }
 
 }
