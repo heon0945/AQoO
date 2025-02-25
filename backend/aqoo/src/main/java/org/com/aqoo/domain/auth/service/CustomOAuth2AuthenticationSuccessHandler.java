@@ -55,7 +55,8 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
             String accessToken = jwtUtil.generateToken(email, "ACCESS");
             User user = userRepository.findById(email).get();
             String nickName = user.getNickname();
-
+            user.setRefreshToken(refreshToken);
+            userRepository.save(user);
             loginResponse = new LoginResponse(accessToken, email, nickName,"기존 회원");
             log.info("Generated refresh token for existing user {}: {}", email, refreshToken);
 
