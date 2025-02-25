@@ -90,7 +90,7 @@ axiosInstance.interceptors.response.use(
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         console.error("토큰 갱신 실패:", refreshError);
-        // forceLogout();
+        forceLogout();
         return;
       }
     }
