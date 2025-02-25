@@ -1,6 +1,7 @@
 "use client";
 
 import { HAND_CONNECTIONS, Hands } from "@mediapipe/hands"; // 손 인식을 위한 라이브러리
+import { HelpCircle, X } from "lucide-react";
 import axios, { AxiosResponse } from "axios";
 import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils"; // 손 랜드마크 그리기 라이브러리
 import { useEffect, useRef, useState } from "react";
@@ -10,8 +11,6 @@ import axiosInstance from "@/services/axiosInstance";
 import { useAuth } from "@/hooks/useAuth"; // ✅ 로그인 정보 가져오기
 import { useSFX } from "@/hooks/useSFX";
 import { useToast } from "@/hooks/useToast";
-
-const PALM_IMAGE_SRC = "/cleanIcon.png";
 
 interface InteractionComponentProps {
   onClose: () => void;
@@ -47,6 +46,7 @@ export default function InteractionComponent({
   const selectedGestureRef = useRef<"handMotion" | "rockGesture" | null>(null); // 현재 선택된 제스처의 참조 처리
 
   const [palmImage, setPalmImage] = useState<HTMLImageElement | null>(null); // 손에 물걸레 png
+  const [feedImage, setFeedImage] = useState<HTMLImageElement | null>(null); // ✅ 추가
 
   const startCameraAndHandRecognition = async () => {
     if (!videoRef.current) {
@@ -78,15 +78,15 @@ export default function InteractionComponent({
   });
 
   useEffect(() => {
-    const img = new Image();
-    img.src = PALM_IMAGE_SRC;
-    // 이미지 로드가 끝나면 상태에 저장
-    img.onload = () => {
-      setPalmImage(img);
-    };
-    img.onerror = () => {
-      console.error("손바닥 이미지 로드 실패");
-    };
+    const cleanImg = new Image();
+    cleanImg.src = "/icon/cleanIcon.png";
+    cleanImg.onload = () => setPalmImage(cleanImg);
+    cleanImg.onerror = () => console.error("손바닥 이미지 로드 실패");
+
+    const feedImg = new Image();
+    feedImg.src = "/icon/feedIcon.png"; // ✅ feedIcon 로드
+    feedImg.onload = () => setFeedImage(feedImg);
+    feedImg.onerror = () => console.error("먹이 이미지 로드 실패");
   }, []);
 
   useEffect(() => {
@@ -137,10 +137,18 @@ export default function InteractionComponent({
               canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
             }
 
+            let detectedLandmarks: any = null;
+
             // canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
             if (results.multiHandLandmarks) {
               for (const landmarks of results.multiHandLandmarks) {
+                if (type === "clean") {
+                  detectHandMotion(landmarks);
+                } else if (type === "feed") {
+                  detectRockGesture(landmarks);
+                }
+
                 // 랜드마크에 선 추가
                 // drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
                 //   color: "#00FF00",
@@ -154,20 +162,17 @@ export default function InteractionComponent({
                 // 🏷️ 주요 랜드마크에 캡션 추가
                 // labelLandmarks(canvasCtx, landmarks);
 
-                detectHandMotion(landmarks);
+                detectedLandmarks = landmarks; // ✅ 마지막으로 감지된 손 정보를 저장
               }
             }
 
-            // 손바닥 이미지 테스트
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-              const landmarks = results.multiHandLandmarks[0];
-
-              // Bounding box 버전
-              drawPalmOverlay(canvasCtx, canvasElement, landmarks, palmImage);
-
-              // 단일 랜드마크(Wrist)에 이미지 찍어보기
-              // const wrist = landmarks[0];
-              // drawImageAtPoint(canvasCtx, canvasElement, wrist.x, wrist.y, palmImage);
+            if (detectedLandmarks) {
+              drawPalmOverlay(
+                canvasCtx,
+                canvasElement,
+                detectedLandmarks,
+                type === "clean" ? palmImage : feedImage // ✅ clean이면 palmImage, feed면 feedImage 사용
+              );
             }
 
             if (isMirrored) {
@@ -249,24 +254,19 @@ export default function InteractionComponent({
     }
 
     if (count.current === 3) {
-      showToast("청소에 성공했어요! 🐟", "success");
-
-      playClear();
       motionData.current = { startX: null, movedLeft: false, movedRight: false };
-      count.current = 0;
-      handleCleanSuccess();
+      handleSuccess();
+      count.current = 0; // ✅ 카운트 초기화
     }
   }
-
-  function drawPalmOverlay(
+  const drawPalmOverlay = (
     canvasCtx: CanvasRenderingContext2D,
     canvas: HTMLCanvasElement,
     landmarks: { x: number; y: number }[],
     image: HTMLImageElement | null
-  ) {
+  ) => {
     if (!image) return;
 
-    // landmark 중 x,y 최소/최대값 구해서 bounding box 계산
     let minX = 1,
       maxX = 0,
       minY = 1,
@@ -279,43 +279,20 @@ export default function InteractionComponent({
       if (y > maxY) maxY = y;
     }
 
-    // 중앙 좌표 (정규화된 값 0~1)
-    const centerX = (minX + maxX) / 2;
-    const centerY = (minY + maxY) / 2;
-    // 손바닥 너비/높이 (정규화)
-    const boxWidth = maxX - minX;
-    const boxHeight = maxY - minY;
+    const pxCenterX = ((minX + maxX) / 2) * canvas.width;
+    const pxCenterY = ((minY + maxY) / 2) * canvas.height;
+    const PalmSize = Math.max(maxX - minX, maxY - minY) * Math.max(canvas.width, canvas.height);
 
-    // 화면 좌표로 전환(canvas, width, height 곱)
-    const pxCenterX = centerX * canvas.width;
-    const pxCenterY = centerY * canvas.height;
-    // 손바닥 크기를 적당히 사용해 이미지 스케일 결정
-    // 너비, 높이 중 더 큰 쪽 기준으로
-    const PalmSize = Math.max(boxWidth, boxHeight);
-    const pxSize = PalmSize * Math.max(canvas.width, canvas.height);
-
-    // 이미지 비율 유지하며 그리기
     const aspect = image.width / image.height;
-    let drawW, drawH;
-    if (aspect > 1) {
-      // 가로가 더 긴 이미지
-      drawW = pxSize;
-      drawH = pxSize / aspect;
-    } else {
-      // 세로가 더 긴 이미지
-      drawH = pxSize;
-      drawW = pxSize * aspect;
+    let drawW = PalmSize,
+      drawH = PalmSize / aspect;
+    if (aspect < 1) {
+      drawH = PalmSize;
+      drawW = PalmSize * aspect;
     }
 
-    // 미러모드 적용
-    const drawX = pxCenterX - drawW / 2;
-    const drawY = pxCenterY - drawH / 2;
-
-    // console.log("손바닥 오버레이:", { drawX, drawY, drawW, drawH, pxCenterX, pxCenterY });
-
-    // 실제 그리기
-    canvasCtx.drawImage(image, drawX, drawY, drawW, drawH);
-  }
+    canvasCtx.drawImage(image, pxCenterX - drawW / 2, pxCenterY - drawH / 2, drawW, drawH);
+  };
 
   function drawImageAtPoint(
     canvasCtx: CanvasRenderingContext2D,
@@ -329,6 +306,82 @@ export default function InteractionComponent({
     const size = 50;
     canvasCtx.drawImage(image, pxX - size / 2, pxY - size / 2, size, size);
     // canvasCtx.fillRect(pxY - 15, pxX - 15, 30, 30);
+  }
+
+  const detectRockGesture = (landmarks: any) => {
+    console.log("주먹 감지 중");
+    const now = Date.now();
+    if (now - gestureState.current.lastGestureTime < 1000) return;
+
+    const [wrist, indexTip, middleTip, ringTip, pinkyTip] = [
+      landmarks[0],
+      landmarks[8],
+      landmarks[12],
+      landmarks[16],
+      landmarks[20],
+    ];
+
+    const isHandClosed =
+      indexTip.y > landmarks[6].y &&
+      middleTip.y > landmarks[10].y &&
+      ringTip.y > landmarks[14].y &&
+      pinkyTip.y > landmarks[18].y;
+
+    // ✅ 주먹이 풀렸다면 다시 감지 가능하도록 설정
+    if (gestureState.current.isRockDetected) {
+      if (!isHandClosed) {
+        gestureState.current.isRockDetected = false;
+      }
+      return;
+    }
+
+    if (isHandClosed) {
+      gestureState.current.isRockDetected = true;
+      gestureState.current.lastGestureTime = now;
+
+      // ✅ 카운트 증가
+      count.current += 1;
+      playFeed();
+      setMotionCount(count.current);
+
+      console.log(`주먹 감지 횟수: ${count.current}`);
+
+      // ✅ 5번 감지되면 handleSuccess 실행
+      if (count.current === 5) {
+        handleSuccess();
+        count.current = 0; // ✅ 카운트 초기화
+      }
+    }
+  };
+
+  async function handleSuccess() {
+    try {
+      // ✅ 1. API 호출 (청소 or 먹이 주기)
+      await axiosInstance.post(`/aquariums/update`, {
+        aquariumId: aquariumId,
+        type: type, // ✅ "clean" 또는 "feed" 전달
+        data: "",
+      });
+
+      setMotionCount(0);
+
+      // ✅ 2. 경험치 증가 (feed는 10, clean은 20)
+      await handleIncreaseExp(type === "clean" ? 20 : 20);
+
+      // ✅ 3. 성공 토스트 메시지
+      showToast(type === "clean" ? "청소에 성공했어요! 🐟" : "먹이를 줬어요! 🍽", "success");
+
+      // ✅ 4. 성공 효과음 재생
+      playClear();
+
+      // ✅ 5. 어항 상태 업데이트
+      onSuccess();
+
+      // ✅ 6. 모달 닫기
+      onClose();
+    } catch (error) {
+      console.error("❌ 업데이트 실패", error);
+    }
   }
 
   async function handleCleanSuccess() {
@@ -377,13 +430,13 @@ export default function InteractionComponent({
   return (
     <div className="relative w-auto h-auto bg-white bg-opacity-70 border border-black rounded-lg shadow-lg p-4">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-bold">어항 청소하기</h2>
+        <h2 className="text-lg font-bold">{type === "clean" ? "어항 청소하기" : "먹이 주기"}</h2>
         <div className="flex space-x-2">
           <button onClick={() => setIsGuideOpen(true)} className="text-xl font-bold hover:text-blue-500">
-            ❓
+            <HelpCircle className="w-6 h-6 text-fwhite" />
           </button>
           <button onClick={onClose} className="text-xl font-bold hover:text-red-500">
-            ✖
+            <X className="w-6 h-6 text-fwhite" />
           </button>
         </div>
       </div>
@@ -410,9 +463,10 @@ export default function InteractionComponent({
           </div>
 
           <div>
-            <p className="mt-5 text-sm text-center">
-              어항이 깨끗해질 수 있게 박박 닦아주세요! <br />
-              카메라를 향해 손바닥을 펴서 흔들어주세요!
+            <p className="mt-5 text-sm text-center whitespace-pre-line">
+              {type === "clean"
+                ? "어항이 깨끗해질 수 있게 좌우로 닦아주세요! \n손바닥을 펴서 왼쪽부터 오른쪽 끝까지!"
+                : "물고기에게 먹이를 주세요! \n 카메라를 향해 주먹을 다섯 번 쥐었다 펴보세요!"}
             </p>
           </div>
         </div>
@@ -426,18 +480,8 @@ export default function InteractionComponent({
             onClick={handleCleanSuccess}
             className="px-4 py-2 bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-700"
           >
-            청소 완료하기
+            {type === "clean" ? "청소 완료하기" : "먹이 주기 완료하기"}
           </button>
-          <input
-            type="text"
-            placeholder="'청소 완료' 입력 후 Enter"
-            className="border p-2 rounded-lg text-center"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && e.currentTarget.value === "청소 완료") {
-                handleCleanSuccess();
-              }
-            }}
-          />
         </div>
       )}
 
@@ -446,20 +490,20 @@ export default function InteractionComponent({
           <div className="bg-white p-4 rounded-lg shadow-lg text-center">
             <h3 className="text-lg font-bold">청소 방법 안내</h3>
             <div className="border mt-2 p-2 border-black rounded-sm">
-              <p className="mt-2">
-                손을 왼쪽 끝부터 오른쪽 끝까지 <br />
-                천천히 움직여 보세요!
-                <br /> 우측 상단 카운트가 올라가요!
+              <p className="mt-2 whitespace-pre-line">
+                {type === "clean"
+                  ? "손을 왼쪽 끝부터 오른쪽 끝까지 \n천천히 움직여 보세요! \n우측 상단 카운트가 올라가요!"
+                  : "주먹을 쥐었다 펴보세요! \n다섯 번 감지되면 \n먹이 주기가 완료됩니다!"}
               </p>
             </div>
             <p className="mt-2">
               카메라 사용이 불가능한 경우,
               <br />
-              버튼으로 청소해 주세요!
+              버튼으로 {type === "clean" ? "청소해주세요!" : "먹이를 주세요!"}
             </p>
             <button
               onClick={() => {
-                showToast("청소에 성공했어요! 🐟", "success");
+                showToast(type === "clean" ? "청소에 성공했어요! 🐟" : "먹이를 줬어요! 🍽", "success");
                 playClear();
                 count.current = 0;
                 handleCleanSuccess();
@@ -467,7 +511,7 @@ export default function InteractionComponent({
               }}
               className="mt-4 px-4 py-2 bg-green-500 mr-2 text-white font-bold rounded-lg hover:bg-red-700"
             >
-              청소하기
+              {type === "clean" ? "청소하기" : "먹이 주기"}
             </button>
             <button
               onClick={() => setIsGuideOpen(false)}
