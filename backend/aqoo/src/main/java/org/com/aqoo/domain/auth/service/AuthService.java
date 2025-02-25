@@ -167,7 +167,7 @@ public class AuthService {
             throw new IllegalArgumentException("Invalid Refresh Token");
         }
         String newAcessToken = jwtUtil.generateToken(userId, "ACCESS");
-        System.out.println("토큰 생성 및 발급" + newAcessToken;
+        System.out.println("토큰 생성 및 발급" + newAcessToken);
         return newAcessToken;
     }
 
