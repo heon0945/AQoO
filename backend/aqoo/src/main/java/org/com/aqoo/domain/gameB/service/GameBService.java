@@ -157,7 +157,16 @@ public class GameBService {
         Optional<Map.Entry<String, Integer>> winnerEntry = roomScore.entrySet().stream()
                 .max(Comparator.comparingInt(Map.Entry::getValue));
 
-        String winner = winnerEntry.map(Map.Entry::getKey).orElse(null);
+        // 기존 winner는 userId이므로, players 리스트에서 해당 userId에 해당하는 nickname을 찾아 winnerNickname에 담음.
+        String winnerUserId = winnerEntry.map(Map.Entry::getKey).orElse(null);
+        String winnerNickname = null;
+        if (winnerUserId != null) {
+            winnerNickname = players.stream()
+                    .filter(p -> p.getUserName().equals(winnerUserId))
+                    .findFirst()
+                    .map(GameBPlayerDto::getNickname)
+                    .orElse(winnerUserId);
+        }
 
         // 최종 점수 순서 구성: 각 항목은 "닉네임 - 점수점" 형태의 문자열
         List<String> scoreOrder = players.stream()
@@ -165,9 +174,8 @@ public class GameBService {
                 .map(p -> p.getNickname() + " - " + p.getScore() + "점")
                 .collect(Collectors.toList());
 
-        RoomResponse response = new RoomResponse(roomId, players, "GAME_B_ENDED", winner, scoreOrder);
+        RoomResponse response = new RoomResponse(roomId, players, "GAME_B_ENDED", winnerNickname, scoreOrder);
         messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
-        log.info("Broadcasted GAME_B_ENDED for roomId: {} with winner: {}", roomId, winner);
+        log.info("Broadcasted GAME_B_ENDED for roomId: {} with winner: {}", roomId, winnerNickname);
     }
-
 }
