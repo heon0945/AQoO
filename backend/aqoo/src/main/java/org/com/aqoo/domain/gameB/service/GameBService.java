@@ -159,14 +159,15 @@ public class GameBService {
 
         String winner = winnerEntry.map(Map.Entry::getKey).orElse(null);
 
-        // (필요하다면) 최종 점수 순서로 정렬
-        List<String> scoreOrder = roomScore.entrySet().stream()
-                .sorted((e1, e2) -> Integer.compare(e2.getValue(), e1.getValue()))
-                .map(Map.Entry::getKey)
+        // 최종 점수 순서 구성: 각 항목은 "닉네임 - 점수점" 형태의 문자열
+        List<String> scoreOrder = players.stream()
+                .sorted((p1, p2) -> Integer.compare(p2.getScore(), p1.getScore()))
+                .map(p -> p.getNickname() + " - " + p.getScore() + "점")
                 .collect(Collectors.toList());
 
         RoomResponse response = new RoomResponse(roomId, players, "GAME_B_ENDED", winner, scoreOrder);
         messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
         log.info("Broadcasted GAME_B_ENDED for roomId: {} with winner: {}", roomId, winner);
     }
+
 }
