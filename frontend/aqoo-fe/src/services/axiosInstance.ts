@@ -56,45 +56,43 @@ axiosInstance.interceptors.response.use(
     // }
 
     // JWT 검증 오류 처리
-    if (error.response?.data) {
-      // 🔹 에러 메시지의 구조를 명확히 타입 단언
-      const responseData = error.response.data as { error?: string };
-      if (responseData.error && responseData.error.includes("JWT 검증 오류")) {
-        //console.error("JWT 검증 오류 발생 - 강제 로그아웃");
+    // if (error.response?.data) {
+    //   // 🔹 에러 메시지의 구조를 명확히 타입 단언
+    //   const responseData = error.response.data as { error?: string };
+    //   if (responseData.error && responseData.error.includes("JWT 검증 오류")) {
+    //     //console.error("JWT 검증 오류 발생 - 강제 로그아웃");
+    //     forceLogout();
+    //     return;
+    //   }
+    // }
+
+    // 401 에러 처리 (토큰 갱신)
+    if (error.response?.status === 401) {
+      if (originalRequest._retry) {
+        return;
+      }
+      originalRequest._retry = true;
+    
+      try {
+        console.log("401 발생 - 토큰 갱신 요청");
+        // 쿠키에 저장된 refreshToken이 자동으로 전송되도록 withCredentials 옵션 추가
+        //console.log("에러 발생 요청" , originalRequest );
+        const { data } = await axios.post(
+          `${BASE_URL}${REFRESH_URL}`,
+          {},
+          { withCredentials: true }
+        );
+        const newAccessToken = data.accessToken;
+    
+        localStorage.setItem("accessToken", newAccessToken); // 새로운 토큰 저장
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        return axiosInstance(originalRequest);
+      } catch (refreshError) {
+        //console.error("토큰 갱신 실패:", refreshError);
         forceLogout();
         return;
       }
     }
-
-    // 401 에러 처리 (토큰 갱신)
-if (error.response?.status === 401) {
-  if (originalRequest._retry) {
-    return;
-  }
-  originalRequest._retry = true;
-
-  try {
-    console.log("401 발생 - 토큰 갱신 요청");
-    // 쿠키에 저장된 refreshToken이 자동으로 전송되도록 withCredentials 옵션 추가
-    //console.log("에러 발생 요청" , originalRequest );
-    const { data } = await axios.post(
-      `${BASE_URL}${REFRESH_URL}`,
-      {},
-      { withCredentials: true }
-    );
-    const newAccessToken = data.accessToken;
-
-    localStorage.setItem("accessToken", newAccessToken); // 새로운 토큰 저장
-    originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-    return axiosInstance(originalRequest);
-  } catch (refreshError) {
-    //console.error("토큰 갱신 실패:", refreshError);
-    forceLogout();
-    return;
-  }
-}
-
-
     return ;
   }
 );

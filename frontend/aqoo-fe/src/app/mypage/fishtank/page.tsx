@@ -60,6 +60,7 @@ export default function MyFishTank() {
         flex flex-col
         min-h-screen
         bg-cover bg-center bg-no-repeat
+        overflow-hidden
       "
     >
       {/* 상단 내비게이션 버튼 */}
