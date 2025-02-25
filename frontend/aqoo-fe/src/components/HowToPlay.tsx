@@ -62,8 +62,8 @@ const MainPages = [
   },
   {
     title: "물고기 뽑기 확률 정보",
-    description:
-      "\n\n🎯 COMMON: 70%\n\n✨ EPIC: 20%\n\n🌟 LEGENDARY: 10%",
+    description:"\n\n🎯 COMMON 물고기는 70%, \n✨멋진 RARE 물고기는 20%, \n🌟전설의 EPIC 물고기는 10% 확률로 나타나요!",
+    image: "/how_to_play/메인페이지_물고기확률.png"
   },
 ];
 
