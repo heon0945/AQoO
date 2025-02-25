@@ -60,6 +60,11 @@ const MainPages = [
       "Clean을 클릭하면 어항을 깨끗하게 닦을 수 있어요. \n 카메라를 향해 손바닥을 펼치고, 좌우로 3번 힘껏! 왔다갔다하면 돼요! \n Tip. 카메라에 손을 가까이대고, 화면의 끝에서 끝까지 갈 수록 더 잘 된답니다🖐",
     image: "/how_to_play/메인페이지_메뉴_청소.png",
   },
+  {
+    title: "물고기 뽑기 확률 정보",
+    description:
+      "\n\n🎯 COMMON: 70%\n\n✨ EPIC: 20%\n\n🌟 LEGENDARY: 10%",
+  },
 ];
 
 const MyPages = [
