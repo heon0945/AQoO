@@ -88,8 +88,8 @@ axiosInstance.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return axiosInstance(originalRequest);
       } catch (refreshError) {
-        //console.error("토큰 갱신 실패:", refreshError);
-        forceLogout();
+        console.error("토큰 갱신 실패:", refreshError);
+        // forceLogout();
         return;
       }
     }
