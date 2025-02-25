@@ -305,7 +305,7 @@ export default function IntegratedRoom({
   const getGameDestination = (game: string) => {
     if (game === "Game") return "/app/game.start";
     if (game === "gameA") return "/app/gameA.start";
-    if (game === "gameB") return "/app/game.start";
+    if (game === "gameB") return "/app/gameB.start";
     return "/app/game.start";
   };
 
@@ -636,8 +636,6 @@ export default function IntegratedRoom({
                 <GameB
                   roomId={roomId}
                   userName={userName}
-                  initialPlayers={gamePlayers}
-                  onResultConfirmed={handleResultConfirmed}
                   user={currentUser}
                 />
               ) : null}
