@@ -2,7 +2,6 @@
 
 import { HAND_CONNECTIONS, Hands } from "@mediapipe/hands"; // 손 인식을 위한 라이브러리
 import { HelpCircle, X } from "lucide-react";
-import axios, { AxiosResponse } from "axios";
 import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils"; // 손 랜드마크 그리기 라이브러리
 import { useEffect, useRef, useState } from "react";
 
@@ -354,7 +353,7 @@ export default function InteractionComponent({
     }
   };
 
-  async function handleSuccess() {
+  async function handleSuccess(isButtonMode?: boolean) {
     try {
       // ✅ 1. API 호출 (청소 or 먹이 주기)
       await axiosInstance.post(`/aquariums/update`, {
@@ -365,8 +364,9 @@ export default function InteractionComponent({
 
       setMotionCount(0);
 
-      // ✅ 2. 경험치 증가 (feed는 10, clean은 20)
-      await handleIncreaseExp(type === "clean" ? 20 : 20);
+      // ✅ 2. 경험치 증가량 조절 (버튼을 눌렀을 때는 10, 카메라 사용 시 20)
+      const expGain = isButtonMode ? 10 : 20;
+      await handleIncreaseExp(expGain);
 
       // ✅ 3. 성공 토스트 메시지
       showToast(type === "clean" ? "청소에 성공했어요! 🐟" : "먹이를 줬어요! 🍽", "success");
@@ -477,7 +477,9 @@ export default function InteractionComponent({
             대신 아래 버튼을 눌러 청소하세요!
           </p>
           <button
-            onClick={handleCleanSuccess}
+            onClick={() => {
+              handleSuccess(true);
+            }}
             className="px-4 py-2 bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-700"
           >
             {type === "clean" ? "청소 완료하기" : "먹이 주기 완료하기"}
@@ -503,10 +505,9 @@ export default function InteractionComponent({
             </p>
             <button
               onClick={() => {
-                showToast(type === "clean" ? "청소에 성공했어요! 🐟" : "먹이를 줬어요! 🍽", "success");
                 playClear();
                 count.current = 0;
-                handleCleanSuccess();
+                handleSuccess(true);
                 setIsGuideOpen(false);
               }}
               className="mt-4 px-4 py-2 bg-green-500 mr-2 text-white font-bold rounded-lg hover:bg-red-700"
