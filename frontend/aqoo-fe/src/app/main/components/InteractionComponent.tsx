@@ -346,8 +346,8 @@ export default function InteractionComponent({
 
       console.log(`주먹 감지 횟수: ${count.current}`);
 
-      // ✅ 5번 감지되면 handleSuccess 실행
-      if (count.current === 5) {
+      // ✅ 3번 감지되면 handleSuccess 실행
+      if (count.current === 3) {
         handleSuccess();
         count.current = 0; // ✅ 카운트 초기화
       }
@@ -466,7 +466,7 @@ export default function InteractionComponent({
             <p className="mt-5 text-sm text-center whitespace-pre-line">
               {type === "clean"
                 ? "어항이 깨끗해질 수 있게 좌우로 닦아주세요! \n손바닥을 펴서 왼쪽부터 오른쪽 끝까지!"
-                : "물고기에게 먹이를 주세요! \n 카메라를 향해 주먹을 다섯 번 쥐었다 펴보세요!"}
+                : "물고기에게 먹이를 주세요! \n 카메라를 향해 주먹을 세 번 쥐었다 펴보세요!"}
             </p>
           </div>
         </div>
@@ -493,7 +493,7 @@ export default function InteractionComponent({
               <p className="mt-2 whitespace-pre-line">
                 {type === "clean"
                   ? "손을 왼쪽 끝부터 오른쪽 끝까지 \n천천히 움직여 보세요! \n우측 상단 카운트가 올라가요!"
-                  : "주먹을 쥐었다 펴보세요! \n다섯 번 감지되면 \n먹이 주기가 완료됩니다!"}
+                  : "주먹을 쥐었다 펴보세요! \n세 번 감지되면 \n먹이 주기가 완료됩니다!"}
               </p>
             </div>
             <p className="mt-2">
