@@ -36,7 +36,7 @@ public class GameBService {
         GameSession session = sessions.get(dto.getRoomId());
         if (session != null) {
             session.updatePlayerDirection(dto.getUserName(), dto.getDirection());
-            // 이동 시 상태 업데이트가 필요한 경우 아래 주석 해제
+            // 이동 시 별도의 상태 업데이트가 필요하면 여기를 활용할 수 있음
             // broadcastGameState(dto.getRoomId());
         }
     }
@@ -49,7 +49,7 @@ public class GameBService {
             } else if ("ROCK".equals(dto.getFoodType())) {
                 session.applyStun(dto.getUserName(), 1); // 1초간 스턴
             }
-            // 플레이어 점수 또는 상태가 변화한 경우 업데이트 브로드캐스트
+            // 플레이어 점수나 상태가 변화한 경우 업데이트 브로드캐스트
             broadcastGameState(dto.getRoomId());
         }
     }
@@ -69,6 +69,8 @@ public class GameBService {
                 return dto;
             }).collect(Collectors.toList());
             update.setPlayerStates(playerStates);
+            // 명시적으로 게임 상태 업데이트 메시지임을 표시
+            update.setMessage("GAME_STATE_UPDATE");
             messagingTemplate.convertAndSend("/topic/room/" + roomId, update);
         }
     }
@@ -90,6 +92,8 @@ public class GameBService {
             FinalResultDto result = new FinalResultDto();
             result.setRoomId(roomId);
             result.setRanking(ranking);
+            // 명시적으로 게임 종료 메시지임을 표시
+            result.setMessage("GAME_ENDED");
             messagingTemplate.convertAndSend("/topic/room/" + roomId, result);
         }
     }
