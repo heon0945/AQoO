@@ -30,43 +30,48 @@ function MyCollectionContent({ allFishList, userFishList, customFishList }: MyCo
     <div className="relative flex flex-col mt-2 w-full max-w-[1300px] justify-start '">
       {/* 탭 영역 */}
       <div className="flex items-end mb-0 mt-1 gap-1">
-        <button
-          onClick={() =>
-            handleTabChange("basic")
-          }
-          className={`
-            relative left-[10px] sm:left-[30px] 
-            cursor-pointer inline-flex items-center justify-center
-            w-1/3 sm:max-w-[180px] md:w-[200px]
-            h-7 sm:h-12 px-5 py-2
-            rounded-t-xl border-t border-r border-l border-[#1c5e8d]
-            bg-[#f0f0f0]
-            [box-shadow:-1px_0px_0px_2px_rgba(0,0,0,0.25)_inset]
-            text-[#070707] text-base sm:text-xl md:text-2xl
-            font-normal leading-normal
-            ${selectedTab === "basic" ? "bg-[#31A9FF] text-2xl text-black border-t-[3px] border-black" : ""}
-          `}
-        >
-          도감관리
-        </button>
-        <button
-          onClick={() => handleTabChange("custom")}
-          className={`
-            relative left-[10px] sm:left-[30px] 
-            cursor-pointer inline-flex items-center justify-center
-            w-1/3 sm:w-[180px] md:w-[200px]
-            h-7 sm:h-12 px-5 py-2
-            rounded-t-xl border-t border-r border-l border-[#1c5e8d]
-            bg-[#f0f0f0]
-            [box-shadow:-1px_0px_0px_2px_rgba(0,0,0,0.25)_inset]
-            text-[#070707] text-base sm:text-xl md:text-2xl
-            font-normal leading-normal
-            ${selectedTab === "custom" ? "bg-[#31A9FF] text-2xl text-black border-t-[3px] border-black" : ""}
-          `}
-        >
-          커스텀
-        </button>
-      </div>
+      <div className="flex space-x-2 ml-3"> {/* 버튼 사이에 간격을 두기 위해 space-x-2 사용 */}
+  <button
+    onClick={() => handleTabChange("basic")}
+    className={`
+      cursor-pointer inline-flex items-center justify-center
+      w-[100px] sm:w-[180px]  /* 버튼 너비를 고정 크기로 설정 */
+      h-7 sm:h-12 px-5 py-2
+      rounded-t-xl border-t border-r border-l border-[#1c5e8d]
+      bg-[#f0f0f0]
+      [box-shadow:-1px_0px_0px_2px_rgba(0,0,0,0.25)_inset]
+      text-[#070707] text-base sm:text-xl md:text-2xl
+      font-normal leading-normal
+      transition-all duration-200
+      ${selectedTab === "basic" ? "bg-[#d6d6d6] text-2xl text-black border-t-[3px] border-black" : ""}
+      hover:bg-[#e0e0e0] hover:text-black hover:border-t-[3px] hover:border-[#1c5e8d]
+    `}
+  >
+    도감
+  </button>
+  <button
+    onClick={() => handleTabChange("custom")}
+    className={`
+      cursor-pointer inline-flex items-center justify-center
+      w-[100px] sm:w-[180px]  /* 버튼 너비를 고정 크기로 설정 */
+      h-7 sm:h-12 px-5 py-2
+      rounded-t-xl border-t border-r border-l border-[#1c5e8d]
+      bg-[#f0f0f0]
+      [box-shadow:-1px_0px_0px_2px_rgba(0,0,0,0.25)_inset]
+      text-[#070707] text-base sm:text-xl md:text-2xl
+      font-normal leading-normal
+      transition-all duration-200
+      ${selectedTab === "custom" ? "bg-[#d6d6d6] text-2xl text-black border-t-[3px] border-black" : ""}
+      hover:bg-[#e0e0e0] hover:text-black hover:border-t-[3px] hover:border-[#1c5e8d]
+    `}
+  >
+    커스텀
+  </button>
+</div>
+
+
+</div>
+
 
       {/* 어항관리 버튼 (오른쪽 상단) */}
       <Link onClick={() => {
@@ -74,18 +79,20 @@ function MyCollectionContent({ allFishList, userFishList, customFishList }: MyCo
       }}
         href="mypage/fishtank" className="absolute right-0 top-0">
         <button
-          className="
-            min-w-[30px] sm:min-w-[80px]
-            h-7 sm:h-10 px-2 
-            rounded-lg sm:rounded-xl border border-[#040303] bg-white 
-            [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset]
-            flex items-center justify-center
-            text-[#070707] text-center font-[400] 
-            text-base sm:text-xl md:text-2xl
-          "
-        >
-          어항관리
-        </button>
+  className="
+    min-w-[30px] sm:min-w-[80px]
+    h-7 sm:h-10 px-2 
+    rounded-lg sm:rounded-xl border border-[#040303] bg-white 
+    [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset]
+    flex items-center justify-center
+    text-[#070707] text-center font-[400] 
+    text-base sm:text-xl md:text-2xl
+    transition-all duration-200
+    hover:bg-[#e0e0e0] hover:border-[#1a4d74]
+  "
+>
+  어항관리
+</button>
       </Link>
 
       {/* 탭 컨텐츠 영역 */}

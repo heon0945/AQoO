@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import { title } from "process";
 
 import { useState } from "react";
 
@@ -59,6 +60,11 @@ const MainPages = [
       "Clean을 클릭하면 어항을 깨끗하게 닦을 수 있어요. \n 카메라를 향해 손바닥을 펼치고, 좌우로 3번 힘껏! 왔다갔다하면 돼요! \n Tip. 카메라에 손을 가까이대고, 화면의 끝에서 끝까지 갈 수록 더 잘 된답니다🖐",
     image: "/how_to_play/메인페이지_메뉴_청소.png",
   },
+  {
+    title: "물고기 뽑기 확률 정보",
+    description:"\n\n🎯 COMMON 물고기는 70%, \n✨멋진 RARE 물고기는 20%, \n🌟전설의 EPIC 물고기는 10% 확률로 나타나요!",
+    image: "/how_to_play/메인페이지_물고기확률.png"
+  },
 ];
 
 const MyPages = [
@@ -107,6 +113,37 @@ const FishTanks = [
   },
 ];
 
+const Game = [
+  {
+    title: "방 만들기",
+    description: "친구를 초대해 함께 게임을 즐길 수 있어요.\n친구 초대는 최대 5명까지 가능하며, 추가와 제거 버튼으로 손쉽게 참가자를 관리할 수 있어요.",
+    image: "/how_to_play/게임_방만들기.png",
+  },
+];
+
+const GameRoom = [
+  {
+    title: "방장",
+    description: "여기서도 친구 초대가 가능해요!\n채팅창 아래에서 원하는 게임을 골라보세요.\n모두가 레디를 누르면 'Game Start' 버튼이 짠! 하고 나타나요.",
+    image: "/how_to_play/게임_친구초대.png",
+  },
+  {
+    title: "채팅방",
+    description: "게임을 시작하려면 레디 버튼을 누르거나 F5를 눌러주세요.\n채팅을 입력하면 내 대표 물고기 위에 말풍선이 나타나요.",
+    image: "/how_to_play/게임_채팅방.png",
+  },
+  {
+    title: "스페이스바 게임",
+    description: "스페이스바를 마구 눌러서 빠르게 골 지점을 통과해 보세요!",
+    image: "/how_to_play/게임_스페이스바.png",
+  },
+  {
+    title: "방향키 게임",
+    description: "화면에 나오는 방향과 같은 방향키를 빠르게 눌러주세요!",
+    image: "/how_to_play/게임_방향키.png",
+  },  
+];
+
 export default function HowToPlayModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -123,6 +160,10 @@ export default function HowToPlayModal({ isOpen, onClose }: { isOpen: boolean; o
     slides = MyPages;
   } else if (pathname === "/mypage/fishtank") {
     slides = FishTanks;
+  } else if (pathname === "/gameroom") {
+    slides = Game;
+  } else if (pathname.startsWith("/room/")) {
+    slides = GameRoom;
   } else {
     slides = [
       {
@@ -159,7 +200,7 @@ export default function HowToPlayModal({ isOpen, onClose }: { isOpen: boolean; o
       >
         {/* 닫기 버튼 */}
         <button
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 pointer-events-auto"
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 pointer-events-auto z-50"
           onClick={onClose}
         >
           <X size={24} />

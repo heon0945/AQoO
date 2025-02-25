@@ -173,21 +173,24 @@ function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal
 
       {/* 우측: 회원정보수정 버튼 */}
       <div className="self-end sm:self-start mb-2 sm:m-2 mr-5">
-        <Link
-          href="/mypage/edit"
-          onClick={playModal}
-          className="
-            min-w-[30px] sm:min-w-[80px] h-7 sm:h-10 px-2
-            rounded-lg sm:rounded-xl border border-[#040303] bg-white 
-            [box-shadow:-1px_-1px_0px_1px_rgba(0,0,0,0.5)_inset]
-            sm:[box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset]
-            flex items-center justify-center
-            text-[#070707] text-center font-[400] text-base sm:text-2xl sm:text-xl md:text-2xl
-          "
-        >
-          회원정보수정
-        </Link>
-      </div>
+  <Link
+    href="/mypage/edit"
+    onClick={playModal}
+    className="
+      min-w-[30px] sm:min-w-[80px] h-7 sm:h-10 px-2
+      rounded-lg sm:rounded-xl border border-[#040303] bg-white 
+      [box-shadow:-1px_-1px_0px_1px_rgba(0,0,0,0.5)_inset]
+      sm:[box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset]
+      flex items-center justify-center
+      text-[#070707] text-center font-[400] text-base sm:text-2xl sm:text-xl md:text-2xl
+      transition-all duration-200
+      hover:bg-[#e0e0e0] hover:border-[#1a4d74]
+    "
+  >
+    회원정보수정
+  </Link>
+</div>
+
     </div>
   );
 }
