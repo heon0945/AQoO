@@ -166,8 +166,9 @@ public class AuthService {
         if (!refreshToken.equals(user.getRefreshToken())) {
             throw new IllegalArgumentException("Invalid Refresh Token");
         }
-
-        return jwtUtil.generateToken(userId, "ACCESS");
+        String newAcessToken = jwtUtil.generateToken(userId, "ACCESS");
+        System.out.println("토큰 생성 및 발급" + newAcessToken;
+        return newAcessToken;
     }
 
     // 소셜 로그인 서비스
