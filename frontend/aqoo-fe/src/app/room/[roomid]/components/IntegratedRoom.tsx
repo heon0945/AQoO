@@ -547,7 +547,7 @@ export default function IntegratedRoom({
                       >
                         <option value='Game'>스페이스바 게임</option>
                         <option value='gameA'>방향키 게임</option>
-                        <option value='gameB'>Comming soon..</option>
+                        <option value='gameB'>먹이 먹기 게임</option>
                       </select>
 
                       <button
