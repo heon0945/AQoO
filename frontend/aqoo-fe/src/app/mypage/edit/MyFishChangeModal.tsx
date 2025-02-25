@@ -79,11 +79,16 @@ function ModalTitlePortal({ title, containerRect }: ModalTitlePortalProps) {
   );
 }
 
-export default function MyFishChangeModal({ onClose, userData }: MyFishChangeModalProps) {
+export default function MyFishChangeModal({
+  onClose,
+  userData,
+}: MyFishChangeModalProps) {
   const { showToast } = useToast();
 
   const [selectedFishId, setSelectedFishId] = useState<number | null>(null);
-  const [selectedFishImage, setSelectedFishImage] = useState<string | null>(null);
+  const [selectedFishImage, setSelectedFishImage] = useState<string | null>(
+    null
+  );
   const [fishList, setFishList] = useState<FishData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -216,7 +221,10 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
 
   return (
     <>
-      <ModalTitlePortal title="🐡대표 물고기 변경🐠" containerRect={modalRect} />
+      <ModalTitlePortal
+        title="🐡대표 물고기 변경🐠"
+        containerRect={modalRect}
+      />
 
       <Modal
         onClose={onClose}
@@ -229,7 +237,10 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
         relative"
       >
         {/* 모달 내부의 콘텐츠 래퍼 ref를 부여 */}
-        <div ref={modalContentRef} className="relative flex flex-col w-full h-full pb-3">
+        <div
+          ref={modalContentRef}
+          className="relative flex flex-col w-full h-full pb-3"
+        >
           {isLoading && <p>로딩 중...</p>}
           {!isLoading && (
             <div
@@ -269,7 +280,7 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
             </div>
           )}
           <button
-            className="absolute right-0 bottom-0 sm:right-3 sm:bottom-3 px-2 py-1 sm:px-4 sm:py-2 bg-blue-600 text-white rounded text-sm sm:text-lg"
+            className="absolute right-0 bottom-0 sm:right-3 sm:bottom-3 px-2 py-1 sm:px-4 sm:py-2 bg-blue-600 text-white rounded text-sm sm:text-lg hover:bg-blue-700 transition-colors duration-300"
             onClick={handleConfirm}
             disabled={isLoading}
           >

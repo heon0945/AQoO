@@ -24,7 +24,7 @@ export default function ModalButton({
     white: "bg-white text-gray-800 border border-gray-300 hover:bg-gray-100",
     green: "bg-[#03C75A] text-white hover:bg-green-700",
     red: "bg-[#F00] text-white hover:bg-red-800",
-    none: "",
+    none: "hover:bg-gray-200",
   };
 
   return (
