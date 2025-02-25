@@ -242,14 +242,13 @@ const GameB: FC<GameBProps> = ({
   // -----------------------------
   // (J) 키 입력(좌우 이동) + 충돌 감지
   // -----------------------------
-  // 가속도 효과를 위한 ref 및 상수 선언
+  // (J) 키 입력(좌우 이동) + 가속도 효과를 이용한 지속 이동
   const moveDirectionRef = useRef<'LEFT' | 'RIGHT' | null>(null);
   const velocityRef = useRef(0);
-  const acceleration = 0.1; // 이전 0.2에서 증가
-  const deceleration = 0.1; // 이전 0.2에서 약간 증가
-  const maxVelocity = 2.5; // 최대 속도는 그대로 유지
+  const acceleration = 0.1; // 가속도 (필요에 따라 조절)
+  const deceleration = 0.1; // 감속도 (필요에 따라 조절)
+  const maxVelocity = 2.5; // 최대 속도
 
-  // keydown 이벤트 핸들러: 방향키 누르면 moveDirectionRef 설정
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (!gameStarted || isStunned || gameEnded) return;
@@ -262,45 +261,51 @@ const GameB: FC<GameBProps> = ({
     [gameStarted, isStunned, gameEnded]
   );
 
-  // keyup 이벤트 핸들러: 방향키에서 손을 떼면 moveDirectionRef 해제
   const handleKeyUp = useCallback((e: KeyboardEvent) => {
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       moveDirectionRef.current = null;
     }
   }, []);
 
-  // 지속적인 이동: requestAnimationFrame을 이용하여 매 프레임마다 속도와 위치 업데이트
   useEffect(() => {
     let animationId: number;
     const updatePosition = () => {
       if (!gameStarted || gameEnded) return;
 
-      const direction = moveDirectionRef.current;
-      if (direction === 'LEFT') {
-        // 왼쪽이면 음수 방향으로 가속
-        velocityRef.current = Math.max(
-          velocityRef.current - acceleration,
-          -maxVelocity
-        );
-      } else if (direction === 'RIGHT') {
-        // 오른쪽이면 양수 방향으로 가속
-        velocityRef.current = Math.min(
-          velocityRef.current + acceleration,
-          maxVelocity
-        );
+      // 스턴 상태이면 속도를 0으로 설정하여 움직임을 멈춤
+      if (isStunned) {
+        velocityRef.current = 0;
       } else {
-        // 방향키가 눌리지 않은 경우 감속
-        if (velocityRef.current > 0) {
-          velocityRef.current = Math.max(velocityRef.current - deceleration, 0);
-        } else if (velocityRef.current < 0) {
-          velocityRef.current = Math.min(velocityRef.current + deceleration, 0);
+        const direction = moveDirectionRef.current;
+        if (direction === 'LEFT') {
+          velocityRef.current = Math.max(
+            velocityRef.current - acceleration,
+            -maxVelocity
+          );
+        } else if (direction === 'RIGHT') {
+          velocityRef.current = Math.min(
+            velocityRef.current + acceleration,
+            maxVelocity
+          );
+        } else {
+          // 방향키가 눌리지 않은 경우 감속
+          if (velocityRef.current > 0) {
+            velocityRef.current = Math.max(
+              velocityRef.current - deceleration,
+              0
+            );
+          } else if (velocityRef.current < 0) {
+            velocityRef.current = Math.min(
+              velocityRef.current + deceleration,
+              0
+            );
+          }
         }
       }
 
       setFishX((prev) => {
         const containerWidth = containerRef.current?.clientWidth || 0;
         let newX = prev + velocityRef.current;
-        // 경계 체크
         if (newX < 0) {
           newX = 0;
           velocityRef.current = 0;
@@ -315,7 +320,7 @@ const GameB: FC<GameBProps> = ({
     };
     animationId = requestAnimationFrame(updatePosition);
     return () => cancelAnimationFrame(animationId);
-  }, [gameStarted, gameEnded]);
+  }, [gameStarted, gameEnded, isStunned]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);

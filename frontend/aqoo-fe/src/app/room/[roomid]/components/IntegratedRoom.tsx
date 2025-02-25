@@ -171,6 +171,9 @@ export default function IntegratedRoom({
             } else if (data.message === 'GAME_STARTED') {
               setGamePlayers(data.players ?? []);
               setScreen('game');
+            } else if (data.message === 'GAME_B_STARTED') {
+              setGamePlayers(data.players ?? []);
+              setScreen('game');
             } else if (data.message === 'USER_LIST') {
               const oldLength = users.length;
               setUsers(data.users ?? []);
@@ -191,11 +194,11 @@ export default function IntegratedRoom({
                         body: JSON.stringify({
                           roomId,
                           sender: userName,
-                          gameType: prev, // 여기서는 prev가 곧 "현재 state 값"임
+                          gameType: prev,
                         }),
                       });
                     }
-                    return prev; // 상태 변경은 없고, 다시 방송만 하고 끝
+                    return prev;
                   });
                 }
               }
@@ -208,7 +211,6 @@ export default function IntegratedRoom({
                 );
               }
             } else if (data.message === 'GAME_DROPDOWN_UPDATED') {
-              // 드롭다운 동기화 메시지 수신 시 상태 업데이트
               if (data.gameType) {
                 setSelectedGame(data.gameType);
               }
