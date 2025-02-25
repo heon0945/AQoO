@@ -94,8 +94,10 @@ public class AuthController {
             String message = "엑세스 토큰 갱신 성공";
             return ResponseEntity.ok(new RefreshResponse(newAccessToken, message));
         } catch (IllegalArgumentException e) {
+            System.out.println("no token exception 발생");
             return ResponseEntity.status(401).body(new RefreshResponse("","Invalid or expired refresh token"));
         } catch (Exception e) {
+            System.out.println("Runtime exception 발생");
             throw new RuntimeException(e);
         }
 
