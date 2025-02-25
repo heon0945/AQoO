@@ -1,100 +1,172 @@
 package org.com.aqoo.domain.gameB.service;
 
-import lombok.RequiredArgsConstructor;
-import org.com.aqoo.domain.gameB.dto.*;
-import org.com.aqoo.domain.gameB.entity.GameSession;
+import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.com.aqoo.domain.auth.dto.UserInfoResponse;
+import org.com.aqoo.domain.auth.service.UserService;
+import org.com.aqoo.domain.chat.model.ChatRoom;
+import org.com.aqoo.domain.chat.service.ChatRoomService;
+import org.com.aqoo.domain.gameB.dto.EatMessage;
+import org.com.aqoo.domain.gameB.dto.GameBPlayerDto;
+import org.com.aqoo.domain.gameB.dto.RoomResponse;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
+@Slf4j
+@AllArgsConstructor
 public class GameBService {
 
     private final SimpMessagingTemplate messagingTemplate;
-    private final Map<String, GameSession> sessions = new ConcurrentHashMap<>();
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
+    private final ChatRoomService chatRoomService;
+    private final UserService userService;
 
-    public void startGame(StartGameDto dto) {
-        String roomId = dto.getRoomId();
-        GameSession session = new GameSession(roomId, dto.getUserName());
-        session.start();
-        sessions.put(roomId, session);
+    /**
+     * 각 방의 점수를 관리하는 Map: roomId -> (userName -> score)
+     */
+    private final Map<String, Map<String, Integer>> scoreMap = new ConcurrentHashMap<>();
 
-        // 100초 후에 게임을 종료하도록 스케줄링
-        scheduler.schedule(() -> endGame(roomId), 100, TimeUnit.SECONDS);
-    }
+    /**
+     * 각 방의 스턴 상태 관리: roomId -> (userName -> stunEndTime)
+     */
+    private final Map<String, Map<String, Long>> stunMap = new ConcurrentHashMap<>();
 
-    public void processPlayerMove(PlayerMoveDto dto) {
-        GameSession session = sessions.get(dto.getRoomId());
-        if (session != null) {
-            session.updatePlayerDirection(dto.getUserName(), dto.getDirection());
-            // 이동 시 별도의 상태 업데이트가 필요하면 여기를 활용할 수 있음
-            // broadcastGameState(dto.getRoomId());
+    /**
+     * 게임 시작: 채팅방 멤버의 점수를 0으로 초기화하고, GAME_B_STARTED 메시지를 브로드캐스트
+     */
+    @Transactional
+    public void startGame(String roomId) {
+        log.info("startGame() called for roomId: {}", roomId);
+        ChatRoom chatRoom = chatRoomService.getRoom(roomId);
+        if (chatRoom != null) {
+            Map<String, Integer> roomScore = new ConcurrentHashMap<>();
+            chatRoom.getMembers().forEach(member -> roomScore.put(member, 0));
+            scoreMap.put(roomId, roomScore);
+            // 스턴 상태 초기화
+            stunMap.put(roomId, new ConcurrentHashMap<>());
+
+            List<GameBPlayerDto> players = roomScore.entrySet().stream()
+                    .map(e -> {
+                        String userName = e.getKey();
+                        int score = e.getValue();
+                        UserInfoResponse userInfo = userService.getUserInfo(userName);
+                        return new GameBPlayerDto(userName, score, userInfo.getMainFishImage(), userInfo.getNickname());
+                    })
+                    .collect(Collectors.toList());
+
+            RoomResponse response = new RoomResponse(roomId, players, "GAME_B_STARTED", null, null);
+            messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
+            log.info("Broadcasted GAME_B_STARTED for roomId: {}", roomId);
+        } else {
+            log.error("ChatRoom not found for roomId: {}", roomId);
         }
     }
 
-    public void processFoodEaten(FoodEatenDto dto) {
-        GameSession session = sessions.get(dto.getRoomId());
-        if (session != null) {
-            if ("FOOD".equals(dto.getFoodType())) {
-                session.addScore(dto.getUserName(), 10);
-            } else if ("ROCK".equals(dto.getFoodType())) {
-                session.applyStun(dto.getUserName(), 1); // 1초간 스턴
+    /**
+     * 먹이/돌 섭취 이벤트 처리
+     * - itemType이 "FEED"이면 점수 +1
+     * - itemType이 "STONE"이면 1초 스턴 처리 (해당 시간 동안 추가 입력 무시)
+     * 점수 변경 시 전체 브로드캐스트로 업데이트
+     */
+    @Transactional
+    public void processEat(EatMessage eatMessage) {
+        String roomId = eatMessage.getRoomId();
+        String user = eatMessage.getUserName();
+        String itemType = eatMessage.getItemType();
+
+        log.info("processEat() called: roomId={}, userName={}, itemType={}", roomId, user, itemType);
+
+        Map<String, Integer> roomScore = scoreMap.get(roomId);
+        Map<String, Long> roomStunMap = stunMap.get(roomId);
+
+        if (roomScore == null || roomStunMap == null) {
+            log.error("No score or stun map found for roomId: {}", roomId);
+            return;
+        }
+
+        long currentTime = System.currentTimeMillis();
+
+        // 스턴 상태 체크
+        if (roomStunMap.containsKey(user)) {
+            long stunEnd = roomStunMap.get(user);
+            if (currentTime < stunEnd) {
+                log.info("User {} is stunned until {}. Ignoring eat event.", user, stunEnd);
+                return;
+            } else {
+                roomStunMap.remove(user);
             }
-            // 플레이어 점수나 상태가 변화한 경우 업데이트 브로드캐스트
-            broadcastGameState(dto.getRoomId());
         }
+
+        if ("FEED".equalsIgnoreCase(itemType)) {
+            // 먹이를 먹으면 점수 +1
+            roomScore.merge(user, 1, Integer::sum);
+            log.info("User {} score increased to {}", user, roomScore.get(user));
+        } else if ("STONE".equalsIgnoreCase(itemType)) {
+            // 돌을 먹으면 1초 스턴
+            roomStunMap.put(user, currentTime + TimeUnit.SECONDS.toMillis(1));
+            log.info("User {} stunned for 1 second", user);
+        }
+
+        // 플레이어 목록 업데이트 및 브로드캐스트
+        List<GameBPlayerDto> players = roomScore.entrySet().stream()
+                .map(e -> {
+                    String userName = e.getKey();
+                    int score = e.getValue();
+                    UserInfoResponse userInfo = userService.getUserInfo(userName);
+                    return new GameBPlayerDto(userName, score, userInfo.getMainFishImage(), userInfo.getNickname());
+                })
+                .collect(Collectors.toList());
+
+        RoomResponse response = new RoomResponse(roomId, players, "SCORE_UPDATED", null, null);
+        messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
     }
 
-    private void broadcastGameState(String roomId) {
-        GameSession session = sessions.get(roomId);
-        if (session != null) {
-            GameStateUpdateDto update = new GameStateUpdateDto();
-            update.setRoomId(roomId);
-            update.setRemainingTime(session.getRemainingTime());
-            List<GamePlayerDto> playerStates = session.getPlayers().stream().map(player -> {
-                GamePlayerDto dto = new GamePlayerDto();
-                dto.setUserName(player.getUserName());
-                dto.setScore(player.getScore());
-                dto.setDirection(player.getDirection());
-                dto.setStunned(player.isStunned());
-                return dto;
-            }).collect(Collectors.toList());
-            update.setPlayerStates(playerStates);
-            // 명시적으로 게임 상태 업데이트 메시지임을 표시
-            update.setMessage("GAME_STATE_UPDATE");
-            messagingTemplate.convertAndSend("/topic/room/" + roomId, update);
+    /**
+     * 타임아웃 등으로 게임 종료 요청 처리
+     * 게임 종료 시 최종 점수 및 승자(최고 점수자)를 브로드캐스트
+     */
+    @Transactional
+    public void endGame(String roomId) {
+        log.info("endGame() called for roomId: {}", roomId);
+        Map<String, Integer> roomScore = scoreMap.get(roomId);
+        if (roomScore == null) {
+            log.error("No score map found for roomId: {}", roomId);
+            return;
         }
-    }
 
-    private void endGame(String roomId) {
-        GameSession session = sessions.remove(roomId);
-        if (session != null) {
-            session.end();
-            List<GamePlayerDto> ranking = session.getPlayers().stream()
-                    .sorted((p1, p2) -> p2.getScore() - p1.getScore())
-                    .map(player -> {
-                        GamePlayerDto dto = new GamePlayerDto();
-                        dto.setUserName(player.getUserName());
-                        dto.setScore(player.getScore());
-                        dto.setDirection(player.getDirection());
-                        dto.setStunned(player.isStunned());
-                        return dto;
-                    }).collect(Collectors.toList());
-            FinalResultDto result = new FinalResultDto();
-            result.setRoomId(roomId);
-            result.setRanking(ranking);
-            // 명시적으로 게임 종료 메시지임을 표시
-            result.setMessage("GAME_ENDED");
-            messagingTemplate.convertAndSend("/topic/room/" + roomId, result);
-        }
+        // 플레이어 목록 구성
+        List<GameBPlayerDto> players = roomScore.entrySet().stream()
+                .map(e -> {
+                    String userName = e.getKey();
+                    int score = e.getValue();
+                    UserInfoResponse userInfo = userService.getUserInfo(userName);
+                    return new GameBPlayerDto(userName, score, userInfo.getMainFishImage(), userInfo.getNickname());
+                })
+                .collect(Collectors.toList());
+
+        // 최고 점수자 산출 (여러 명이면 최초 등록된 순서)
+        Optional<Map.Entry<String, Integer>> winnerEntry = roomScore.entrySet().stream()
+                .max(Comparator.comparingInt(Map.Entry::getValue));
+
+        String winner = winnerEntry.map(Map.Entry::getKey).orElse(null);
+
+        // (필요하다면) 최종 점수 순서로 정렬
+        List<String> scoreOrder = roomScore.entrySet().stream()
+                .sorted((e1, e2) -> Integer.compare(e2.getValue(), e1.getValue()))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+
+        RoomResponse response = new RoomResponse(roomId, players, "GAME_B_ENDED", winner, scoreOrder);
+        messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
+        log.info("Broadcasted GAME_B_ENDED for roomId: {} with winner: {}", roomId, winner);
     }
 }
