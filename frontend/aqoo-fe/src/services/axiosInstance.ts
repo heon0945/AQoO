@@ -86,6 +86,7 @@ axiosInstance.interceptors.response.use(
     
         localStorage.setItem("accessToken", newAccessToken); // 새로운 토큰 저장
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        console.log(originalRequest);
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         console.error("토큰 갱신 실패:", refreshError);
