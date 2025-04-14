@@ -1,13 +1,14 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
-import { useRecoilState } from "recoil";
-import { getStompClient } from "@/lib/stompclient";
-import HowToPlayModal from "./HowToPlay";
-import { useAuth } from "@/hooks/useAuth";
+import { HelpCircle, Settings, X } from "lucide-react";
 import { bgMusicVolumeState, sfxVolumeState } from "@/store/soundAtom";
-import { Settings, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+
+import HowToPlayModal from "./HowToPlay";
+import { getStompClient } from "@/lib/stompclient";
+import { useAuth } from "@/hooks/useAuth";
+import { useRecoilState } from "recoil";
 
 export default function Navbar() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -24,10 +25,7 @@ export default function Navbar() {
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
   const [isElectron, setIsElectron] = useState(false);
   useEffect(() => {
-    if (
-      typeof navigator !== "undefined" &&
-      navigator.userAgent.includes("Electron")
-    ) {
+    if (typeof navigator !== "undefined" && navigator.userAgent.includes("Electron")) {
       setIsElectron(true);
     }
   }, []);
@@ -83,20 +81,22 @@ export default function Navbar() {
       <nav className="absolute top-4 left-4 z-10 flex justify-between w-full px-10 pointer-events-none">
         {/* 🏠 로고: 클릭 시 handleLogoClick 실행 */}
         <button onClick={handleLogoClick}>
-          <span className="pointer-events-auto text-white text-5xl hover:text-yellow-300"
-          style={{ textShadow: "4px 4px 10px rgba(0, 0, 0, 0.8)" }}>
+          <span
+            className="pointer-events-auto text-white text-5xl hover:text-yellow-300"
+            style={{ textShadow: "4px 4px 10px rgba(0, 0, 0, 0.8)" }}
+          >
             AQoO
           </span>
         </button>
 
         {/* 안내창 테스트 */}
         <div className="flex gap-3">
-          <img
-            src={"/icon/howtoplayicon.png"}
-            width={45}
-            onClick={() => setIsHowToPlayOpen(true)}
+          <button
             className="pointer-events-auto p-2 bg-white/30 rounded-full hover:bg-white/50"
-          />
+            onClick={() => setIsHowToPlayOpen(true)}
+          >
+            <HelpCircle className="w-6 h-6 text-fwhite" />
+          </button>
 
           {/* ⚙️ 설정 버튼 */}
           <button
@@ -108,12 +108,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {isHowToPlayOpen && (
-        <HowToPlayModal
-          isOpen={isHowToPlayOpen}
-          onClose={() => setIsHowToPlayOpen(false)}
-        />
-      )}
+      {isHowToPlayOpen && <HowToPlayModal isOpen={isHowToPlayOpen} onClose={() => setIsHowToPlayOpen(false)} />}
       {/* 🎛️ 설정 모달 */}
       {isSettingsOpen && (
         <div
@@ -136,9 +131,7 @@ export default function Navbar() {
               <label className="block text-sm font-medium flex justify-between items-center">
                 배경음악
                 <button
-                  className={`p-2 rounded-md ${
-                    isBgOn ? "bg-green-500" : "bg-red-500"
-                  } text-white`}
+                  className={`p-2 rounded-md ${isBgOn ? "bg-green-500" : "bg-red-500"} text-white`}
                   onClick={toggleBgMusic}
                 >
                   {isBgOn ? "ON" : "OFF"}
@@ -161,9 +154,7 @@ export default function Navbar() {
               <label className="block text-sm font-medium flex justify-between items-center">
                 효과음
                 <button
-                  className={`p-2 rounded-md ${
-                    isSfxOn ? "bg-green-500" : "bg-red-500"
-                  } text-white`}
+                  className={`p-2 rounded-md ${isSfxOn ? "bg-green-500" : "bg-red-500"} text-white`}
                   onClick={toggleSfx}
                 >
                   {isSfxOn ? "ON" : "OFF"}
@@ -193,10 +184,7 @@ export default function Navbar() {
             )}
 
             {/* 로그아웃 버튼 */}
-            <button
-              className="w-full bg-red-500 text-white p-2 rounded hover:bg-red-600"
-              onClick={handleLogout}
-            >
+            <button className="w-full bg-red-500 text-white p-2 rounded hover:bg-red-600" onClick={handleLogout}>
               로그아웃
             </button>
           </div>

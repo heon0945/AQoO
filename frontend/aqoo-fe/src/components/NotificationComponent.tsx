@@ -32,7 +32,7 @@ export default function NotificationComponent({
         }
 
         const currentToken = await getToken(messaging, {
-          vapidKey: "BEUpmeaw0oerqu0AtiyAgUgJ-sKN0NNqtFaDORztzyl14h97JgCjxiLwFjnQkdcR8aY6XAaFp1AqWf3P05JlkVU",
+          vapidKey: V-API-KEY,
         });
 
         if (currentToken) {

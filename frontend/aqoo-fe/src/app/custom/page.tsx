@@ -125,6 +125,43 @@ export default function CustomFishPages() {
     }
   }, [penWidth]); // ✅ 펜 굵기 변경 시에만 실행됨 (리사이징과 분리)
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === "z") {
+        event.preventDefault();
+        undo();
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key === "y") {
+        event.preventDefault();
+        redo();
+      }
+
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "d") {
+        event.preventDefault();
+        setLineMode((prev) => !prev);
+        setEraserMode(false);
+        setFillMode(false);
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "f") {
+        event.preventDefault();
+        setFillMode((prev) => !prev);
+        setEraserMode(false);
+        setLineMode(false);
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "e") {
+        event.preventDefault();
+        setEraserMode((prev) => !prev);
+        setFillMode(false);
+        setLineMode(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [history, redoStack]);
+
   const getCanvasCoordinates = (event: MouseEvent | TouchEvent) => {
     if (!canvasRef.current) return { x: 0, y: 0 };
 

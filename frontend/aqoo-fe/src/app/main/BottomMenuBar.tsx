@@ -2,8 +2,8 @@
 
 import { AquariumData, AquariumListItem, UserInfo } from "@/types";
 
-import CleanComponent from "@/app/main/CleanComponent";
 import FriendsList from "@/app/main/FriendsList";
+import InteractionComponent from "@/app/main/components/InteractionComponent";
 import MenuButton from "./MenuButton";
 import PushNotifications from "@/app/main/PushNotifications";
 import axiosInstance from "@/services/axiosInstance";
@@ -76,16 +76,9 @@ export default function BottomMenuBar({
   const handleAquariumUpdate = async (type: "water" | "feed") => {
     if (!selectedAquariumId) return; // ✅ 선택된 어항 ID가 없으면 return
 
-    if (
-      (type === "water" && isWaterMaxed) ||
-      (type === "feed" && isFeedMaxed)
-    ) {
+    if ((type === "water" && isWaterMaxed) || (type === "feed" && isFeedMaxed)) {
       showToast(
-        `👍👍 ${
-          type === "water"
-            ? "수질이 이미 최고 상태입니다!"
-            : "먹이가 이미 가득 찼습니다!"
-        } 👍👍`,
+        `👍👍 ${type === "water" ? "수질이 이미 최고 상태입니다!" : "먹이가 이미 가득 찼습니다!"} 👍👍`,
         "info"
       );
       return;
@@ -113,14 +106,9 @@ export default function BottomMenuBar({
   };
 
   const expToNextLevel = userInfo.level * 20;
-  const expProgress = Math.max(
-    0,
-    Math.min((userInfo.exp / expToNextLevel) * 100, 100)
-  );
+  const expProgress = Math.max(0, Math.min((userInfo.exp / expToNextLevel) * 100, 100));
 
-  const isElectron =
-    typeof navigator !== "undefined" &&
-    navigator.userAgent.toLowerCase().includes("electron");
+  const isElectron = typeof navigator !== "undefined" && navigator.userAgent.toLowerCase().includes("electron");
 
   return (
     <div className="fixed bottom-0 w-full flex flex-col items-center pb-2 md:pb-4">
@@ -162,11 +150,7 @@ export default function BottomMenuBar({
                 <button
                   onClick={handleToggleOverlay}
                   className={`px-4 py-2 text-white rounded shadow-md opacity-90 transition-all
-            ${
-              overlayActive
-                ? "bg-red-600 hover:bg-red-700"
-                : "bg-blue-600 hover:bg-blue-700"
-            }`}
+            ${overlayActive ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"}`}
                 >
                   {overlayActive ? "오버레이 끄기" : "오버레이 켜기"}
                 </button>
@@ -179,30 +163,37 @@ export default function BottomMenuBar({
         {activeComponent === "friends" && (
           <div className="absolute  bottom-full left-0 mb-2 bg-white/50 border border-gray-400 rounded-lg shadow-lg overflow-hidden z-50">
             <div className="overflow-y-auto h-full custom-scollbar">
-              <FriendsList
-                onClose={() => setActiveComponent(null)}
-                userId={userInfo.id}
-              />
+              <FriendsList onClose={() => setActiveComponent(null)} userId={userInfo.id} />
             </div>
           </div>
         )}
 
         {activeComponent === "push" && (
           <div className="absolute  bottom-full left-0 mb-2 bg-white/50 border border-gray-400 rounded-lg shadow-lg overflow-auto z-50">
-            <PushNotifications
-              onClose={() => setActiveComponent(null)}
-              setNewNotifications={() => {}}
-            />
+            <PushNotifications onClose={() => setActiveComponent(null)} setNewNotifications={() => {}} />
           </div>
         )}
 
         {/* ✅ 선택된 컴포넌트만 표시 (BottomMenuBar 위에서 반응형 유지) */}
         {activeComponent === "clean" && selectedAquariumId !== null && (
           <div className="absolute  absolute bottom-full mb-2 right-0 bg-white/50 border border-gray-400 rounded-lg shadow-lg overflow-auto z-50">
-            <CleanComponent
+            <InteractionComponent
+              type="clean"
               onClose={() => setActiveComponent(null)}
-              onCleanSuccess={refreshAquariumData}
-              handleIncreaseExp={handleIncreaseExp} // ✅ 이 방식이 맞음 (async 함수이므로 그대로 전달 가능)
+              onSuccess={refreshAquariumData}
+              handleIncreaseExp={handleIncreaseExp}
+              aquariumId={selectedAquariumId}
+            />
+          </div>
+        )}
+
+        {activeComponent === "feed" && selectedAquariumId !== null && (
+          <div className="absolute  absolute bottom-full mb-2 right-0 bg-white/50 border border-gray-400 rounded-lg shadow-lg overflow-auto z-50">
+            <InteractionComponent
+              type="feed"
+              onClose={() => setActiveComponent(null)}
+              onSuccess={refreshAquariumData}
+              handleIncreaseExp={handleIncreaseExp}
               aquariumId={selectedAquariumId}
             />
           </div>
@@ -210,9 +201,7 @@ export default function BottomMenuBar({
 
         <div
           className={`w-full bg-white/70 rounded-lg px-3 py-2 sm:py-0 flex flex-wrap items-center justify-between shadow-lg backdrop-blur-md transition-all duration-500 ${
-            isMenuVisible
-              ? "opacity-100"
-              : "opacity-0 translate-y-12 pointer-events-none"
+            isMenuVisible ? "opacity-100" : "opacity-0 translate-y-12 pointer-events-none"
           } relative`}
         >
           <div className="flex space-x-2 md:space-x-4 ">
@@ -244,13 +233,16 @@ export default function BottomMenuBar({
                 }}
                 isActive={activeComponent === "push"}
               />
-              {newNotifications && (
-                <div className="notification-dot absolute top-2 right-2" />
-              )}
+              {newNotifications && <div className="notification-dot absolute top-2 right-2" />}
             </div>
-            <MenuButton icon="/icon/gameIcon.png" label="Game" onClick={() => {
-              playModal();
-              router.push("/gameroom")}} />
+            <MenuButton
+              icon="/icon/gameIcon.png"
+              label="Game"
+              onClick={() => {
+                playModal();
+                router.push("/gameroom");
+              }}
+            />
             <MenuButton
               icon="/icon/fishticketIcon.png"
               label="Ticket"
@@ -306,11 +298,7 @@ export default function BottomMenuBar({
           </div>
 
           <div className="flex space-x-2 md:space-x-4">
-            <MenuButton
-              icon="/icon/waterIcon.png"
-              label="Water"
-              onClick={() => handleAquariumUpdate("water")}
-            />
+            <MenuButton icon="/icon/waterIcon.png" label="Water" onClick={() => handleAquariumUpdate("water")} />
             <MenuButton
               icon="/icon/cleanIcon.png"
               label="Clean"
@@ -326,7 +314,14 @@ export default function BottomMenuBar({
             <MenuButton
               icon="/icon/feedIcon.png"
               label="Feed"
-              onClick={() => handleAquariumUpdate("feed")}
+              onClick={() => {
+                if (isFeedMaxed) {
+                  showToast("먹이가 이미 가득 찼습니다!", "info");
+                  return;
+                }
+                setActiveComponent("feed");
+              }}
+              isActive={activeComponent === "feed"}
             />
           </div>
         </div>
@@ -335,38 +330,20 @@ export default function BottomMenuBar({
   );
 }
 
-function StatusBar({
-  icon,
-  label,
-  value,
-  color,
-}: {
-  icon: string;
-  label: string;
-  value: number;
-  color: string;
-}) {
+function StatusBar({ icon, label, value, color }: { icon: string; label: string; value: number; color: string }) {
   const segmentCount = 5;
   const activeSegments = Math.max(0, Math.min(value, segmentCount));
   return (
     <div className="flex items-center space-x-3">
-      <img
-        src={`/${icon}`}
-        alt={label}
-        className="w-[24px] h-[24px] md:w-[24px] md:h-[24px]"
-      />
-      <span className="w-[72px] md:w-[86px] text-xs sm:text-base text-black text-center sm:inline hidden">
-        {label}
-      </span>
+      <img src={`/${icon}`} alt={label} className="w-[24px] h-[24px] md:w-[24px] md:h-[24px]" />
+      <span className="w-[72px] md:w-[86px] text-xs sm:text-base text-black text-center sm:inline hidden">{label}</span>
       <div className="w-32 md:w-48 h-4 md:h-5 flex border-2 border-black rounded-full overflow-hidden">
         {Array.from({ length: segmentCount }).map((_, index) => (
           <div
             key={index}
-            className={`flex-1 border-l border-black ${
-              index < activeSegments ? color : "bg-white"
-            } ${index === 0 ? "rounded-l-full" : ""} ${
-              index === segmentCount - 1 ? "rounded-r-full" : ""
-            }`}
+            className={`flex-1 border-l border-black ${index < activeSegments ? color : "bg-white"} ${
+              index === 0 ? "rounded-l-full" : ""
+            } ${index === segmentCount - 1 ? "rounded-r-full" : ""}`}
           />
         ))}
       </div>
