@@ -2,6 +2,9 @@
 
 > **나만의 어항에서 물고기를 키우며 ‘물멍’으로 힐링하는 Web · Mobile 서비스**
 
+## 🥇 삼성 청년 SW AI 아카데미 12기 프로젝트 부울경 최우수 🥇
+![image1.webp](image1.webp)
+
 ---
 
 ## 1. 서비스 소개
@@ -125,6 +128,12 @@ Browser / Electron ↔ Nginx(SSL) ↔ ① Next.js (SSR)  ↔  Redis (세션)
 ### 이미지 폴더 위치
 
 `exec/images` → **컨테이너 외부** `/home/ubuntu/images` (심볼릭 링크 권장)
+
+### 발표 관련 자료
+[발표 자료 바로가기](./12기_공통PJT_발표자료_E203.pdf)
+
+### 포팅 메뉴얼 관련
+[포팅 메뉴얼 바로가기](./exec)
 
 ---
 
